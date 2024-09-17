@@ -4,12 +4,17 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.location.LocationManager
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -26,12 +31,16 @@ import llc.bokadev.bokabayseatrafficapp.core.navigation.Navigator
 import llc.bokadev.bokabayseatrafficapp.core.navigation.graphs.BokaBaySeaTrafficAppNavigation
 import llc.bokadev.bokabayseatrafficapp.core.utils.CustomModifiers
 import llc.bokadev.bokabayseatrafficapp.core.utils.rememberAppState
+import llc.bokadev.bokabayseatrafficapp.presentation.BayMapViewModel
 import llc.bokadev.bokabayseatrafficapp.presentation.PermissionDenied
 import llc.bokadev.bokabayseatrafficapp.ui.theme.BokaBaySeaTrafficAppTheme
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : ComponentActivity(), SensorEventListener {
+
+
+    private val viewModel: BayMapViewModel by viewModels()
 
     @Inject
     internal lateinit var navigator: Navigator
@@ -39,9 +48,20 @@ class MainActivity : ComponentActivity() {
     private lateinit var locationRequest: LocationRequest
     private val REQUEST_CHECK_SETTINGS = 1001
 
+    private lateinit var sensorManager: SensorManager
+    private lateinit var accelerometer: Sensor
+
+    private var lastAccelerometerValues: FloatArray = FloatArray(3)
+
+
     @OptIn(ExperimentalPermissionsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+
+        sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)!!
+        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL)
 
         setContent {
             BokaBaySeaTrafficAppTheme {
@@ -64,6 +84,8 @@ class MainActivity : ComponentActivity() {
                         multiplePermissionsState.launchMultiplePermissionRequest()
                     }
                 }
+
+
 
                 Scaffold(
                     snackbarHost = {
@@ -118,7 +140,15 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onSensorChanged(p0: SensorEvent?) {
+        if (p0?.sensor?.type == Sensor.TYPE_ACCELEROMETER) {
+            lastAccelerometerValues = p0.values.clone()
+        }
+    }
 
+    override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
+
+    }
 }
 
 

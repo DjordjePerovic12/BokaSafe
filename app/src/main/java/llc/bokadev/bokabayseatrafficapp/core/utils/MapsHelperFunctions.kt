@@ -2,7 +2,13 @@ package llc.bokadev.bokabayseatrafficapp.core.utils
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Rect
 import android.location.Location
+import android.view.View
+import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.BitmapDescriptor
@@ -489,6 +495,45 @@ fun bitmapDescriptorFromVector(
 }
 
 
+fun bitmapDescriptorFromText(
+    text: String,
+    height: Int? = null,
+    width: Int? = null,
+    context: Context
+): BitmapDescriptor {
+
+    // Set default dimensions if not provided
+    val textSize = 40f  // Default text size, adjust as needed
+    val defaultWidth = width ?: 100
+    val defaultHeight = height ?: 100
+
+    // Create a new bitmap with the given width and height
+    val bitmap = Bitmap.createBitmap(defaultWidth, defaultHeight, Bitmap.Config.ARGB_8888)
+
+    // Create a canvas to draw onto the bitmap
+    val canvas = Canvas(bitmap)
+    canvas.drawColor(Color.TRANSPARENT)  // Transparent background
+
+    // Create a Paint object to define the text style
+    val paint = Paint()
+    paint.color = Color.BLACK // Set the text color
+    paint.textSize = textSize
+    paint.isAntiAlias = true
+    paint.textAlign = Paint.Align.CENTER
+
+    // Calculate the coordinates to draw the text in the center
+    val xPos = canvas.width / 2
+    val yPos = (canvas.height / 2 - (paint.descent() + paint.ascent()) / 2).toInt()
+
+    // Draw the text onto the canvas
+    canvas.drawText(text, xPos.toFloat(), yPos.toFloat(), paint)
+
+    // Convert the bitmap to a BitmapDescriptor and return it
+    return BitmapDescriptorFactory.fromBitmap(bitmap)
+}
+
+
+
 fun createWavyPolyline(
     start: LatLng,
     end: LatLng,
@@ -597,4 +642,32 @@ fun clearPipelineLinesAndCircles() {
         circle.remove()
     }
     allPolylines.clear()
+}
+
+
+
+fun getMidpoint(pos1: LatLng?, pos2: LatLng?): LatLng {
+    if (pos1 == null || pos2 == null) return LatLng(0.0, 0.0)
+
+    val lat = (pos1.latitude + pos2.latitude) / 2
+    val lng = (pos1.longitude + pos2.longitude) / 2
+    return LatLng(lat, lng)
+}
+
+ fun updateTextViewPosition(
+    map: GoogleMap,
+    midpoint: LatLng?,
+    textView: TextView,
+    distanceText: String
+) {
+    if (midpoint == null) return
+
+    val projection = map.projection
+    val screenPosition = projection.toScreenLocation(midpoint)
+
+    // Update the text and position of the TextView
+    textView.text = distanceText
+    textView.x = screenPosition.x.toFloat()
+    textView.y = screenPosition.y.toFloat()
+    textView.visibility = View.VISIBLE
 }

@@ -118,14 +118,14 @@ fun BayMapScreen(
     ColumnLayout {
         BokaBayMapScreenContent(viewModel = viewModel,
             onCheckPointClick = { checkpoint ->
-            viewModel.onEvent(
-                MapEvent.CheckpointSelected(
-                    checkpoint
+                viewModel.onEvent(
+                    MapEvent.CheckpointSelected(
+                        checkpoint
+                    )
                 )
-            )
-        }, onShipwreckClick = {
-            viewModel.onEvent(MapEvent.ShipWreckSelected(it))
-        },
+            }, onShipwreckClick = {
+                viewModel.onEvent(MapEvent.ShipWreckSelected(it))
+            },
             onProhibitedAnchoringZoneClick = {
                 viewModel.onEvent(MapEvent.ProhibitedAnchoringZoneSelected(it))
             },
@@ -190,17 +190,44 @@ fun BayMapScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(120.dp)
+                    .wrapContentHeight()
                     .clip(RoundedCornerShape(5.dp))
                     .background(BokaBaySeaTrafficAppTheme.colors.lightBlue.copy(.9f))
             ) {
                 Text(
-                    text = "You are ${state.distanceToCheckpoint?.toNauticalMiles() ?: ""} NM away from ${viewModel.state.selectedCheckpoint?.name ?: ""}, and your azimuth is ${state.azimuth?.toInt() ?: "" }°",
-
+                    text = viewModel.state.selectedCheckpoint?.name ?: "",
                     color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular18,
+                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold18,
                     modifier = Modifier.padding(horizontal = 25.dp)
                 )
+
+                Spacer(modifier = Modifier.height(15.dp))
+
+                Text(
+                    text = "Characteristics : ${viewModel.state.selectedCheckpoint?.characteristics}",
+                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
+                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular18
+                )
+
+
+                Spacer(modifier = Modifier.height(15.dp))
+
+                Text(
+                    text = "D = ${viewModel.state.distanceToCheckpoint?.toNauticalMiles()} NM",
+                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
+                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular18
+                )
+
+                Spacer(modifier = Modifier.height(15.dp))
+
+
+                Text(
+                    text = "W = ${viewModel.state.azimuth?.toInt()}°",
+                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
+                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular18
+                )
+
+
             }
         }
 

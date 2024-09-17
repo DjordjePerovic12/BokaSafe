@@ -6,26 +6,40 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SheetValue
+import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.google.android.gms.maps.model.Marker
 import kotlinx.coroutines.launch
 import llc.bokadev.bokabayseatrafficapp.R
 import llc.bokadev.bokabayseatrafficapp.core.components.GoogleMaps
+import llc.bokadev.bokabayseatrafficapp.core.utils.getMidpoint
 import llc.bokadev.bokabayseatrafficapp.core.utils.noRippleClickable
 import llc.bokadev.bokabayseatrafficapp.domain.model.Anchorage
 import llc.bokadev.bokabayseatrafficapp.domain.model.AnchorageZone
@@ -59,6 +73,7 @@ fun BokaBayMapScreenContent(
     state: GuideState
 ) {
 
+    val speed = viewModel.smoothedSpeed.collectAsState()
     val bottomSheetState =
         rememberModalBottomSheetState(
             confirmValueChange = {
@@ -70,7 +85,13 @@ fun BokaBayMapScreenContent(
     val scope = rememberCoroutineScope()
 
 
+    var textPosition by remember { mutableStateOf(state.distanceTextOffset) }
 
+    var shouldShowPopup by remember { mutableStateOf(false) }
+
+    LaunchedEffect(key1 = state.distanceTextOffset) {
+        textPosition = state.distanceTextOffset
+    }
 
     Box(
         modifier = Modifier
@@ -138,10 +159,26 @@ fun BokaBayMapScreenContent(
                 onBuoyClick(it)
             },
             viewModel = viewModel,
-            onItemHide = { onItemHide(it) }
+            onItemHide = { onItemHide(it) },
+            onMapClick = { viewModel.onEvent(MapEvent.OnMapClick(it)) }
 
 
         )
+
+        if (state.customPointsDistance != null && state.customPointsDistance.toNauticalMiles() != "0.00") {
+            Text(
+                text = "D = ${state.customPointsDistance.toNauticalMiles()} NM",
+                modifier = Modifier.offset {
+                    IntOffset(
+                        textPosition.x.toInt(),
+                        textPosition.y.toInt()
+                    )
+                },// Ensure the text is displayed above the map
+                color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
+                style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold20
+            )
+
+        }
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -185,6 +222,41 @@ fun BokaBayMapScreenContent(
                     tint = BokaBaySeaTrafficAppTheme.colors.lightBlue
                 )
             }
+
+            Box(
+                modifier = Modifier
+                    .padding(top = 25.dp, start = 25.dp)
+                    .size(50.dp)
+                    .clip(RoundedCornerShape(100.dp))
+                    .background(BokaBaySeaTrafficAppTheme.colors.darkBlue)
+                    .noRippleClickable {
+                        viewModel.onEvent(MapEvent.ResetSelection)
+                        viewModel.onEvent(MapEvent.OnCompassIconClick)
+
+                    }
+                    .zIndex(1f)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.compass),
+                    contentDescription = null,
+                    modifier = Modifier.padding(15.dp),
+                    tint = BokaBaySeaTrafficAppTheme.colors.lightBlue
+                )
+            }
+        }
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 65.dp)
+        ) {
+            Text(
+                text = "Course: ${state.userCourseOfMovement}",
+                style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14,
+                color = BokaBaySeaTrafficAppTheme.colors.darkBlue
+            )
         }
 
     }

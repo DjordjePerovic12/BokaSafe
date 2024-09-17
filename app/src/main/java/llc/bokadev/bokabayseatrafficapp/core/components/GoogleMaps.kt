@@ -4,11 +4,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.TextView
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
+import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -16,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -28,6 +31,7 @@ import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.Polyline
+import com.google.android.gms.maps.model.PolylineOptions
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapEffect
 import com.google.maps.android.compose.MapProperties
@@ -39,6 +43,7 @@ import kotlinx.coroutines.launch
 import llc.bokadev.bokabayseatrafficapp.R
 import llc.bokadev.bokabayseatrafficapp.core.utils.allCircles
 import llc.bokadev.bokabayseatrafficapp.core.utils.allPolylines
+import llc.bokadev.bokabayseatrafficapp.core.utils.bitmapDescriptorFromText
 import llc.bokadev.bokabayseatrafficapp.core.utils.bitmapDescriptorFromVector
 import llc.bokadev.bokabayseatrafficapp.core.utils.calculateBoundingBoxCentroid
 import llc.bokadev.bokabayseatrafficapp.core.utils.calculateBounds
@@ -51,6 +56,7 @@ import llc.bokadev.bokabayseatrafficapp.core.utils.drawAnchoringZoneLinesWith8Po
 import llc.bokadev.bokabayseatrafficapp.core.utils.drawAnchoringZoneLinesWithSixPoints
 import llc.bokadev.bokabayseatrafficapp.core.utils.drawCustomDashedPolylineWithCircles
 import llc.bokadev.bokabayseatrafficapp.core.utils.drawLinesBetweenPoints
+import llc.bokadev.bokabayseatrafficapp.core.utils.getMidpoint
 import llc.bokadev.bokabayseatrafficapp.domain.model.Anchorage
 import llc.bokadev.bokabayseatrafficapp.domain.model.AnchorageZone
 import llc.bokadev.bokabayseatrafficapp.domain.model.Buoy
@@ -62,6 +68,7 @@ import llc.bokadev.bokabayseatrafficapp.domain.model.UnderwaterCable
 import llc.bokadev.bokabayseatrafficapp.presentation.BayMapViewModel
 import llc.bokadev.bokabayseatrafficapp.presentation.MapEvent
 import llc.bokadev.bokabayseatrafficapp.presentation.NotificationPreferencesBottomSheet
+import llc.bokadev.bokabayseatrafficapp.presentation.toNauticalMiles
 import llc.bokadev.bokabayseatrafficapp.ui.theme.BokaBaySeaTrafficAppTheme
 import timber.log.Timber
 
@@ -99,7 +106,8 @@ fun GoogleMaps(
     onAnchorageZoneMarkerCreation: (Marker) -> Unit,
     onBuoyMarkerCreation: (Marker) -> Unit,
     onItemHide: (Int) -> Unit,
-    onMarkerUpdate: () -> Unit
+    onMarkerUpdate: () -> Unit,
+    onMapClick: (LatLng) -> Unit,
 ) {
 
     val state = viewModel.state
@@ -162,9 +170,12 @@ fun GoogleMaps(
     var markerCreated by remember {
         mutableStateOf(false)
     }
+
     var hasZoomed by remember {
         mutableStateOf(false)
     }
+
+
     val mapStyle =
         LocalContext.current.assets.open("map_style.json").bufferedReader().use { it.readText() }
     val mapProperties = remember {
@@ -195,6 +206,8 @@ fun GoogleMaps(
     val dashedPolylines: MutableList<Polyline> = remember { mutableListOf() }
     val circles: MutableList<Circle> = remember { mutableListOf() }
     val anchorageZonesPolylines: MutableList<Polyline> = remember { mutableListOf() }
+    val customPointsMarkers = remember { mutableListOf<Marker>() }
+    val customPointsPollyline = remember { mutableStateOf<Polyline?>(null) }
 
 
 
@@ -579,6 +592,7 @@ fun GoogleMaps(
                                     onAnchorageZoneClick(it)
                                 }
                             }
+
                             tag.startsWith("buoy_") -> {
                                 val buoyId =
                                     tag.removePrefix("buoy_").toInt()
@@ -600,8 +614,116 @@ fun GoogleMaps(
                 shipwreckMarkers.clear()
             }
         }
+
+        MapEffect(key1 = state.shouldEnableCustomPointToPoint) { map ->
+//            var polyline: Polyline? = null
+
+                if (state.shouldEnableCustomPointToPoint) {
+                    val updateDistanceTextOffset: () -> Unit = {
+                        if (customPointsMarkers.size == 2) {
+                            val midpoint = getMidpoint(customPointsMarkers[0]?.position, customPointsMarkers[1]?.position)
+                            val projection = map.projection
+                            val screenPosition = projection.toScreenLocation(midpoint)
+                            viewModel.onEvent(
+                                MapEvent.OnDistanceTextOffsetChange(
+                                    Offset(screenPosition.x.toFloat(), screenPosition.y.toFloat())
+                                )
+                            )
+                        } else {
+                            viewModel.onEvent(MapEvent.ClearDistanceBetweenCustomPoints)
+                        }
+                    }
+
+                    // Enable map click listener for adding custom points
+                    map.setOnMapClickListener { latLng ->
+                        if (customPointsMarkers.size < 2) {
+                            val newMarker = map.addMarker(
+                                MarkerOptions().position(latLng).icon(
+                                    bitmapDescriptorFromVector(
+                                        vectorResId = R.drawable.checkpoint_to,
+                                        context = context
+                                    )
+                                )
+                            )
+                            if (newMarker != null) {
+                                customPointsMarkers.add(newMarker)
+                            }
+
+                            // Update ViewModel's list of points
+                            viewModel.onEvent(MapEvent.OnMapClick(latLng))
+
+                            if (customPointsMarkers.size == 2) {
+                                customPointsPollyline.value = map.addPolyline(
+                                    PolylineOptions().add(
+                                        customPointsMarkers[0]?.position,
+                                        customPointsMarkers[1]?.position
+                                    ).color(0xFF001E31.toInt()).width(5f)
+                                )
+                                updateDistanceTextOffset()
+                            }
+                        }
+                    }
+
+                    // Handle marker clicks for deselecting
+                    map.setOnMarkerClickListener { clickedMarker ->
+                        if (customPointsMarkers.contains(clickedMarker)) {
+                            val markerIndex = customPointsMarkers.indexOf(clickedMarker)
+
+                            // Remove the marker from the map
+                            clickedMarker.remove()
+                            customPointsMarkers.removeAt(markerIndex)
+
+                            // Remove the corresponding point from the ViewModel's list
+                            viewModel.onEvent(MapEvent.OnMarkerRemoved(markerIndex))
+
+                            // Clear the polyline if it exists
+                            customPointsPollyline.value?.remove()
+                            customPointsPollyline.value = null
+
+                            // Clear distance if fewer than 2 markers
+                            if (customPointsMarkers.size < 2) {
+                                viewModel.onEvent(MapEvent.ClearDistanceBetweenCustomPoints)
+                            } else if (customPointsMarkers.size == 2) {
+                                customPointsPollyline.value = map.addPolyline(
+                                    PolylineOptions().add(
+                                        customPointsMarkers[0]?.position,
+                                        customPointsMarkers[1]?.position
+                                    ).color(0xFF001E31.toInt()).width(5f)
+                                )
+                                updateDistanceTextOffset()
+                            }
+
+                            true // Indicate that the click event has been handled
+                        } else {
+                            false
+                        }
+                    }
+
+                    map.setOnCameraMoveListener {
+                        updateDistanceTextOffset()
+                    }
+                } else {
+                    // Clear all customPointsMarkers from the map
+                    customPointsMarkers.forEach { it?.remove() }
+                    customPointsMarkers.clear()
+
+                    // Remove the polyline if it exists
+                    customPointsPollyline.value?.remove()
+                    customPointsPollyline.value = null
+
+                    // Disable the click listeners to prevent further drawing
+                    map.setOnMapClickListener(null)
+                    map.setOnMarkerClickListener(null)
+
+                    // Clear points in ViewModel
+                    viewModel.onEvent(MapEvent.ClearCustomPoints)
+                }
+            }
+
+        }
+
     }
-}
+
 
 
 

@@ -1,7 +1,10 @@
 package llc.bokadev.bokabayseatrafficapp.presentation
 
 import android.app.Application
+import android.content.Context.SENSOR_SERVICE
 import android.content.Intent
+import android.hardware.Sensor
+import android.hardware.SensorManager
 import android.location.Location
 import android.location.LocationManager
 import android.net.Uri
@@ -9,6 +12,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.geometry.Offset
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -18,6 +23,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -27,7 +34,6 @@ import llc.amplitudo.flourish_V2.core.utils.Constants
 import llc.bokadev.bokabayseatrafficapp.core.navigation.Navigator
 import llc.bokadev.bokabayseatrafficapp.core.utils.Gps
 import llc.bokadev.bokabayseatrafficapp.core.utils.MapItems
-import llc.bokadev.bokabayseatrafficapp.core.utils.calculateBoundingBoxCentroid
 import llc.bokadev.bokabayseatrafficapp.core.utils.calculateCentroid
 import llc.bokadev.bokabayseatrafficapp.core.utils.createGpsReceiver
 import llc.bokadev.bokabayseatrafficapp.domain.model.Anchorage
@@ -59,6 +65,16 @@ class BayMapViewModel @Inject constructor(
     private var previouslySelectedAnchorageMarkerId: Int? = null
     private var previouslySelectedAnchorageZoneMarkerId: Int? = null
     private var previouslySelectedBuoyMarkerId: Int? = null
+
+
+    private val _smoothedSpeed = MutableStateFlow(0f)
+    val smoothedSpeed: StateFlow<Float> = _smoothedSpeed
+
+    private val alpha = .5f // Smoothing factor for EMA (between 0 and 1, higher is more responsive)
+    private var previousSpeed: Float = 0f
+    private val stationaryThreshold = 0.5f // Threshold in m/s to consider the device as stationary
+    private var isStationary: Boolean = true
+
 
     private val _launchIntentChannel = Channel<Intent>()
     val launchIntentChannel = _launchIntentChannel.receiveAsFlow()
@@ -117,6 +133,7 @@ class BayMapViewModel @Inject constructor(
                 state.userLocation?.let {
                     state.userMarker?.position = it
                 }
+
             }
 
             is MapEvent.ZoomUserLocation -> {
@@ -273,6 +290,70 @@ class BayMapViewModel @Inject constructor(
                 )
             }
 
+            is MapEvent.OnCompassIconClick -> {
+                state =
+                    state.copy(shouldEnableCustomPointToPoint = !state.shouldEnableCustomPointToPoint)
+                if (!state.shouldEnableCustomPointToPoint) {
+                    state = state.copy(
+                        customPoints = mutableListOf(),
+                        distanceTextOffset = Offset.Zero,
+                        customPointsDistance = null
+                    )
+                }
+                Timber.e("compas ${state.shouldEnableCustomPointToPoint}")
+            }
+
+            is MapEvent.ClearDistanceBetweenCustomPoints -> {
+                state = state.copy(customPointsDistance = null)
+            }
+
+            is MapEvent.OnMapClick -> {
+                val updatedCustomPoints = state.customPoints.toMutableList()
+                if (updatedCustomPoints.size == 2) {
+                    updatedCustomPoints[1] = event.position
+                } else {
+                    updatedCustomPoints.add(event.position)
+                }
+
+                state = state.copy(customPoints = updatedCustomPoints)
+
+                if (updatedCustomPoints.size == 2) {
+                    calculateDistanceBetweenPoints(updatedCustomPoints[0], updatedCustomPoints[1])
+                } else {
+                    state = state.copy(customPointsDistance = null)
+                }
+            }
+
+            is MapEvent.OnMarkerRemoved -> {
+                val updatedCustomPoints = state.customPoints.toMutableList()
+                if (event.index >= 0 && event.index < updatedCustomPoints.size) {
+                    updatedCustomPoints.removeAt(event.index)
+
+                    state = state.copy(customPoints = updatedCustomPoints)
+
+                    if (updatedCustomPoints.size < 2) {
+                        state = state.copy(customPointsDistance = null)
+                    } else if (updatedCustomPoints.size == 2) {
+                        calculateDistanceBetweenPoints(
+                            updatedCustomPoints[0],
+                            updatedCustomPoints[1]
+                        )
+                    }
+                }
+            }
+
+            is MapEvent.ClearCustomPoints -> {
+                state = state.copy(
+                    customPoints = mutableListOf(), customPointsDistance = null,
+                    distanceTextOffset = Offset.Zero
+                )
+            }
+
+
+            is MapEvent.OnDistanceTextOffsetChange -> {
+                state = state.copy(distanceTextOffset = event.offset)
+            }
+
             else -> {}
         }
     }
@@ -289,9 +370,25 @@ class BayMapViewModel @Inject constructor(
 
     }
 
+    private fun calculateDistanceBetweenPoints(point1: LatLng, point2: LatLng) {
+        val loc1 = Location(LocationManager.GPS_PROVIDER).apply {
+            latitude = point1.latitude
+            longitude = point1.longitude
+        }
+
+        val loc2 = Location(LocationManager.GPS_PROVIDER).apply {
+            latitude = point2.latitude
+            longitude = point2.longitude
+        }
+
+        val distance = loc1.distanceTo(loc2)
+        state = state.copy(customPointsDistance = distance)
+    }
+
     private fun observeUserLocation() {
         locationRepository.getLocationUpdates().catch { e -> e.printStackTrace() }
             .onEach { location ->
+                updateDirection(location)
                 Timber.e("Location vm ${location.latitude}, ${location.latitude}")
                 val latitudeCurrent = location.latitude
                 val longitudeCurrent = location.longitude
@@ -541,6 +638,55 @@ class BayMapViewModel @Inject constructor(
         )
     }
 
+    private fun updateDirection(location: Location) {
+        val bearing = location.bearing // Bearing in degrees
+
+        // Convert bearing to a readable direction
+        val direction = when {
+            bearing >= 337.5 || bearing < 22.5 -> "N"
+            bearing in 22.5..67.5 -> "NE"
+            bearing in 67.5..112.5 -> "E"
+            bearing in 112.5..157.5 -> "SE"
+            bearing in 157.5..202.5 -> "S"
+            bearing in 202.5..247.5 -> "SW"
+            bearing in 247.5..292.5 -> "W"
+            bearing in 292.5..337.5 -> "NW"
+            else -> "Unknown"
+        }
+        Timber.e("DIRECTION $direction")
+        state = state.copy(userCourseOfMovement = direction)
+    }
+
+    fun updateSpeed(rawSpeed: Float, acceleration: FloatArray) {
+        viewModelScope.launch {
+            // Check if the device is stationary using accelerometer data
+            isStationary = isDeviceStationary(acceleration)
+
+            // Apply threshold and smoothing only if not stationary
+            val speedToUse = if (isStationary) 0f else rawSpeed
+
+            // Apply EMA smoothing
+            val smoothedSpeedValue = alpha * speedToUse + (1 - alpha) * previousSpeed
+
+            // If the smoothed speed is below the threshold, consider the device stationary
+            val finalSpeed =
+                if (smoothedSpeedValue < stationaryThreshold) 0f else smoothedSpeedValue
+
+            // Update the state
+            previousSpeed = finalSpeed
+            _smoothedSpeed.emit(finalSpeed)
+        }
+    }
+
+    private fun isDeviceStationary(acceleration: FloatArray): Boolean {
+        val accelerationMagnitude = Math.sqrt(
+            (acceleration[0] * acceleration[0] + acceleration[1] * acceleration[1] + acceleration[2] * acceleration[2]).toDouble()
+        ).toFloat()
+
+        // Consider the device stationary if the magnitude is close to 9.8 (gravity) for some time
+        return accelerationMagnitude < 10.5f && accelerationMagnitude > 9.0f
+    }
+
 
 }
 
@@ -591,6 +737,12 @@ sealed class MapEvent() {
     object OnConfirmPreferencesClick : MapEvent()
     object OnCancelPreferencesClick : MapEvent()
     data class OnItemHide(val mapItemTypeId: Int) : MapEvent()
+    object OnCompassIconClick : MapEvent()
+    object ClearDistanceBetweenCustomPoints : MapEvent()
+    data class OnMapClick(val position: LatLng) : MapEvent()
+    data class OnMarkerRemoved(val index: Int) : MapEvent()
+    object ClearCustomPoints : MapEvent()
+    data class OnDistanceTextOffsetChange(val offset: Offset) : MapEvent()
 }
 
 data class GuideState(
@@ -634,4 +786,11 @@ data class GuideState(
     val isAnchorageVisible: Boolean = false,
     val isAnchorageZoneVisible: Boolean = false,
     val mapItemFilters: MapItemFilters? = MapItemFilters(true, true, true, true, true, true),
-)
+    val userSpeed: Double? = null,
+    val userCourseOfMovement: String? = String(),
+    val shouldEnableCustomPointToPoint: Boolean = false,
+    val customPoints: MutableList<LatLng> = mutableStateListOf(),
+    val customPointsDistance: Float? = null,
+    val distanceTextOffset: Offset = Offset.Zero,
+
+    )
