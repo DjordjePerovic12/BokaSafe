@@ -641,7 +641,7 @@ fun clearPipelineLinesAndCircles() {
     for (circle in allCircles) {
         circle.remove()
     }
-    allPolylines.clear()
+    pipelinePolylines.clear()
 }
 
 

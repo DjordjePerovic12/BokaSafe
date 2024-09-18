@@ -4,13 +4,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.TextView
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
-import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -41,9 +39,6 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import llc.bokadev.bokabayseatrafficapp.R
-import llc.bokadev.bokabayseatrafficapp.core.utils.allCircles
-import llc.bokadev.bokabayseatrafficapp.core.utils.allPolylines
-import llc.bokadev.bokabayseatrafficapp.core.utils.bitmapDescriptorFromText
 import llc.bokadev.bokabayseatrafficapp.core.utils.bitmapDescriptorFromVector
 import llc.bokadev.bokabayseatrafficapp.core.utils.calculateBoundingBoxCentroid
 import llc.bokadev.bokabayseatrafficapp.core.utils.calculateBounds
@@ -68,7 +63,6 @@ import llc.bokadev.bokabayseatrafficapp.domain.model.UnderwaterCable
 import llc.bokadev.bokabayseatrafficapp.presentation.BayMapViewModel
 import llc.bokadev.bokabayseatrafficapp.presentation.MapEvent
 import llc.bokadev.bokabayseatrafficapp.presentation.NotificationPreferencesBottomSheet
-import llc.bokadev.bokabayseatrafficapp.presentation.toNauticalMiles
 import llc.bokadev.bokabayseatrafficapp.ui.theme.BokaBaySeaTrafficAppTheme
 import timber.log.Timber
 
@@ -208,6 +202,9 @@ fun GoogleMaps(
     val anchorageZonesPolylines: MutableList<Polyline> = remember { mutableListOf() }
     val customPointsMarkers = remember { mutableListOf<Marker>() }
     val customPointsPollyline = remember { mutableStateOf<Polyline?>(null) }
+    var selectedMarker by remember { mutableStateOf<Marker?>(null) }
+
+
 
 
 
@@ -247,6 +244,88 @@ fun GoogleMaps(
             }
             map.setOnCameraIdleListener(resetZoom)
         }
+
+
+        MapEffect(key1 = state.shouldEnableCustomPointToPoint) { map ->
+//            var polyline: Polyline? = null
+
+            if (state.shouldEnableCustomPointToPoint) {
+                val updateDistanceTextOffset: () -> Unit = {
+                    if (customPointsMarkers.size == 2) {
+                        val midpoint = getMidpoint(
+                            customPointsMarkers[0].position,
+                            customPointsMarkers[1].position
+                        )
+                        val projection = map.projection
+                        val screenPosition = projection.toScreenLocation(midpoint)
+                        viewModel.onEvent(
+                            MapEvent.OnDistanceTextOffsetChange(
+                                Offset(screenPosition.x.toFloat(), screenPosition.y.toFloat())
+                            )
+                        )
+                    } else {
+                        viewModel.onEvent(MapEvent.ClearDistanceBetweenCustomPoints)
+                    }
+                }
+
+                // Enable map click listener for adding custom points
+                map.setOnMapClickListener { latLng ->
+                    if (customPointsMarkers.size < 2) {
+                        val newMarker = map.addMarker(
+                            MarkerOptions().position(latLng).icon(
+                                bitmapDescriptorFromVector(
+                                    vectorResId = R.drawable.checkpoint_to,
+                                    context = context
+                                )
+                            )
+                        )
+                        newMarker?.tag = "${newMarker?.id}"
+                        if (newMarker != null) {
+                            customPointsMarkers.add(newMarker)
+                        }
+
+                        // Update ViewModel's list of points
+                        viewModel.onEvent(MapEvent.OnMapTwoPointsClick(latLng))
+
+                        if (customPointsMarkers.size == 2) {
+                            customPointsPollyline.value = map.addPolyline(
+                                PolylineOptions().add(
+                                    customPointsMarkers[0].position,
+                                    customPointsMarkers[1].position
+                                ).color(0xFF001E31.toInt()).width(5f)
+                            )
+                            updateDistanceTextOffset()
+                        }
+                    }
+                }
+
+
+
+                map.setOnCameraMoveListener {
+                    updateDistanceTextOffset()
+                }
+            } else {
+                // Clear all customPointsMarkers from the map
+                customPointsMarkers.forEach { it.remove() }
+                customPointsMarkers.clear()
+
+                // Remove the polyline if it exists
+                customPointsPollyline.value?.remove()
+                customPointsPollyline.value = null
+
+                // Disable the click listeners to prevent further drawing
+                map.setOnMapClickListener(null)
+
+                // Clear points in ViewModel
+                viewModel.onEvent(MapEvent.ClearCustomPoints)
+
+            }
+        }
+
+
+
+
+
         MapEffect(key1 = state.mapItemFilters?.lighthouses) { map ->
             if (state.mapItemFilters?.lighthouses == true) {
                 for (checkpoint in checkpoints) {
@@ -280,7 +359,7 @@ fun GoogleMaps(
         }
 
 
-        MapEffect(key1 = Unit) { map ->
+        MapEffect(key1 = Unit, key2 = state.shouldEnableCustomPointToPoint) { map ->
             map.setInfoWindowAdapter(object : GoogleMap.InfoWindowAdapter {
                 override fun getInfoContents(p0: Marker): Nothing? = null
                 override fun getInfoWindow(marker: Marker): View? {
@@ -542,68 +621,138 @@ fun GoogleMaps(
 
 
 
-                    map.setOnMarkerClickListener { marker ->
-                        Timber.e("Marker ${marker.title} clicked ${marker.id}")
-                        val tag = marker.tag as? String ?: return@setOnMarkerClickListener true
-
-                        when {
-                            tag.startsWith("checkpoint_") -> {
-                                val checkpointId = tag.removePrefix("checkpoint_").toInt()
-                                val clickedCheckpoint =
-                                    localCheckpoints.firstOrNull { it.id == checkpointId }
-                                clickedCheckpoint?.let { onCheckpointClick(it) }
-                            }
-
-                            tag.startsWith("shipwreck_") -> {
-                                val shipwreckId = tag.removePrefix("shipwreck_").toInt()
-                                val clickedShipwreck =
-                                    localShipwrecks.firstOrNull { it.id == shipwreckId }
-                                clickedShipwreck?.let { onShipwreckClick(it) }
-                            }
-
-                            tag.startsWith("prohibitedAnchoringZone_") -> {
-                                val prohibitedAnchoringZoneId =
-                                    tag.removePrefix("prohibitedAnchoringZone_").toInt()
-                                val clickedProhibitedAnchoringZone =
-                                    localProhibitedProhibitedAnchoringZones.firstOrNull { it.id == prohibitedAnchoringZoneId }
-                                clickedProhibitedAnchoringZone?.let {
-                                    onProhibitedAnchoringZoneClick(
-                                        it
+                    if (state.shouldEnableCustomPointToPoint) {
+                        val updateDistanceTextOffset: () -> Unit = {
+                            if (customPointsMarkers.size == 2) {
+                                val midpoint = getMidpoint(
+                                    customPointsMarkers[0].position,
+                                    customPointsMarkers[1].position
+                                )
+                                val projection = map.projection
+                                val screenPosition = projection.toScreenLocation(midpoint)
+                                viewModel.onEvent(
+                                    MapEvent.OnDistanceTextOffsetChange(
+                                        Offset(
+                                            screenPosition.x.toFloat(),
+                                            screenPosition.y.toFloat()
+                                        )
                                     )
-                                }
-                            }
-
-                            tag.startsWith("anchorage_") -> {
-                                val anchorageId =
-                                    tag.removePrefix("anchorage_").toInt()
-                                val clickedAnchorage =
-                                    localAnchorages.firstOrNull { it.id == anchorageId }
-                                clickedAnchorage?.let {
-                                    onAnchorageClick(it)
-                                }
-                            }
-
-                            tag.startsWith("anchorageZone_") -> {
-                                val anchorageZoneId =
-                                    tag.removePrefix("anchorageZone_").toInt()
-                                val clickedAnchorageZone =
-                                    localAnchorageZones.firstOrNull { it.id == anchorageZoneId }
-                                clickedAnchorageZone?.let {
-                                    onAnchorageZoneClick(it)
-                                }
-                            }
-
-                            tag.startsWith("buoy_") -> {
-                                val buoyId =
-                                    tag.removePrefix("buoy_").toInt()
-                                val clickedBuoy =
-                                    localBuoys.firstOrNull { it.id == buoyId }
-                                clickedBuoy?.let {
-                                    onBuoyClick(it)
-                                }
+                                )
+                            } else {
+                                viewModel.onEvent(MapEvent.ClearDistanceBetweenCustomPoints)
                             }
                         }
-                        true // Mark the event as handled
+
+                        // Handle marker clicks for deselecting
+                        map.setOnMarkerClickListener { clickedMarker ->
+                            if (customPointsMarkers.contains(clickedMarker)) {
+                                customPointsPollyline.value?.remove()
+                                if (customPointsMarkers.size == 2) {
+                                    customPointsPollyline.value = map.addPolyline(
+                                        PolylineOptions().add(
+                                            customPointsMarkers[0].position,
+                                            customPointsMarkers[1].position
+                                        ).color(0xFF001E31.toInt()).width(5f)
+                                    )
+                                    updateDistanceTextOffset()
+                                } else {
+                                    viewModel.onEvent(MapEvent.ClearDistanceBetweenCustomPoints)
+                                }
+
+                                true // Mark the event as handled
+                            } else {
+                                false // Let other marker clicks pass through (icon markers)
+                            }
+                        }
+
+
+                    } else {
+                        map.setOnMarkerClickListener { marker ->
+                            Timber.e("Marker ${marker.title} clicked ${marker.id}, tag ${marker.tag}")
+                            Timber.e("CustomCheckpointMarkers ${(checkpoints.size + anchorages.size + prohibitedProhibitedAnchoringZones.size + buoys.size + shipwrecks.size + anchorageZones.size)}")
+                            val tag = marker.tag as? String ?: return@setOnMarkerClickListener true
+
+                            when {
+                                tag.startsWith("m") -> {
+                                    val checkpointId = tag.removePrefix("m").toInt()
+                                    // Update ViewModel (remove corresponding point)
+                                    viewModel.onEvent(MapEvent.OnMarkerRemovedTwoPoints(checkpointId.minus((checkpoints.size + anchorages.size + prohibitedProhibitedAnchoringZones.size + buoys.size + shipwrecks.size + anchorageZones.size + 1))))
+
+                                    // Update polyline or clear it if fewer than 2 markers are left
+                                    customPointsPollyline.value?.remove()
+                                    if (customPointsMarkers.size == 2) {
+                                        customPointsPollyline.value = map.addPolyline(
+                                            PolylineOptions().add(
+                                                customPointsMarkers[0].position,
+                                                customPointsMarkers[1].position
+                                            ).color(0xFF001E31.toInt()).width(5f)
+                                        )
+//                                        updateDistanceTextOffset()
+                                    } else {
+                                        viewModel.onEvent(MapEvent.ClearDistanceBetweenCustomPoints)
+                                    }
+                                    marker.remove()
+                                    customPointsPollyline.value?.remove()
+                                    customPointsMarkers.remove(marker)
+                                }
+                                tag.startsWith("checkpoint_") -> {
+                                    val checkpointId = tag.removePrefix("checkpoint_").toInt()
+                                    val clickedCheckpoint =
+                                        localCheckpoints.firstOrNull { it.id == checkpointId }
+                                    clickedCheckpoint?.let { onCheckpointClick(it) }
+                                }
+
+                                tag.startsWith("shipwreck_") -> {
+                                    val shipwreckId = tag.removePrefix("shipwreck_").toInt()
+                                    val clickedShipwreck =
+                                        localShipwrecks.firstOrNull { it.id == shipwreckId }
+                                    clickedShipwreck?.let { onShipwreckClick(it) }
+                                }
+
+                                tag.startsWith("prohibitedAnchoringZone_") -> {
+                                    val prohibitedAnchoringZoneId =
+                                        tag.removePrefix("prohibitedAnchoringZone_").toInt()
+                                    val clickedProhibitedAnchoringZone =
+                                        localProhibitedProhibitedAnchoringZones.firstOrNull { it.id == prohibitedAnchoringZoneId }
+                                    clickedProhibitedAnchoringZone?.let {
+                                        onProhibitedAnchoringZoneClick(
+                                            it
+                                        )
+                                    }
+                                }
+
+                                tag.startsWith("anchorage_") -> {
+                                    val anchorageId =
+                                        tag.removePrefix("anchorage_").toInt()
+                                    val clickedAnchorage =
+                                        localAnchorages.firstOrNull { it.id == anchorageId }
+                                    clickedAnchorage?.let {
+                                        onAnchorageClick(it)
+                                    }
+                                }
+
+                                tag.startsWith("anchorageZone_") -> {
+                                    val anchorageZoneId =
+                                        tag.removePrefix("anchorageZone_").toInt()
+                                    val clickedAnchorageZone =
+                                        localAnchorageZones.firstOrNull { it.id == anchorageZoneId }
+                                    clickedAnchorageZone?.let {
+                                        onAnchorageZoneClick(it)
+                                    }
+                                }
+
+                                tag.startsWith("buoy_") -> {
+                                    val buoyId =
+                                        tag.removePrefix("buoy_").toInt()
+                                    val clickedBuoy =
+                                        localBuoys.firstOrNull { it.id == buoyId }
+                                    clickedBuoy?.let {
+                                        onBuoyClick(it)
+                                    }
+                                }
+                            }
+                            true // Mark the event as handled
+                        }
                     }
 
                 }
@@ -615,114 +764,9 @@ fun GoogleMaps(
             }
         }
 
-        MapEffect(key1 = state.shouldEnableCustomPointToPoint) { map ->
-//            var polyline: Polyline? = null
-
-                if (state.shouldEnableCustomPointToPoint) {
-                    val updateDistanceTextOffset: () -> Unit = {
-                        if (customPointsMarkers.size == 2) {
-                            val midpoint = getMidpoint(customPointsMarkers[0]?.position, customPointsMarkers[1]?.position)
-                            val projection = map.projection
-                            val screenPosition = projection.toScreenLocation(midpoint)
-                            viewModel.onEvent(
-                                MapEvent.OnDistanceTextOffsetChange(
-                                    Offset(screenPosition.x.toFloat(), screenPosition.y.toFloat())
-                                )
-                            )
-                        } else {
-                            viewModel.onEvent(MapEvent.ClearDistanceBetweenCustomPoints)
-                        }
-                    }
-
-                    // Enable map click listener for adding custom points
-                    map.setOnMapClickListener { latLng ->
-                        if (customPointsMarkers.size < 2) {
-                            val newMarker = map.addMarker(
-                                MarkerOptions().position(latLng).icon(
-                                    bitmapDescriptorFromVector(
-                                        vectorResId = R.drawable.checkpoint_to,
-                                        context = context
-                                    )
-                                )
-                            )
-                            if (newMarker != null) {
-                                customPointsMarkers.add(newMarker)
-                            }
-
-                            // Update ViewModel's list of points
-                            viewModel.onEvent(MapEvent.OnMapClick(latLng))
-
-                            if (customPointsMarkers.size == 2) {
-                                customPointsPollyline.value = map.addPolyline(
-                                    PolylineOptions().add(
-                                        customPointsMarkers[0]?.position,
-                                        customPointsMarkers[1]?.position
-                                    ).color(0xFF001E31.toInt()).width(5f)
-                                )
-                                updateDistanceTextOffset()
-                            }
-                        }
-                    }
-
-                    // Handle marker clicks for deselecting
-                    map.setOnMarkerClickListener { clickedMarker ->
-                        if (customPointsMarkers.contains(clickedMarker)) {
-                            val markerIndex = customPointsMarkers.indexOf(clickedMarker)
-
-                            // Remove the marker from the map
-                            clickedMarker.remove()
-                            customPointsMarkers.removeAt(markerIndex)
-
-                            // Remove the corresponding point from the ViewModel's list
-                            viewModel.onEvent(MapEvent.OnMarkerRemoved(markerIndex))
-
-                            // Clear the polyline if it exists
-                            customPointsPollyline.value?.remove()
-                            customPointsPollyline.value = null
-
-                            // Clear distance if fewer than 2 markers
-                            if (customPointsMarkers.size < 2) {
-                                viewModel.onEvent(MapEvent.ClearDistanceBetweenCustomPoints)
-                            } else if (customPointsMarkers.size == 2) {
-                                customPointsPollyline.value = map.addPolyline(
-                                    PolylineOptions().add(
-                                        customPointsMarkers[0]?.position,
-                                        customPointsMarkers[1]?.position
-                                    ).color(0xFF001E31.toInt()).width(5f)
-                                )
-                                updateDistanceTextOffset()
-                            }
-
-                            true // Indicate that the click event has been handled
-                        } else {
-                            false
-                        }
-                    }
-
-                    map.setOnCameraMoveListener {
-                        updateDistanceTextOffset()
-                    }
-                } else {
-                    // Clear all customPointsMarkers from the map
-                    customPointsMarkers.forEach { it?.remove() }
-                    customPointsMarkers.clear()
-
-                    // Remove the polyline if it exists
-                    customPointsPollyline.value?.remove()
-                    customPointsPollyline.value = null
-
-                    // Disable the click listeners to prevent further drawing
-                    map.setOnMapClickListener(null)
-                    map.setOnMarkerClickListener(null)
-
-                    // Clear points in ViewModel
-                    viewModel.onEvent(MapEvent.ClearCustomPoints)
-                }
-            }
-
-        }
-
     }
+
+}
 
 
 

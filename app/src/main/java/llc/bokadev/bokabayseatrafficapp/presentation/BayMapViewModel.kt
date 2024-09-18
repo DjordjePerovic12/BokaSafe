@@ -1,10 +1,7 @@
 package llc.bokadev.bokabayseatrafficapp.presentation
 
 import android.app.Application
-import android.content.Context.SENSOR_SERVICE
 import android.content.Intent
-import android.hardware.Sensor
-import android.hardware.SensorManager
 import android.location.Location
 import android.location.LocationManager
 import android.net.Uri
@@ -13,7 +10,6 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
-import androidx.core.content.ContextCompat.getSystemService
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -307,7 +303,7 @@ class BayMapViewModel @Inject constructor(
                 state = state.copy(customPointsDistance = null)
             }
 
-            is MapEvent.OnMapClick -> {
+            is MapEvent.OnMapTwoPointsClick -> {
                 val updatedCustomPoints = state.customPoints.toMutableList()
                 if (updatedCustomPoints.size == 2) {
                     updatedCustomPoints[1] = event.position
@@ -324,7 +320,7 @@ class BayMapViewModel @Inject constructor(
                 }
             }
 
-            is MapEvent.OnMarkerRemoved -> {
+            is MapEvent.OnMarkerRemovedTwoPoints -> {
                 val updatedCustomPoints = state.customPoints.toMutableList()
                 if (event.index >= 0 && event.index < updatedCustomPoints.size) {
                     updatedCustomPoints.removeAt(event.index)
@@ -344,8 +340,10 @@ class BayMapViewModel @Inject constructor(
 
             is MapEvent.ClearCustomPoints -> {
                 state = state.copy(
-                    customPoints = mutableListOf(), customPointsDistance = null,
-                    distanceTextOffset = Offset.Zero
+                    customPoints = mutableListOf(),
+                    customPointsDistance = null,
+                    distanceTextOffset = Offset.Zero,
+                    shouldEnableCustomPointToPoint = false
                 )
             }
 
@@ -739,8 +737,8 @@ sealed class MapEvent() {
     data class OnItemHide(val mapItemTypeId: Int) : MapEvent()
     object OnCompassIconClick : MapEvent()
     object ClearDistanceBetweenCustomPoints : MapEvent()
-    data class OnMapClick(val position: LatLng) : MapEvent()
-    data class OnMarkerRemoved(val index: Int) : MapEvent()
+    data class OnMapTwoPointsClick(val position: LatLng) : MapEvent()
+    data class OnMarkerRemovedTwoPoints(val index: Int) : MapEvent()
     object ClearCustomPoints : MapEvent()
     data class OnDistanceTextOffsetChange(val offset: Offset) : MapEvent()
 }
