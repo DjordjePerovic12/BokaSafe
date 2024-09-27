@@ -98,3 +98,15 @@ fun Modifier.hideKeyboard(focusManager: FocusManager): Modifier = composed {
         })
     }
 }
+
+fun Int.toThreeDigitString(): String {
+    return String.format("%03d", this)
+}
+
+fun Float.toKnots() : Float {
+    return String.format("%.1f", (this / 1852f) * 3600f).toFloat()
+}
+
+fun Float.toKilometersPerHour(): Float {
+    return String.format("%.1f", this * 3.6f).toFloat()
+}

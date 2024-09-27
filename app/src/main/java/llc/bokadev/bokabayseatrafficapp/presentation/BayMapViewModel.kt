@@ -30,8 +30,11 @@ import llc.amplitudo.flourish_V2.core.utils.Constants
 import llc.bokadev.bokabayseatrafficapp.core.navigation.Navigator
 import llc.bokadev.bokabayseatrafficapp.core.utils.Gps
 import llc.bokadev.bokabayseatrafficapp.core.utils.MapItems
+import llc.bokadev.bokabayseatrafficapp.core.utils.Resource
 import llc.bokadev.bokabayseatrafficapp.core.utils.calculateCentroid
 import llc.bokadev.bokabayseatrafficapp.core.utils.createGpsReceiver
+import llc.bokadev.bokabayseatrafficapp.core.utils.toKnots
+import llc.bokadev.bokabayseatrafficapp.data.remote.dto.ElevationResponse
 import llc.bokadev.bokabayseatrafficapp.domain.model.Anchorage
 import llc.bokadev.bokabayseatrafficapp.domain.model.AnchorageZone
 import llc.bokadev.bokabayseatrafficapp.domain.model.Buoy
@@ -41,6 +44,7 @@ import llc.bokadev.bokabayseatrafficapp.domain.model.Pipeline
 import llc.bokadev.bokabayseatrafficapp.domain.model.ProhibitedAnchoringZone
 import llc.bokadev.bokabayseatrafficapp.domain.model.ShipWreck
 import llc.bokadev.bokabayseatrafficapp.domain.model.UnderwaterCable
+import llc.bokadev.bokabayseatrafficapp.domain.repository.AppRepository
 import llc.bokadev.bokabayseatrafficapp.domain.repository.LocationRepository
 import timber.log.Timber
 import javax.inject.Inject
@@ -51,6 +55,7 @@ class BayMapViewModel @Inject constructor(
     private val application: Application,
     private val savedStateHandle: SavedStateHandle,
     private val locationRepository: LocationRepository,
+    private val repository: AppRepository,
     private val navigator: Navigator
 ) : ViewModel() {
 
@@ -66,10 +71,13 @@ class BayMapViewModel @Inject constructor(
     private val _smoothedSpeed = MutableStateFlow(0f)
     val smoothedSpeed: StateFlow<Float> = _smoothedSpeed
 
-    private val alpha = .5f // Smoothing factor for EMA (between 0 and 1, higher is more responsive)
-    private var previousSpeed: Float = 0f
-    private val stationaryThreshold = 0.5f // Threshold in m/s to consider the device as stationary
-    private var isStationary: Boolean = true
+    private var totalDistance = 0.0f
+    private var previousLocation: Location? = null
+    val speedList: ArrayList<Float> = arrayListOf()
+    private var staticCounter = 0
+    private val staticSpeedThreshold = 0.5f // Speed threshold to consider user static
+    private val staticDistanceThreshold = 1.5f // Distance threshold to consider user static
+    private val staticCheckIterations = 3 // Number of checks to confirm user is static
 
 
     private val _launchIntentChannel = Channel<Intent>()
@@ -81,6 +89,7 @@ class BayMapViewModel @Inject constructor(
     }, onGpsOFF = {
         state = state.copy(gpsState = Gps.OFF)
     })
+
 
     init {
         observeUserLocation()
@@ -95,6 +104,7 @@ class BayMapViewModel @Inject constructor(
             onClick()
         }
     }
+
 
     fun onEvent(event: MapEvent) {
         when (event) {
@@ -300,48 +310,24 @@ class BayMapViewModel @Inject constructor(
             }
 
             is MapEvent.ClearDistanceBetweenCustomPoints -> {
-                state = state.copy(customPointsDistance = null)
+                state = state.copy(customPointsDistance = null, customPointsAzimuth = null)
             }
 
             is MapEvent.OnMapTwoPointsClick -> {
-                val updatedCustomPoints = state.customPoints.toMutableList()
-                if (updatedCustomPoints.size == 2) {
-                    updatedCustomPoints[1] = event.position
-                } else {
-                    updatedCustomPoints.add(event.position)
-                }
-
-                state = state.copy(customPoints = updatedCustomPoints)
-
-                if (updatedCustomPoints.size == 2) {
-                    calculateDistanceBetweenPoints(updatedCustomPoints[0], updatedCustomPoints[1])
-                } else {
-                    state = state.copy(customPointsDistance = null)
-                }
+                updateCustomPoints(event.position, event.index)
             }
 
             is MapEvent.OnMarkerRemovedTwoPoints -> {
-                val updatedCustomPoints = state.customPoints.toMutableList()
-                if (event.index >= 0 && event.index < updatedCustomPoints.size) {
-                    updatedCustomPoints.removeAt(event.index)
-
-                    state = state.copy(customPoints = updatedCustomPoints)
-
-                    if (updatedCustomPoints.size < 2) {
-                        state = state.copy(customPointsDistance = null)
-                    } else if (updatedCustomPoints.size == 2) {
-                        calculateDistanceBetweenPoints(
-                            updatedCustomPoints[0],
-                            updatedCustomPoints[1]
-                        )
-                    }
-                }
+                removeCustomPoint(event.index)
             }
 
+
             is MapEvent.ClearCustomPoints -> {
+                // Reset everything when clearing custom points
                 state = state.copy(
                     customPoints = mutableListOf(),
                     customPointsDistance = null,
+                    customPointsAzimuth = null,
                     distanceTextOffset = Offset.Zero,
                     shouldEnableCustomPointToPoint = false
                 )
@@ -352,7 +338,220 @@ class BayMapViewModel @Inject constructor(
                 state = state.copy(distanceTextOffset = event.offset)
             }
 
+            is MapEvent.OnRouteIconClick -> {
+                state =
+                    state.copy(
+                        shouldEnableCustomRoute = !state.shouldEnableCustomRoute,
+                    )
+                if (!state.shouldEnableCustomRoute) {
+                    state = state.copy(
+                        customRoutePoints = mutableListOf(),
+                        distanceTextOffset = Offset.Zero,
+                        customPointsDistance = null
+                    )
+                }
+            }
+
+            is MapEvent.ClearCustomRouteDistance -> {
+                state = state.copy(customRouteAzimuth = null, customRouteDistance = null)
+            }
+
+            is MapEvent.OnMapCustomRouteClick -> {
+                val updatedRoutePoints = state.customRoutePoints.toMutableList()
+
+                // Add the new point to the list of custom route points
+                updatedRoutePoints.add(event.position)
+
+                // Initialize the total distance to 0
+                var totalDistance = 0f
+
+                // List to store consecutive distances between points
+                val updatedConsecutiveDistances = mutableListOf<Float>()
+                val updatedConsecutiveAzimuths = mutableListOf<Float>()
+
+                // If there are at least two points, calculate distances between each pair of consecutive points
+                if (updatedRoutePoints.size > 1) {
+                    for (i in 0 until updatedRoutePoints.size - 1) {
+                        val point1 = updatedRoutePoints[i]
+                        val point2 = updatedRoutePoints[i + 1]
+
+                        // Calculate the distance between the consecutive points
+                        val distance = calculateDistanceBetweenCustomRoutePoints(point1, point2)
+                        val azimuth = calculateAzimuthBetweenCustomRoutePoints(point1, point2)
+
+                        // Add to the total distance
+                        totalDistance += distance
+
+                        // Store the consecutive distance
+                        updatedConsecutiveDistances.add(distance)
+                        updatedConsecutiveAzimuths.add(azimuth)
+                    }
+
+                    // Update the state with the new distances and updated points
+                    state = state.copy(
+                        customRoutePoints = updatedRoutePoints,
+                        customRouteDistance = totalDistance,  // Updated total distance
+                        customRouteConsecutivePointsDistance = updatedConsecutiveDistances, // List of consecutive distances
+                        customRouteConsecutivePointsAzimuth = updatedConsecutiveAzimuths
+                    )
+                } else {
+                    // If there's only one point, reset the distances
+                    state = state.copy(
+                        customRoutePoints = updatedRoutePoints,
+                        customRouteDistance = null,  // No total distance yet
+                        customRouteConsecutivePointsDistance = mutableListOf(), // No consecutive distances yet
+                        customRouteConsecutivePointsAzimuth = mutableListOf()
+                    )
+                }
+            }
+
+
+            is MapEvent.OnMarkerRemovedCustomRoute -> {
+                // Create NEW mutable lists of points and distances from the immutable state
+                val updatedCustomRoutePoints = state.customRoutePoints.toMutableList()
+                val updatedConsecutiveDistances =
+                    state.customRouteConsecutivePointsDistance.toMutableList()
+                val updatedConsecutiveAzimuths =
+                    state.customRouteConsecutivePointsAzimuth.toMutableList()
+
+                if (event.index >= 0 && event.index < updatedCustomRoutePoints.size) {
+                    // Remove the marker (point) at the specified index
+                    updatedCustomRoutePoints.removeAt(event.index)
+
+                    // Check if there are still enough points to calculate distances
+                    if (updatedCustomRoutePoints.size > 1) {
+                        when {
+                            // If the removed point is the first one, remove the first consecutive distance
+                            event.index == 0 -> {
+                                updatedConsecutiveDistances.removeAt(0)
+                                updatedConsecutiveAzimuths.removeAt(0)
+                            }
+                            // If the removed point is the last one, remove the last consecutive distance
+                            event.index == updatedCustomRoutePoints.size -> {
+                                updatedConsecutiveDistances.removeAt(updatedConsecutiveDistances.lastIndex)
+                                updatedConsecutiveAzimuths.removeAt(updatedConsecutiveAzimuths.lastIndex)
+                            }
+
+                            // If the removed point is in the middle, recalculate the distance
+                            else -> {
+                                // Remove the previous distance (between the point before the removed one and the removed point)
+                                updatedConsecutiveDistances.removeAt(event.index - 1)
+                                updatedConsecutiveAzimuths.removeAt(event.index - 1)
+
+                                // Now calculate the new distance between the previous point and the next point
+                                if (event.index < updatedCustomRoutePoints.size) {
+                                    val prevPoint = updatedCustomRoutePoints[event.index - 1]
+                                    val nextPoint = updatedCustomRoutePoints[event.index]
+                                    val newDistance = calculateDistanceBetweenCustomRoutePoints(
+                                        prevPoint,
+                                        nextPoint
+                                    )
+                                    val newAzimuth = calculateAzimuthBetweenCustomRoutePoints(
+                                        prevPoint,
+                                        nextPoint
+                                    )
+
+                                    // Replace the next distance with the recalculated distance
+                                    updatedConsecutiveDistances[event.index - 1] = newDistance
+                                    updatedConsecutiveAzimuths[event.index - 1] = newAzimuth
+                                }
+                            }
+                        }
+
+                        // **Reindex the entire points list after removing an item**
+                        val reindexedCustomRoutePoints =
+                            updatedCustomRoutePoints.mapIndexed { index, point ->
+                                point // Rebuild the list starting from 0
+                            }
+
+
+                        // Recalculate the total distance after the marker is removed
+                        val newTotalDistance = updatedConsecutiveDistances.sum()
+
+                        // Create new immutable lists to trigger recomposition
+                        val newCustomRoutePoints =
+                            reindexedCustomRoutePoints.toList() // Immutable copy
+                        val newCustomRouteConsecutiveDistances =
+                            updatedConsecutiveDistances.toList() // Immutable copy
+                        val newCustomRouteConsecutiveAzimuths = updatedConsecutiveAzimuths.toList()
+
+                        // Update the state with new lists and distances
+                        state = state.copy(
+                            customRoutePoints = newCustomRoutePoints, // Updated points
+                            customRouteConsecutivePointsDistance = newCustomRouteConsecutiveDistances, // Updated distances
+                            customRouteDistance = newTotalDistance, // Recalculate total distance
+                            customRouteConsecutivePointsAzimuth = newCustomRouteConsecutiveAzimuths,
+                        )
+                    } else {
+                        // If there are fewer than two points left, reset distances
+                        state = state.copy(
+                            customRoutePoints = updatedCustomRoutePoints.toList(), // Immutable copy of points
+                            customRouteConsecutivePointsDistance = emptyList(), // Reset distances to an empty list
+                            customRouteDistance = null, // No total distance left
+                            customRouteConsecutivePointsAzimuth = emptyList()
+                        )
+                    }
+                }
+            }
+
+
+            is MapEvent.ClearCustomRoutePoints -> {
+                state = state.copy(
+                    customRoutePoints = mutableListOf(),
+                    customRouteDistance = null,
+                    distanceTextOffset = Offset.Zero,
+                    shouldEnableCustomRoute = false,
+                    customRouteConsecutivePointsDistance = mutableListOf(),
+                    customRouteConsecutivePointsAzimuth = mutableListOf()
+                )
+            }
+
+            is MapEvent.OnCourseChange -> {
+                Timber.e("DA LI ${state.userCourseOfMovement}, ${state.userCourseOfMovementAzimuth}")
+                state = state.copy(
+                    userCourseOfMovement = event.direction,
+                    userCourseOfMovementAzimuth = event.angle.toFloat()
+                )
+            }
+
             else -> {}
+        }
+    }
+
+    private fun updateCustomPoints(position: LatLng, index: Int) {
+        val updatedCustomPoints = state.customPoints.toMutableList()
+
+        if (index < updatedCustomPoints.size) {
+            updatedCustomPoints[index] = position
+        } else {
+            updatedCustomPoints.add(position)
+        }
+
+        state = state.copy(customPoints = updatedCustomPoints)
+
+        if (updatedCustomPoints.size == 2) {
+            calculateDistanceBetweenPoints(updatedCustomPoints[0], updatedCustomPoints[1])
+            calculateAzimuthBetweenPoints(updatedCustomPoints[0], updatedCustomPoints[1])
+        } else {
+            state = state.copy(customPointsDistance = null, customPointsAzimuth = null)
+        }
+    }
+
+    // Helper function to remove a custom point by index and recalculate if needed
+    private fun removeCustomPoint(index: Int) {
+        val updatedCustomPoints = state.customPoints.toMutableList()
+
+        if (index in updatedCustomPoints.indices) {
+            updatedCustomPoints.removeAt(index)
+        }
+
+        state = state.copy(customPoints = updatedCustomPoints)
+
+        if (updatedCustomPoints.size == 2) {
+            calculateDistanceBetweenPoints(updatedCustomPoints[0], updatedCustomPoints[1])
+            calculateAzimuthBetweenPoints(updatedCustomPoints[0], updatedCustomPoints[1])
+        } else {
+            state = state.copy(customPointsDistance = null, customPointsAzimuth = null)
         }
     }
 
@@ -365,6 +564,63 @@ class BayMapViewModel @Inject constructor(
         loc2.latitude = state.userLocation?.latitude ?: 0.0
         loc2.longitude = state.userLocation?.longitude ?: 0.0
         state = state.copy(distanceToCheckpoint = loc1.distanceTo(loc2))
+
+    }
+
+    private fun calculateAzimuthBetweenPoints(point1: LatLng, point2: LatLng) {
+
+
+        val loc1 = Location(LocationManager.GPS_PROVIDER).apply {
+            latitude = point1.latitude
+            longitude = point1.longitude
+        }
+
+        val loc2 = Location(LocationManager.GPS_PROVIDER).apply {
+            latitude = point2.latitude
+            longitude = point2.longitude
+        }
+
+        val bearing = loc1.bearingTo(loc2)
+        val correctedBearing = (bearing + 360) % 360
+        state = state.copy(customPointsAzimuth = correctedBearing)
+    }
+
+    private fun calculateDistanceBetweenCustomRoutePoints(point1: LatLng, point2: LatLng): Float {
+        val loc1 = Location(LocationManager.GPS_PROVIDER).apply {
+            latitude = point1.latitude
+            longitude = point1.longitude
+        }
+
+        val loc2 = Location(LocationManager.GPS_PROVIDER).apply {
+            latitude = point2.latitude
+            longitude = point2.longitude
+        }
+
+        // Return the calculated distance
+        return loc1.distanceTo(loc2)
+    }
+
+
+    private fun calculateAzimuthBetweenCustomRoutePoints(point1: LatLng, point2: LatLng): Float {
+        val loc1 = Location(LocationManager.GPS_PROVIDER).apply {
+            latitude = point1.latitude
+            longitude = point1.longitude
+        }
+
+        val loc2 = Location(LocationManager.GPS_PROVIDER).apply {
+            latitude = point2.latitude
+            longitude = point2.longitude
+        }
+
+
+        val bearing: Float = loc1.bearingTo(loc2)
+
+        // Correct the bearing to ensure it is within 0-360 degrees
+        val correctedBearing = (bearing + 360) % 360
+
+        // Update state with the calculated azimuth
+        return correctedBearing
+        // Return the calculated distance
 
     }
 
@@ -386,12 +642,59 @@ class BayMapViewModel @Inject constructor(
     private fun observeUserLocation() {
         locationRepository.getLocationUpdates().catch { e -> e.printStackTrace() }
             .onEach { location ->
-                updateDirection(location)
+//                updateDirection(location)
                 Timber.e("Location vm ${location.latitude}, ${location.latitude}")
                 val latitudeCurrent = location.latitude
                 val longitudeCurrent = location.longitude
                 state = state.copy(userLocation = LatLng(latitudeCurrent, longitudeCurrent))
                 Timber.e("Location vm state ${state.userLocation?.latitude}, ${state.userLocation?.latitude}")
+
+                val speed = location.speed
+                val accuracy = location.accuracy
+                Timber.e("LOCATION ACCURACY $accuracy")
+                Timber.e(
+                    "LOCATION SPEED ${
+                        speed.toKnots()
+                    }"
+                )
+                if (!state.isUserStatic) {
+                    if (accuracy > 3.0f && accuracy < 9f) {
+                        speedList.add(speed)
+                    }
+                }
+                Timber.e("SPEED LIST $speedList")
+
+
+                state = state.copy(locationAccuracy = accuracy)
+                val averageSpeed = calculateAverageSpeed()
+
+                if (previousLocation != null) {
+                    val distance = previousLocation?.distanceTo(location)
+                    if (distance != null) {
+                        totalDistance += distance
+                    }
+
+                    if (distance != null) {
+                        if (speed < staticSpeedThreshold && distance < staticDistanceThreshold) {
+
+                            staticCounter++
+                            if (staticCounter >= staticCheckIterations) {
+                                state = state.copy(isUserStatic = true)
+                                if (speedList.isNotEmpty()) speedList.clear()
+                            }
+                        } else {
+                            staticCounter = 0
+                            state = state.copy(isUserStatic = false)
+                        }
+                    }
+                }
+
+
+                previousLocation = location
+
+                state = state.copy(userMovementSpeed = averageSpeed)
+
+
             }.launchIn(viewModelScope)
     }
 
@@ -421,6 +724,14 @@ class BayMapViewModel @Inject constructor(
         // Update state with the calculated azimuth
         state = state.copy(azimuth = correctedBearing)
 
+    }
+
+    private fun calculateAverageSpeed(): Float {
+        var sum = 0.0f
+        for (speed in speedList) {
+            sum += speed
+        }
+        return sum / speedList.size
     }
 
     private fun handleCheckpointSelected(event: MapEvent.CheckpointSelected) {
@@ -586,7 +897,7 @@ class BayMapViewModel @Inject constructor(
         val buoy = state.buoys.firstOrNull { it.id == event.buoy.id }
 
         if (buoy != null) {
-            if (buoy.id == previouslySelectedAnchorageZoneMarkerId) {
+            if (buoy.id == previouslySelectedBuoyMarkerId) {
                 // Deselect buoy
                 buoy.isSelected = false
                 state = state.copy(
@@ -595,7 +906,7 @@ class BayMapViewModel @Inject constructor(
                     selectedBuoy = null
                 )
                 marker?.hideInfoWindow()
-                previouslySelectedAnchorageZoneMarkerId = null
+                previouslySelectedBuoyMarkerId = null
             } else {
                 // Select new buoy
                 buoy.isSelected = true
@@ -607,7 +918,7 @@ class BayMapViewModel @Inject constructor(
                 calculateDistance(LatLng(buoy.coordinates.latitude, buoy.coordinates.longitude))
                 calculateAzimuth(LatLng(buoy.coordinates.latitude, buoy.coordinates.longitude))
                 marker?.showInfoWindow()
-                previouslySelectedAnchorageZoneMarkerId = buoy.id
+                previouslySelectedBuoyMarkerId = buoy.id
             }
         }
     }
@@ -636,58 +947,31 @@ class BayMapViewModel @Inject constructor(
         )
     }
 
-    private fun updateDirection(location: Location) {
-        val bearing = location.bearing // Bearing in degrees
-
-        // Convert bearing to a readable direction
-        val direction = when {
-            bearing >= 337.5 || bearing < 22.5 -> "N"
-            bearing in 22.5..67.5 -> "NE"
-            bearing in 67.5..112.5 -> "E"
-            bearing in 112.5..157.5 -> "SE"
-            bearing in 157.5..202.5 -> "S"
-            bearing in 202.5..247.5 -> "SW"
-            bearing in 247.5..292.5 -> "W"
-            bearing in 292.5..337.5 -> "NW"
-            else -> "Unknown"
-        }
-        Timber.e("DIRECTION $direction")
-        state = state.copy(userCourseOfMovement = direction)
-    }
-
-    fun updateSpeed(rawSpeed: Float, acceleration: FloatArray) {
-        viewModelScope.launch {
-            // Check if the device is stationary using accelerometer data
-            isStationary = isDeviceStationary(acceleration)
-
-            // Apply threshold and smoothing only if not stationary
-            val speedToUse = if (isStationary) 0f else rawSpeed
-
-            // Apply EMA smoothing
-            val smoothedSpeedValue = alpha * speedToUse + (1 - alpha) * previousSpeed
-
-            // If the smoothed speed is below the threshold, consider the device stationary
-            val finalSpeed =
-                if (smoothedSpeedValue < stationaryThreshold) 0f else smoothedSpeedValue
-
-            // Update the state
-            previousSpeed = finalSpeed
-            _smoothedSpeed.emit(finalSpeed)
-        }
-    }
-
-    private fun isDeviceStationary(acceleration: FloatArray): Boolean {
-        val accelerationMagnitude = Math.sqrt(
-            (acceleration[0] * acceleration[0] + acceleration[1] * acceleration[1] + acceleration[2] * acceleration[2]).toDouble()
-        ).toFloat()
-
-        // Consider the device stationary if the magnitude is close to 9.8 (gravity) for some time
-        return accelerationMagnitude < 10.5f && accelerationMagnitude > 9.0f
-    }
-
+//    private fun getElevations() {
+//        viewModelScope.launch {
+//            when (val result = repository.getElevation(
+//                locations = "42.315645, 18.368939",
+//                apiKey = "AIzaSyAIhn_eoViubKHORi_rlliqVnHGgve2At0"
+//            )) {
+//                is Resource.Success -> {
+//                    result.data?.let { elevationResponse ->
+//                        state = state.copy(depth = elevationResponse)
+//                    }
+//                }
+//
+//                is Resource.Error -> {
+//
+//                }
+//
+//                is Resource.Loading -> {
+//
+//                }
+//            }
+//
+//        }
+//    }
 
 }
-
 
 sealed class MapEvent() {
     data class CheckpointSelected(
@@ -737,10 +1021,17 @@ sealed class MapEvent() {
     data class OnItemHide(val mapItemTypeId: Int) : MapEvent()
     object OnCompassIconClick : MapEvent()
     object ClearDistanceBetweenCustomPoints : MapEvent()
-    data class OnMapTwoPointsClick(val position: LatLng) : MapEvent()
+    data class OnMapTwoPointsClick(val position: LatLng, val index: Int) : MapEvent()
     data class OnMarkerRemovedTwoPoints(val index: Int) : MapEvent()
     object ClearCustomPoints : MapEvent()
     data class OnDistanceTextOffsetChange(val offset: Offset) : MapEvent()
+    object OnRouteIconClick : MapEvent()
+    object ClearCustomRouteDistance : MapEvent()
+    data class OnMapCustomRouteClick(val position: LatLng) : MapEvent()
+    data class OnMarkerRemovedCustomRoute(val index: Int) : MapEvent()
+    object ClearCustomRoutePoints : MapEvent()
+    data class OnCourseChange(val direction: String, val angle: Double) : MapEvent()
+
 }
 
 data class GuideState(
@@ -784,11 +1075,22 @@ data class GuideState(
     val isAnchorageVisible: Boolean = false,
     val isAnchorageZoneVisible: Boolean = false,
     val mapItemFilters: MapItemFilters? = MapItemFilters(true, true, true, true, true, true),
-    val userSpeed: Double? = null,
-    val userCourseOfMovement: String? = String(),
     val shouldEnableCustomPointToPoint: Boolean = false,
     val customPoints: MutableList<LatLng> = mutableStateListOf(),
     val customPointsDistance: Float? = null,
+    val customPointsAzimuth: Float? = null,
     val distanceTextOffset: Offset = Offset.Zero,
+    val shouldEnableCustomRoute: Boolean = false,
+    val customRoutePoints: List<LatLng> = emptyList(),
+    val customRouteDistance: Float? = null,
+    val customRouteConsecutivePointsDistance: List<Float> = emptyList(),
+    val customRouteConsecutivePointsAzimuth: List<Float> = emptyList(),
+    val customRouteAzimuth: Float? = null,
+    val userCourseOfMovement: String? = String(),
+    val userCourseOfMovementAzimuth: Float? = null,
+    val userMovementSpeed: Float? = null,
+    val locationAccuracy: Float? = null,
+    val isUserStatic: Boolean = true,
+    val depth: ElevationResponse? = null
 
-    )
+)

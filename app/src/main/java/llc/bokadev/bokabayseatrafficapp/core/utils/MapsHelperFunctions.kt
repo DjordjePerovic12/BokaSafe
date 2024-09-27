@@ -481,6 +481,7 @@ fun bitmapDescriptorFromVector(
 
     // retrieve the actual drawable
     val drawable = ContextCompat.getDrawable(context, vectorResId) ?: return null
+    drawable.setTint(0XFFFFFFFF.toInt())
     drawable.setBounds(0, 0, width ?: drawable.intrinsicWidth, height ?: drawable.intrinsicHeight)
     val bm = Bitmap.createBitmap(
         width ?: drawable.intrinsicWidth,
@@ -531,7 +532,6 @@ fun bitmapDescriptorFromText(
     // Convert the bitmap to a BitmapDescriptor and return it
     return BitmapDescriptorFactory.fromBitmap(bitmap)
 }
-
 
 
 fun createWavyPolyline(
@@ -645,7 +645,6 @@ fun clearPipelineLinesAndCircles() {
 }
 
 
-
 fun getMidpoint(pos1: LatLng?, pos2: LatLng?): LatLng {
     if (pos1 == null || pos2 == null) return LatLng(0.0, 0.0)
 
@@ -654,7 +653,7 @@ fun getMidpoint(pos1: LatLng?, pos2: LatLng?): LatLng {
     return LatLng(lat, lng)
 }
 
- fun updateTextViewPosition(
+fun updateTextViewPosition(
     map: GoogleMap,
     midpoint: LatLng?,
     textView: TextView,
@@ -671,3 +670,4 @@ fun getMidpoint(pos1: LatLng?, pos2: LatLng?): LatLng {
     textView.y = screenPosition.y.toFloat()
     textView.visibility = View.VISIBLE
 }
+

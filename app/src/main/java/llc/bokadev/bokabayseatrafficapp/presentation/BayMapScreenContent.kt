@@ -36,6 +36,9 @@ import kotlinx.coroutines.launch
 import llc.bokadev.bokabayseatrafficapp.R
 import llc.bokadev.bokabayseatrafficapp.core.components.GoogleMaps
 import llc.bokadev.bokabayseatrafficapp.core.utils.noRippleClickable
+import llc.bokadev.bokabayseatrafficapp.core.utils.toKilometersPerHour
+import llc.bokadev.bokabayseatrafficapp.core.utils.toKnots
+import llc.bokadev.bokabayseatrafficapp.core.utils.toThreeDigitString
 import llc.bokadev.bokabayseatrafficapp.domain.model.Anchorage
 import llc.bokadev.bokabayseatrafficapp.domain.model.AnchorageZone
 import llc.bokadev.bokabayseatrafficapp.domain.model.Buoy
@@ -43,6 +46,7 @@ import llc.bokadev.bokabayseatrafficapp.domain.model.ProhibitedAnchoringZone
 import llc.bokadev.bokabayseatrafficapp.domain.model.Checkpoint
 import llc.bokadev.bokabayseatrafficapp.domain.model.ShipWreck
 import llc.bokadev.bokabayseatrafficapp.ui.theme.BokaBaySeaTrafficAppTheme
+import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,6 +92,14 @@ fun BokaBayMapScreenContent(
         textPosition = state.distanceTextOffset
     }
 
+    LaunchedEffect(key1 = state.userMovementSpeed) {
+        Timber.e("SPEED ${state.userMovementSpeed}")
+    }
+
+
+
+
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -110,7 +122,7 @@ fun BokaBayMapScreenContent(
                 onCheckPointClick(checkpoint)
             },
             userLocation = state.userLocation,
-            userIcon = R.drawable.ic_user_location,
+            userIcon = R.drawable.ic_boat,
             onMarkerCreation = {
                 onMarkerCreation(it)
             },
@@ -155,14 +167,17 @@ fun BokaBayMapScreenContent(
             },
             viewModel = viewModel,
             onItemHide = { onItemHide(it) },
-            onMapClick = { viewModel.onEvent(MapEvent.OnMapTwoPointsClick(it)) }
+            onMapClick = { poistion, index ->
+                viewModel.onEvent(MapEvent.OnMapTwoPointsClick(poistion, index))
+            }
 
 
         )
 
         if (state.customPointsDistance != null && state.customPointsDistance.toNauticalMiles() != "0.00") {
             Text(
-                text = "D = ${state.customPointsDistance.toNauticalMiles()} NM",
+                text = "D = ${state.customPointsDistance.toNauticalMiles()} NM \n" +
+                        "W = ${state.customPointsAzimuth?.toInt()?.toThreeDigitString()}°",
                 modifier = Modifier.offset {
                     IntOffset(
                         textPosition.x.toInt(),
@@ -174,6 +189,8 @@ fun BokaBayMapScreenContent(
             )
 
         }
+
+
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -223,7 +240,7 @@ fun BokaBayMapScreenContent(
                     .padding(top = 25.dp, start = 25.dp)
                     .size(50.dp)
                     .clip(RoundedCornerShape(100.dp))
-                    .background(BokaBaySeaTrafficAppTheme.colors.darkBlue)
+                    .background(if (state.shouldEnableCustomPointToPoint) BokaBaySeaTrafficAppTheme.colors.lightGreen else BokaBaySeaTrafficAppTheme.colors.darkBlue)
                     .noRippleClickable {
                         viewModel.onEvent(MapEvent.ResetSelection)
                         viewModel.onEvent(MapEvent.OnCompassIconClick)
@@ -235,20 +252,106 @@ fun BokaBayMapScreenContent(
                     painter = painterResource(id = R.drawable.compass),
                     contentDescription = null,
                     modifier = Modifier.padding(15.dp),
+                    tint = if (state.shouldEnableCustomPointToPoint) BokaBaySeaTrafficAppTheme.colors.darkBlue else BokaBaySeaTrafficAppTheme.colors.lightBlue
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .padding(top = 25.dp, start = 25.dp)
+                    .size(50.dp)
+                    .clip(RoundedCornerShape(100.dp))
+                    .background(BokaBaySeaTrafficAppTheme.colors.darkBlue)
+                    .noRippleClickable {
+                        viewModel.onEvent(MapEvent.ResetSelection)
+                        viewModel.onEvent(MapEvent.OnRouteIconClick)
+
+                    }
+                    .zIndex(1f)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_route),
+                    contentDescription = null,
+                    modifier = Modifier.padding(15.dp),
                     tint = BokaBaySeaTrafficAppTheme.colors.lightBlue
                 )
             }
+
+
         }
+
+
+        if (state.userCourseOfMovement != String() && state.userCourseOfMovementAzimuth != null) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 100.dp)
+            ) {
+                Text(
+                    text = "Course: ${
+                        state.userCourseOfMovementAzimuth.toInt().toThreeDigitString()
+                    }° ${state.userCourseOfMovement}",
+                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14,
+                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue
+                )
+            }
+        }
+
+
+
+        if (state.shouldEnableCustomRoute)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .padding(top = 65.dp)
+            ) {
+                CustomRouteBottomSheet(state = viewModel.state)
+            }
+
+//        if (state.locationAccuracy != null)
+//            Row(
+//                verticalAlignment = Alignment.CenterVertically,
+//                horizontalArrangement = Arrangement.Center,
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(top = 125.dp)
+//            ) {
+//                Text(
+//                    text = "ACCURACY: ${state.locationAccuracy}",
+//                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14,
+//                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue
+//                )
+//            }
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 65.dp)
+                .padding(top = 200.dp)
         ) {
             Text(
-                text = "Course: ${state.userCourseOfMovement}",
+                text = if (state.isUserStatic || viewModel.speedList.isEmpty()) "SPEED : 0.0 kt" else "SPEED: ${state.userMovementSpeed?.toKnots()} kt",
+                style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14,
+                color = BokaBaySeaTrafficAppTheme.colors.darkBlue
+            )
+        }
+
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 230.dp)
+        ) {
+            Text(
+                text = if (state.isUserStatic ||  viewModel.speedList.isEmpty()) "SPEED : 0.0 km/h" else "SPEED: ${state.userMovementSpeed?.toKilometersPerHour()} km/h",
                 style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14,
                 color = BokaBaySeaTrafficAppTheme.colors.darkBlue
             )

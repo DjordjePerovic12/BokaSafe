@@ -11,12 +11,14 @@ import llc.bokadev.bokabayseatrafficapp.core.navigation.Routes.BAY_MAP_SCREEN
 import llc.bokadev.bokabayseatrafficapp.core.navigation.Routes.ROOT
 import llc.bokadev.bokabayseatrafficapp.core.navigation.destinations.bayMapScreenComposable
 import llc.bokadev.bokabayseatrafficapp.core.utils.observeWithLifecycle
+import llc.bokadev.bokabayseatrafficapp.presentation.BayMapViewModel
 import timber.log.Timber
 
 @Composable
 fun BokaBaySeaTrafficAppNavigation(
     navController: NavHostController,
     navigator: Navigator,
+    viewModel: BayMapViewModel,
     showSnackBar: (message: String) -> Unit,
     launchIntent: (intent: Intent) -> Unit,
     modifier: Modifier = Modifier
@@ -34,7 +36,7 @@ fun BokaBaySeaTrafficAppNavigation(
         modifier = modifier
     ) {
         bayMapScreenComposable(
-            navController = navController, showSnackBar = showSnackBar, launchPhoneIntent = launchIntent
+            navController = navController, showSnackBar = showSnackBar, launchPhoneIntent = launchIntent, viewModel = viewModel
         )
     }
 }

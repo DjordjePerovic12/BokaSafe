@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,6 +45,7 @@ import llc.bokadev.bokabayseatrafficapp.core.utils.Gps
 import llc.bokadev.bokabayseatrafficapp.core.utils.enableGps
 import llc.bokadev.bokabayseatrafficapp.core.utils.isGpsOn
 import llc.bokadev.bokabayseatrafficapp.core.utils.observeWithLifecycle
+import llc.bokadev.bokabayseatrafficapp.core.utils.toThreeDigitString
 import llc.bokadev.bokabayseatrafficapp.ui.theme.BokaBaySeaTrafficAppTheme
 
 import timber.log.Timber
@@ -57,19 +59,23 @@ fun BayMapScreen(
     showSnackBar: (String) -> Unit,
     launchPhoneIntent: (intent: Intent) -> Unit
 ) {
+
     viewModel.launchIntentChannel.observeWithLifecycle { intent ->
         launchPhoneIntent(intent)
     }
 
 
+
     val state = viewModel.state
+
+
+
 
     var lifecycle by remember {
         mutableStateOf(Lifecycle.Event.ON_CREATE)
     }
 
     val context = LocalContext.current
-
 
 
     LaunchedEffect(key1 = true) {
@@ -110,7 +116,7 @@ fun BayMapScreen(
         }
     }
 
-    Timber.e("Is selected ${state.isShipwreckMarkerSelected}")
+
 
 
 
@@ -222,7 +228,7 @@ fun BayMapScreen(
 
 
                 Text(
-                    text = "W = ${viewModel.state.azimuth?.toInt()}°",
+                    text = "W = ${viewModel.state.azimuth?.toInt()?.toThreeDigitString()}°",
                     color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
                     style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular18
                 )
@@ -263,7 +269,7 @@ fun BayMapScreen(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
-                    text = "Your azimuth from ${viewModel.state.selectedShipwreck?.name} : ${state.azimuth?.toInt()}°",
+                    text = "Your azimuth from ${viewModel.state.selectedShipwreck?.name} : ${state.azimuth?.toInt()?.toThreeDigitString()}°",
                     color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
                     style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14,
                     modifier = Modifier.padding(horizontal = 25.dp)
@@ -365,7 +371,7 @@ fun BayMapScreen(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
-                    text = "Your azimuth from ${viewModel.state.selectedAnchorage?.name} : ${state.azimuth?.toInt()}°",
+                    text = "Your azimuth from ${viewModel.state.selectedAnchorage?.name} : ${state.azimuth?.toInt()?.toThreeDigitString()}°",
                     color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
                     style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14,
                     modifier = Modifier.padding(horizontal = 25.dp)
@@ -403,7 +409,7 @@ fun BayMapScreen(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
-                    text = "Your azimuth from ${viewModel.state.selectedAnchorageZone?.name} : ${state.azimuth?.toInt()}°",
+                    text = "Your azimuth from ${viewModel.state.selectedAnchorageZone?.name} : ${state.azimuth?.toInt()?.toThreeDigitString()}°",
                     color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
                     style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14,
                     modifier = Modifier.padding(horizontal = 25.dp)
@@ -454,7 +460,7 @@ fun BayMapScreen(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
-                    text = "W: ${state.azimuth?.toInt()}°",
+                    text = "W: ${state.azimuth?.toInt()?.toThreeDigitString()}°",
                     color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
                     style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14,
                     modifier = Modifier.padding(horizontal = 25.dp)

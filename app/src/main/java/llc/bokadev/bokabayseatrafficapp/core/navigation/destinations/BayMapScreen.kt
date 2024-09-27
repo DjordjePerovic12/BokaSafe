@@ -24,16 +24,18 @@ import llc.bokadev.bokabayseatrafficapp.presentation.BayMapViewModel
 @SuppressLint("RememberReturnType")
 @OptIn(ExperimentalAnimationApi::class)
 fun NavGraphBuilder.bayMapScreenComposable(
-    navController: NavController, showSnackBar: (message: String) -> Unit, launchPhoneIntent: (intent: Intent) -> Unit
+    navController: NavController,
+    showSnackBar: (message: String) -> Unit,
+    launchPhoneIntent: (intent: Intent) -> Unit,
+    viewModel: BayMapViewModel
 ) {
     composable(route = Screen.BayMapScreen.route,
         enterTransition = { fadeIn(animationSpec = tween(Constants.ANIMATION_DURATION)) }) { backStackEntry ->
         val parentEntry = remember(backStackEntry) {
             navController.getBackStackEntry(Routes.ROOT)
         }
-        val guideScreenViewModel = hiltViewModel<BayMapViewModel>()
         BayMapScreen(
-            viewModel = guideScreenViewModel,
+            viewModel = viewModel,
             showSnackBar = showSnackBar,
             launchPhoneIntent = launchPhoneIntent
         )
