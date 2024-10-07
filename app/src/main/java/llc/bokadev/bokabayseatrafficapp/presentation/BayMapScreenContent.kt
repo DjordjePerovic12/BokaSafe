@@ -117,6 +117,7 @@ fun BokaBayMapScreenContent(
             underwaterCables = state.underWaterCables,
             pipelines = state.pipelines,
             buoys = state.buoys,
+            depths = state.depths,
             onCheckpointClick = { checkpoint ->
                 viewModel.onEvent(MapEvent.ResetSelection)
                 onCheckPointClick(checkpoint)
@@ -187,7 +188,6 @@ fun BokaBayMapScreenContent(
                 color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
                 style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold20
             )
-
         }
 
 
@@ -358,7 +358,6 @@ fun BokaBayMapScreenContent(
         }
 
     }
-
 }
 
 

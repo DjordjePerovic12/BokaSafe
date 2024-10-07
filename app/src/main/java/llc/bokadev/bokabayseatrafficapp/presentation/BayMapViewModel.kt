@@ -39,6 +39,7 @@ import llc.bokadev.bokabayseatrafficapp.domain.model.Anchorage
 import llc.bokadev.bokabayseatrafficapp.domain.model.AnchorageZone
 import llc.bokadev.bokabayseatrafficapp.domain.model.Buoy
 import llc.bokadev.bokabayseatrafficapp.domain.model.Checkpoint
+import llc.bokadev.bokabayseatrafficapp.domain.model.Depth
 import llc.bokadev.bokabayseatrafficapp.domain.model.MapItemFilters
 import llc.bokadev.bokabayseatrafficapp.domain.model.Pipeline
 import llc.bokadev.bokabayseatrafficapp.domain.model.ProhibitedAnchoringZone
@@ -1091,6 +1092,7 @@ data class GuideState(
     val userMovementSpeed: Float? = null,
     val locationAccuracy: Float? = null,
     val isUserStatic: Boolean = true,
-    val depth: ElevationResponse? = null
+    val depth: ElevationResponse? = null,
+    val depths: MutableList<Depth> = Constants.depths
 
 )

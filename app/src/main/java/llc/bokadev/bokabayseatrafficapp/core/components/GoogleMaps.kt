@@ -54,11 +54,13 @@ import llc.bokadev.bokabayseatrafficapp.core.utils.drawAnchoringZoneLinesWithSix
 import llc.bokadev.bokabayseatrafficapp.core.utils.drawCustomDashedPolylineWithCircles
 import llc.bokadev.bokabayseatrafficapp.core.utils.drawLinesBetweenPoints
 import llc.bokadev.bokabayseatrafficapp.core.utils.getMidpoint
+import llc.bokadev.bokabayseatrafficapp.core.utils.textAsBitmap
 import llc.bokadev.bokabayseatrafficapp.domain.model.Anchorage
 import llc.bokadev.bokabayseatrafficapp.domain.model.AnchorageZone
 import llc.bokadev.bokabayseatrafficapp.domain.model.Buoy
 import llc.bokadev.bokabayseatrafficapp.domain.model.ProhibitedAnchoringZone
 import llc.bokadev.bokabayseatrafficapp.domain.model.Checkpoint
+import llc.bokadev.bokabayseatrafficapp.domain.model.Depth
 import llc.bokadev.bokabayseatrafficapp.domain.model.Pipeline
 import llc.bokadev.bokabayseatrafficapp.domain.model.ShipWreck
 import llc.bokadev.bokabayseatrafficapp.domain.model.UnderwaterCable
@@ -90,6 +92,7 @@ fun GoogleMaps(
     onAnchorageClick: (Anchorage) -> Unit,
     onAnchorageZoneClick: (AnchorageZone) -> Unit,
     onBuoyClick: (Buoy) -> Unit,
+    depths: MutableList<Depth>,
     userLocation: LatLng? = null,
     @DrawableRes userIcon: Int,
     shouldZoomUserLocation: Boolean,
@@ -190,6 +193,7 @@ fun GoogleMaps(
     val localAnchorages: ArrayList<Anchorage> = arrayListOf()
     val localAnchorageZones: ArrayList<AnchorageZone> = arrayListOf()
     val localBuoys: ArrayList<Buoy> = arrayListOf()
+    val localDepths: ArrayList<Depth> = arrayListOf()
 
 
     //Filtering markers
@@ -199,6 +203,7 @@ fun GoogleMaps(
     val anchorageMarkers = remember { mutableListOf<Marker>() }
     val anchorageZoneMarkers = remember { mutableListOf<Marker>() }
     val buoyMarkers = remember { mutableListOf<Marker>() }
+    val depthMarkers = remember { mutableListOf<Marker>() }
     val dashedPolylines: MutableList<Polyline> = remember { mutableListOf() }
     val circles: MutableList<Circle> = remember { mutableListOf() }
     val anchorageZonesPolylines: MutableList<Polyline> = remember { mutableListOf() }
@@ -280,6 +285,31 @@ fun GoogleMaps(
         // MapEffect code
 
         // MapEffect code
+
+        MapEffect(key1 = depths) { map ->
+            for (depth in depths) {
+                val depthMarkerOptions = MarkerOptions()
+                    .position(LatLng(depth.coordinates.latitude, depth.coordinates.longitude))
+                    .icon(
+                        textAsBitmap(
+                            text = depth.depth.toString(),
+                            textSize = 14f,
+                            textColor = 0xFFFFFFFF.toInt()
+                        )
+                    )
+                    .title(depth.depth.toString()).infoWindowAnchor(.5f, 1.9f)
+                localDepths.add(depth)
+                val depthMarker: Marker? = map.addMarker(depthMarkerOptions)
+//                depthMarker?.tag = "depth_${dep}"
+//                depthMarker?.let(onLighthouseMarkersCreation)
+//                if (depthMarker != null) {
+//                    depthMarkers.add(depthMarker)
+//                }
+                Timber.e("Local depths $localCheckpoints")
+
+            }
+        }
+
 
         MapEffect(key1 = state.shouldEnableCustomPointToPoint) { map ->
             if (state.shouldEnableCustomPointToPoint) {

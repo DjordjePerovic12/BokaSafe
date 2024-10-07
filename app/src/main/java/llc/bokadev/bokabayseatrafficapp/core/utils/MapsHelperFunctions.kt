@@ -5,33 +5,25 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.Rect
-import android.location.Location
 import android.view.View
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import com.google.android.gms.maps.model.Cap
 import com.google.android.gms.maps.model.Circle
 import com.google.android.gms.maps.model.CircleOptions
 import com.google.android.gms.maps.model.Dash
-import com.google.android.gms.maps.model.Dot
 import com.google.android.gms.maps.model.Gap
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.PatternItem
 import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.PolylineOptions
-import llc.bokadev.bokabayseatrafficapp.domain.model.ProhibitedAnchoringZone
 import llc.bokadev.bokabayseatrafficapp.domain.model.Checkpoint
+import llc.bokadev.bokabayseatrafficapp.domain.model.ProhibitedAnchoringZone
 import kotlin.math.PI
-import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.min
 import kotlin.math.sin
-import kotlin.math.sqrt
 
 
 val allPolylines: MutableList<Polyline> = mutableListOf()
@@ -671,3 +663,17 @@ fun updateTextViewPosition(
     textView.visibility = View.VISIBLE
 }
 
+
+fun textAsBitmap(text: String?, textSize: Float, textColor: Int): BitmapDescriptor {
+    val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    paint.textSize = textSize
+    paint.color = textColor
+    paint.textAlign = Paint.Align.LEFT
+    val baseline = -paint.ascent() // ascent() is negative
+    val width = (paint.measureText(text) + 0.5f).toInt() // round
+    val height = (baseline + paint.descent() + 0.5f).toInt()
+    val image = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(image)
+    canvas.drawText(text!!, 0f, baseline, paint)
+    return BitmapDescriptorFactory.fromBitmap(image)
+}
