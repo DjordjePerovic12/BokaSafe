@@ -13,12 +13,12 @@ plugins {
 
 android {
     namespace = "llc.bokadev.bokabayseatrafficapp"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "llc.bokadev.bokabayseatrafficapp"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -121,6 +121,7 @@ dependencies {
 
     //Compose Maps
     implementation(libs.maps.compose)
+    implementation(libs.maps.widgets)
 
     // Google Locations
     implementation (libs.gms.play.services.location)

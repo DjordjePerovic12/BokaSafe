@@ -110,3 +110,25 @@ fun Float.toKnots() : Float {
 fun Float.toKilometersPerHour(): Float {
     return String.format("%.1f", this * 3.6f).toFloat()
 }
+
+/**
+ * Extension function to format a latitude value (DD° MM').
+ * Latitude degrees range from -90 to 90.
+ * @return A string in the format "DD° MM'"
+ */
+fun Double.toLatitude(): String {
+    val degrees = this.toInt() // Extract the integer part for degrees
+    val minutes = (Math.abs(this) - Math.abs(degrees)) * 60 // Calculate fractional part in minutes
+    return String.format("%02d° %.3f'", degrees, minutes) // Use %02d for two digits
+}
+
+/**
+ * Extension function to format a longitude value (DDD° MM').
+ * Longitude degrees range from -180 to 180.
+ * @return A string in the format "DDD° MM'"
+ */
+fun Double.toLongitude(): String {
+    val degrees = this.toInt() // Extract the integer part for degrees
+    val minutes = (Math.abs(this) - Math.abs(degrees)) * 60 // Calculate fractional part in minutes
+    return String.format("%03d° %.3f'", degrees, minutes) // Use %03d for three digits
+}

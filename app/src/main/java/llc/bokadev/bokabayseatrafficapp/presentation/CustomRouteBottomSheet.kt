@@ -29,6 +29,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.google.android.gms.maps.model.LatLng
+import llc.bokadev.bokabayseatrafficapp.core.utils.toLatitude
+import llc.bokadev.bokabayseatrafficapp.core.utils.toLongitude
 import llc.bokadev.bokabayseatrafficapp.ui.theme.BokaBaySeaTrafficAppTheme
 
 @Composable
@@ -43,6 +45,7 @@ fun CustomRouteBottomSheet(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start,
         modifier = Modifier
+            .fillMaxHeight(.6f)
             .clip(RoundedCornerShape(topStart = 15.dp, topEnd = 15.dp))
             .fillMaxWidth()
             .background(BokaBaySeaTrafficAppTheme.colors.white)
@@ -99,7 +102,7 @@ fun CustomRouteBottomSheet(
 
                         Spacer(modifier = Modifier.width(20.dp))
 
-                        Text(text = "${point.latitude} N ${point.longitude} E")
+                        Text(text = "${point.latitude.toLatitude()} N ${point.longitude.toLongitude()} E")
 
 
                     }
@@ -116,8 +119,8 @@ fun CustomRouteBottomSheet(
                             if (state.customRouteConsecutivePointsDistance.isNotEmpty()) {
                                 // Display the distance for consecutive points between index 0 and 1, 1 and 2, and so on
                                 Text(
-                                    text = "D = ${state.customRouteConsecutivePointsDistance[index].toNauticalMiles()} nm \n" +
-                                            "W = ${state.customRouteConsecutivePointsAzimuth[index].toInt()}°"
+                                    text = "D: ${state.customRouteConsecutivePointsDistance[index].toNauticalMiles()} NM \n" +
+                                            "C:  ${state.customRouteConsecutivePointsAzimuth[index].toInt()}°"
                                 )
                             }
                         }

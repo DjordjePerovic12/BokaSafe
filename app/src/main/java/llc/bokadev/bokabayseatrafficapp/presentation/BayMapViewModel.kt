@@ -22,6 +22,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -46,6 +47,7 @@ import llc.bokadev.bokabayseatrafficapp.domain.model.ProhibitedAnchoringZone
 import llc.bokadev.bokabayseatrafficapp.domain.model.ShipWreck
 import llc.bokadev.bokabayseatrafficapp.domain.model.UnderwaterCable
 import llc.bokadev.bokabayseatrafficapp.domain.repository.AppRepository
+import llc.bokadev.bokabayseatrafficapp.domain.repository.DataStoreRepository
 import llc.bokadev.bokabayseatrafficapp.domain.repository.LocationRepository
 import timber.log.Timber
 import javax.inject.Inject
@@ -56,6 +58,7 @@ class BayMapViewModel @Inject constructor(
     private val application: Application,
     private val savedStateHandle: SavedStateHandle,
     private val locationRepository: LocationRepository,
+    private val dataStoreRepository: DataStoreRepository,
     private val repository: AppRepository,
     private val navigator: Navigator
 ) : ViewModel() {
@@ -94,6 +97,12 @@ class BayMapViewModel @Inject constructor(
 
     init {
         observeUserLocation()
+        viewModelScope.launch {
+            state = state.copy(
+                preferredSpeedUnit = dataStoreRepository.getPreferredSpeedUnit().first()
+            )
+        }
+
     }
 
     private var buttonDebounceJob: Job? = null
@@ -211,7 +220,7 @@ class BayMapViewModel @Inject constructor(
 
             is MapEvent.OnPhoneClick -> {
                 val intent = Intent(Intent.ACTION_DIAL).apply {
-                    data = Uri.parse("tel:069069069")
+                    data = Uri.parse("tel:129")
                 }
                 viewModelScope.launch {
                     _launchIntentChannel.send(intent)
@@ -1093,6 +1102,7 @@ data class GuideState(
     val locationAccuracy: Float? = null,
     val isUserStatic: Boolean = true,
     val depth: ElevationResponse? = null,
-    val depths: MutableList<Depth> = Constants.depths
+    val depths: MutableList<Depth> = Constants.depths,
+    val preferredSpeedUnit: String = String()
 
 )

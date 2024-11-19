@@ -677,3 +677,11 @@ fun textAsBitmap(text: String?, textSize: Float, textColor: Int): BitmapDescript
     canvas.drawText(text!!, 0f, baseline, paint)
     return BitmapDescriptorFactory.fromBitmap(image)
 }
+
+fun Double.toFormattedString(): String {
+    return if (this % 1.0 == 0.0) {
+        this.toInt().toString()
+    } else {
+        this.toString()
+    }
+}

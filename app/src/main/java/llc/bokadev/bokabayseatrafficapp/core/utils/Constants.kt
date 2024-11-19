@@ -16,7 +16,7 @@ import llc.bokadev.bokabayseatrafficapp.domain.model.UnderwaterCable
 
 object Constants {
     const val ANIMATION_DURATION = 500
-    const val DATASTORE_NAME = "Flourish datastore"
+    const val DATASTORE_NAME = "Boka Bay Sea Traficc app datastore"
     const val UNAUTHORIZED = "Unauthorized"
     const val CHECK_CONNECTION = "Check your internet connection."
     const val NETWORK_PROBLEM = "An error occurred during communication with the server."
@@ -29,11 +29,11 @@ object Constants {
             latitude = 42.39543,
             longitude = 18.55787,
             isSelected = false,
-            characteristics = "F1 2 3s"
+            characteristics = "Fl 2 3s"
         ),
         Checkpoint(
             id = 2, name = "Dobreč", latitude = 42.42190, longitude = 18.54665, isSelected = false,
-            characteristics = "F1 G 5s"
+            characteristics = "Fl G 5s"
         ),
         Checkpoint(
             id = 3,
@@ -49,11 +49,11 @@ object Constants {
             latitude = 42.44962,
             longitude = 18.53238,
             isSelected = false,
-            characteristics = "F1 (2)G 5s"
+            characteristics = "Fl (2)G 5s"
         ),
         Checkpoint(
             id = 5, name = "Meljine", latitude = 42.45250, longitude = 18.56050, isSelected = false,
-            characteristics = "F1 (2)R 6s"
+            characteristics = "Fl (2)R 6s"
         ),
 
         Checkpoint(
@@ -78,7 +78,7 @@ object Constants {
             latitude = 42.45343,
             longitude = 18.56195,
             isSelected = false,
-            characteristics = "VQ(6) + LF1 10s"
+            characteristics = "VQ(6) + LFl 10s"
         ),
         Checkpoint(
             id = 9,
@@ -86,7 +86,7 @@ object Constants {
             latitude = 42.44968,
             longitude = 18.57132,
             isSelected = false,
-            characteristics = "F1 R 3s"
+            characteristics = "Fl R 3s"
         ),
         Checkpoint(
             id = 10,
@@ -94,7 +94,7 @@ object Constants {
             latitude = 42.43712,
             longitude = 18.62932,
             isSelected = false,
-            characteristics = "F1 R 5s"
+            characteristics = "Fl R 5s"
         ),
         Checkpoint(
             id = 11,
@@ -102,7 +102,7 @@ object Constants {
             latitude = 42.42602,
             longitude = 18.60180,
             isSelected = false,
-            characteristics = "F1 G 3s"
+            characteristics = "Fl G 3s"
         ),
         Checkpoint(
             id = 12,
@@ -110,7 +110,7 @@ object Constants {
             latitude = 42.43315,
             longitude = 18.59753,
             isSelected = false,
-            characteristics = "F1 R"
+            characteristics = "Fl R"
         ),
         Checkpoint(
             id = 13,
@@ -118,7 +118,7 @@ object Constants {
             latitude = 42.43190,
             longitude = 18.60535,
             isSelected = false,
-            characteristics = "F1 G 3s"
+            characteristics = "Fl G 3s"
         ),
         Checkpoint(
             id = 14,
@@ -142,7 +142,7 @@ object Constants {
             latitude = 42.43318,
             longitude = 18.60672,
             isSelected = false,
-            characteristics = "F1(2) W 5s"
+            characteristics = "Fl(2) W 5s"
         ),
         Checkpoint(
             id = 17,
@@ -150,7 +150,7 @@ object Constants {
             latitude = 42.43163,
             longitude = 18.60607,
             isSelected = false,
-            characteristics = "F1(2) W 5s"
+            characteristics = "Fl(2) W 5s"
         ),
         Checkpoint(
             id = 18,
@@ -174,7 +174,7 @@ object Constants {
             latitude = 42.40617,
             longitude = 18.66610,
             isSelected = false,
-            characteristics = "F1 G 2s"
+            characteristics = "Fl G 2s"
         ),
         Checkpoint(
             id = 21,
@@ -182,7 +182,7 @@ object Constants {
             latitude = 42.40404,
             longitude = 18.68606,
             isSelected = false,
-            characteristics = "F1 G 3s"
+            characteristics = "Fl G 3s"
         ),
         Checkpoint(
             id = 22,
@@ -190,7 +190,7 @@ object Constants {
             latitude = 42.41591045284294,
             longitude = 18.680426794570497,
             isSelected = false,
-            characteristics = "F1(2) WR"
+            characteristics = "Fl(2) WR"
         ),
         Checkpoint(
             id = 23,
@@ -206,7 +206,7 @@ object Constants {
             latitude = 42.42565057502816,
             longitude = 18.699151789153444,
             isSelected = false,
-            characteristics = "F1 R 4s"
+            characteristics = "Fl R 4s"
         ),
         Checkpoint(
             id = 25,
@@ -214,7 +214,7 @@ object Constants {
             latitude = 42.42999,
             longitude = 18.69119,
             isSelected = false,
-            characteristics = "F1 R 4s"
+            characteristics = "Fl R 4s"
         ),
         Checkpoint(
             id = 26,
@@ -222,14 +222,14 @@ object Constants {
             latitude = 42.43413,
             longitude = 18.68997,
             isSelected = false,
-            characteristics = "F1 G 4s"
+            characteristics = "Fl G 4s"
         ),
         Checkpoint(
             id = 27,
             name = "Porto Montenegro, gat 1",
             latitude = 42.43153,
             longitude = 18.69060,
-            isSelected = false, characteristics = "F1 W 3s"
+            isSelected = false, characteristics = "Fl W 3s"
         ),
         Checkpoint(
             id = 28,
@@ -237,7 +237,7 @@ object Constants {
             latitude = 42.43372,
             longitude = 18.69083,
             isSelected = false,
-            characteristics = "F1 R 4s"
+            characteristics = "Fl R 4s"
         ),
         Checkpoint(
             id = 29,
@@ -245,7 +245,7 @@ object Constants {
             latitude = 42.43025,
             longitude = 18.69510,
             isSelected = false,
-            characteristics = "F1 R(2) 6s"
+            characteristics = "Fl R(2) 6s"
         ),
         Checkpoint(
             id = 30,
@@ -253,7 +253,7 @@ object Constants {
             latitude = 42.439153997139435,
             longitude = 18.684438548431622,
             isSelected = false,
-            characteristics = "F1 R 3s"
+            characteristics = "Fl R 3s"
         ),
         Checkpoint(
             id = 31,
@@ -261,7 +261,7 @@ object Constants {
             latitude = 42.46015126097649,
             longitude = 18.675817066343665,
             isSelected = false,
-            characteristics = "F1 R 2s"
+            characteristics = "Fl R 2s"
         ),
         Checkpoint(
             id = 32,
@@ -269,7 +269,7 @@ object Constants {
             latitude = 42.45942,
             longitude = 18.68148,
             isSelected = false,
-            characteristics = "F1 G 2s"
+            characteristics = "Fl G 2s"
         ),
         Checkpoint(
             id = 33,
@@ -277,7 +277,7 @@ object Constants {
             latitude = 42.47808,
             longitude = 18.68672,
             isSelected = false,
-            characteristics = "F1 W(2) 5s"
+            characteristics = "Fl W(2) 5s"
         ),
         Checkpoint(
             id = 34,
@@ -285,7 +285,7 @@ object Constants {
             latitude = 42.47742500848345,
             longitude = 18.690245160951605,
             isSelected = false,
-            characteristics = "F1 G 3s"
+            characteristics = "Fl G 3s"
         ),
         Checkpoint(
             id = 35,
@@ -309,7 +309,7 @@ object Constants {
             latitude = 42.51344,
             longitude = 18.69432,
             isSelected = false,
-            characteristics = "F1 G(3) 6s"
+            characteristics = "Fl G(3) 6s"
         ),
         Checkpoint(
             id = 38,
@@ -317,7 +317,7 @@ object Constants {
             latitude = 42.487290731072704,
             longitude = 18.68821472872734,
             isSelected = false,
-            characteristics = "F1 R(2) 6s"
+            characteristics = "Fl R(2) 6s"
         ),
         Checkpoint(
             id = 39,
@@ -325,7 +325,7 @@ object Constants {
             latitude = 42.48625,
             longitude = 18.69843,
             isSelected = false,
-            characteristics = "F1 R(3) 7s"
+            characteristics = "Fl R(3) 7s"
         ),
         Checkpoint(
             id = 40,
@@ -341,7 +341,7 @@ object Constants {
             latitude = 42.46563,
             longitude = 18.73415,
             isSelected = false,
-            characteristics = "F1 G(2) 6s"
+            characteristics = "Fl G(2) 6s"
         ),
         Checkpoint(
             id = 42,
@@ -349,7 +349,7 @@ object Constants {
             latitude = 42.45368,
             longitude = 18.74895,
             isSelected = false,
-            characteristics = "F1 G 3s"
+            characteristics = "Fl G 3s"
         ),
         Checkpoint(
             id = 43,
@@ -357,7 +357,7 @@ object Constants {
             latitude = 42.44835,
             longitude = 18.75415,
             isSelected = false,
-            characteristics = "F1 G 5s"
+            characteristics = "Fl G 5s"
         ),
         Checkpoint(
             id = 44,
@@ -365,7 +365,7 @@ object Constants {
             latitude = 42.43608,
             longitude = 18.76370,
             isSelected = false,
-            characteristics = "F1 R(2) 5s"
+            characteristics = "Fl R(2) 5s"
         ),
         Checkpoint(
             id = 45,
@@ -373,7 +373,7 @@ object Constants {
             latitude = 42.43350,
             longitude = 18.75730,
             isSelected = false,
-            characteristics = "F1 G(2) 5s"
+            characteristics = "Fl G(2) 5s"
         ),
         Checkpoint(
             id = 46,
@@ -381,7 +381,7 @@ object Constants {
             latitude = 42.42612,
             longitude = 18.76672,
             isSelected = false,
-            characteristics = "F1 R 3s"
+            characteristics = "Fl R 3s"
         ),
     )
 
