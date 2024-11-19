@@ -308,7 +308,14 @@ class BayMapViewModel @Inject constructor(
 
             is MapEvent.OnCompassIconClick -> {
                 state =
-                    state.copy(shouldEnableCustomPointToPoint = !state.shouldEnableCustomPointToPoint)
+                    state.copy(shouldEnableCustomPointToPoint = !state.shouldEnableCustomPointToPoint,
+                        shouldEnableCustomRoute = false,
+                        customRouteDistance = null,
+                        customRouteAzimuth = null,
+                        customRoutePoints = mutableListOf(),
+                        customRouteConsecutivePointsAzimuth = mutableListOf(),
+                        customRouteConsecutivePointsDistance = mutableListOf()
+                    )
                 if (!state.shouldEnableCustomPointToPoint) {
                     state = state.copy(
                         customPoints = mutableListOf(),
@@ -352,6 +359,11 @@ class BayMapViewModel @Inject constructor(
                 state =
                     state.copy(
                         shouldEnableCustomRoute = !state.shouldEnableCustomRoute,
+                        customPoints = mutableListOf(),
+                        customPointsDistance = null,
+                        customPointsAzimuth = null,
+                        distanceTextOffset = Offset.Zero,
+                        shouldEnableCustomPointToPoint = false
                     )
                 if (!state.shouldEnableCustomRoute) {
                     state = state.copy(

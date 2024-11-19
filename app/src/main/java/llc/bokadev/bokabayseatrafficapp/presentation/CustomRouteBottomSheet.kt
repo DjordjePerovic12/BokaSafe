@@ -76,7 +76,7 @@ fun CustomRouteBottomSheet(
             // Make sure to use the re-indexed list and proper keys
             itemsIndexed(
                 items = points,
-                key = { index, point -> "${point.latitude}_${point.longitude}" }) { index, point ->
+                key = { index, point -> "${point.latitude}_${point.longitude}_$index" }) { index, point ->
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.Start
