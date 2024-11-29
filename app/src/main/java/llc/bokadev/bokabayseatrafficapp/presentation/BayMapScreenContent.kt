@@ -180,7 +180,7 @@ fun BokaBayMapScreenContent(
         if (state.customPointsDistance != null && state.customPointsDistance.toNauticalMiles() != "0.00") {
             Text(
                 text = "D: ${state.customPointsDistance.toNauticalMiles()} NM \n" +
-                        "W: ${state.customPointsAzimuth?.toInt()?.toThreeDigitString()}°",
+                        if(state.customPointsAzimuth != null)"W: ${state.customPointsAzimuth?.toInt()?.toThreeDigitString()}°" else "",
                 modifier = Modifier.offset {
                     IntOffset(
                         textPosition.x.toInt(),

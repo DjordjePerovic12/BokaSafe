@@ -5,6 +5,8 @@ import android.content.Intent
 import android.location.Location
 import android.location.LocationManager
 import android.net.Uri
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -31,7 +33,6 @@ import llc.amplitudo.flourish_V2.core.utils.Constants
 import llc.bokadev.bokabayseatrafficapp.core.navigation.Navigator
 import llc.bokadev.bokabayseatrafficapp.core.utils.Gps
 import llc.bokadev.bokabayseatrafficapp.core.utils.MapItems
-import llc.bokadev.bokabayseatrafficapp.core.utils.Resource
 import llc.bokadev.bokabayseatrafficapp.core.utils.calculateCentroid
 import llc.bokadev.bokabayseatrafficapp.core.utils.createGpsReceiver
 import llc.bokadev.bokabayseatrafficapp.core.utils.toKnots
@@ -116,6 +117,7 @@ class BayMapViewModel @Inject constructor(
     }
 
 
+    @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
     fun onEvent(event: MapEvent) {
         when (event) {
             is MapEvent.CheckpointSelected -> handleCheckpointSelected(event)
@@ -308,7 +310,8 @@ class BayMapViewModel @Inject constructor(
 
             is MapEvent.OnCompassIconClick -> {
                 state =
-                    state.copy(shouldEnableCustomPointToPoint = !state.shouldEnableCustomPointToPoint,
+                    state.copy(
+                        shouldEnableCustomPointToPoint = !state.shouldEnableCustomPointToPoint,
                         shouldEnableCustomRoute = false,
                         customRouteDistance = null,
                         customRouteAzimuth = null,
@@ -331,12 +334,114 @@ class BayMapViewModel @Inject constructor(
             }
 
             is MapEvent.OnMapTwoPointsClick -> {
-                updateCustomPoints(event.position, event.index)
+                val updatedCustomPoints = state.customPoints.toMutableList()
+
+                // Add the new point to the list
+                updatedCustomPoints.add(event.position)
+
+                // Initialize the total distance
+                var totalDistance = 0f
+
+                // Lists to store consecutive distances and azimuths
+                val updatedConsecutiveDistances = mutableListOf<Float>()
+                val updatedConsecutiveAzimuths = mutableListOf<Float>()
+
+                // Calculate distances and azimuths between consecutive points
+                if (updatedCustomPoints.size > 1) {
+                    for (i in 0 until updatedCustomPoints.size - 1) {
+                        val point1 = updatedCustomPoints[i]
+                        val point2 = updatedCustomPoints[i + 1]
+
+                        // Calculate distance and azimuth
+                        val distance = calculateDistanceBetweenCustomRoutePoints(point1, point2)
+                        val azimuth = calculateAzimuthBetweenCustomRoutePoints(point1, point2)
+
+                        // Accumulate total distance
+                        totalDistance += distance
+
+                        // Store consecutive values
+                        updatedConsecutiveDistances.add(distance)
+                        updatedConsecutiveAzimuths.add(azimuth)
+                    }
+                }
+
+                // Update state with calculated values
+                state = state.copy(
+                    customPoints = updatedCustomPoints,
+                    customPointsDistance = if (updatedCustomPoints.size > 1) totalDistance else null,
+                    customConsecutivePointsDistance = updatedConsecutiveDistances, // Consecutive distances
+                    customConsecutivePointsAzimuth = updatedConsecutiveAzimuths,  // Consecutive azimuths
+                    customPointsAzimuth = if (updatedCustomPoints.size == 2) {
+                        calculateAzimuthBetweenCustomRoutePoints(
+                            updatedCustomPoints[0],
+                            updatedCustomPoints[1]
+                        )
+                    } else null // Only set azimuth when there are exactly 2 points
+                )
             }
 
+
+
             is MapEvent.OnMarkerRemovedTwoPoints -> {
-                removeCustomPoint(event.index)
+                val updatedCustomPoints = state.customPoints.toMutableList()
+                val updatedConsecutiveDistances = state.customConsecutivePointsDistance.toMutableList()
+                val updatedConsecutiveAzimuths = state.customConsecutivePointsAzimuth.toMutableList()
+
+                if (event.index in updatedCustomPoints.indices) {
+                    // Remove the point
+                    updatedCustomPoints.removeAt(event.index)
+
+                    // Clear and recalculate distances and azimuths
+                    updatedConsecutiveDistances.clear()
+                    updatedConsecutiveAzimuths.clear()
+
+                    var totalDistance = 0f
+
+                    if (updatedCustomPoints.size > 1) {
+                        for (i in 0 until updatedCustomPoints.size - 1) {
+                            val point1 = updatedCustomPoints[i]
+                            val point2 = updatedCustomPoints[i + 1]
+
+                            // Recalculate distance and azimuth
+                            val distance = calculateDistanceBetweenCustomRoutePoints(point1, point2)
+                            val azimuth = calculateAzimuthBetweenCustomRoutePoints(point1, point2)
+
+                            updatedConsecutiveDistances.add(distance)
+                            updatedConsecutiveAzimuths.add(azimuth)
+
+                            // Accumulate total distance
+                            totalDistance += distance
+                        }
+
+                        // Update state with recalculated values
+                        state = state.copy(
+                            customPoints = updatedCustomPoints,
+                            customPointsDistance = totalDistance,
+                            customConsecutivePointsDistance = updatedConsecutiveDistances,
+                            customConsecutivePointsAzimuth = updatedConsecutiveAzimuths,
+                            customPointsAzimuth = if (updatedCustomPoints.size == 2) {
+                                calculateAzimuthBetweenCustomRoutePoints(
+                                    updatedCustomPoints[0],
+                                    updatedCustomPoints[1]
+                                )
+                            } else null // Only set azimuth when there are exactly 2 points
+                        )
+                    } else {
+                        // If fewer than two points remain, reset distances and azimuths
+                        state = state.copy(
+                            customPoints = updatedCustomPoints,
+                            customPointsDistance = null,
+                            customConsecutivePointsDistance = emptyList(),
+                            customConsecutivePointsAzimuth = emptyList(),
+                            customPointsAzimuth = null // Reset azimuth
+                        )
+                    }
+                } else {
+                    Timber.e("Invalid index ${event.index} for custom points size ${updatedCustomPoints.size}")
+                }
             }
+
+
 
 
             is MapEvent.ClearCustomPoints -> {
@@ -1100,6 +1205,8 @@ data class GuideState(
     val shouldEnableCustomPointToPoint: Boolean = false,
     val customPoints: MutableList<LatLng> = mutableStateListOf(),
     val customPointsDistance: Float? = null,
+    val customConsecutivePointsDistance: List<Float> = emptyList(),
+    val customConsecutivePointsAzimuth: List<Float> = emptyList(),
     val customPointsAzimuth: Float? = null,
     val distanceTextOffset: Offset = Offset.Zero,
     val shouldEnableCustomRoute: Boolean = false,

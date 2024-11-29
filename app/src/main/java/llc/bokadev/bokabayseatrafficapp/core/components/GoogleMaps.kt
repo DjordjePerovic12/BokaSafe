@@ -1,10 +1,12 @@
 package llc.bokadev.bokabayseatrafficapp.core.components
 
 import android.annotation.SuppressLint
+import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.TextView
 import androidx.annotation.DrawableRes
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -78,6 +80,7 @@ import llc.bokadev.bokabayseatrafficapp.ui.theme.BokaBaySeaTrafficAppTheme
 import timber.log.Timber
 
 
+@RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
 @SuppressLint("PotentialBehaviorOverride")
 @OptIn(MapsComposeExperimentalApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -219,7 +222,7 @@ fun GoogleMaps(
 
     //Distance between two points handlers
     val customPointsMarkers = remember { mutableListOf<Marker>() }
-    val customPointsPollyline = remember { mutableStateOf<Polyline?>(null) }
+    val customPointsPollyline = remember { mutableListOf<Polyline?>(null) }
 
 
     //Custom route
@@ -313,9 +316,10 @@ fun GoogleMaps(
                 if (state.shouldEnableCustomPointToPoint) {
                     // Function to update distance and azimuth UI offset
                     val updateDistanceTextOffset: () -> Unit = {
-                        if (customPointsMarkers.size == 2) {
+                        if (customPointsMarkers.size >= 2) {
                             val midpoint = getMidpoint(
-                                customPointsMarkers[0].position, customPointsMarkers[1].position
+                                customPointsMarkers.first().position,
+                                customPointsMarkers.last().position
                             )
                             val projection = map.projection
                             val screenPosition = projection.toScreenLocation(midpoint)
@@ -331,11 +335,8 @@ fun GoogleMaps(
 
                     // Map click listener to add new points
                     map.setOnMapClickListener { latLng ->
-                        if (customPointsMarkers.size < 2) {
-                            // Calculate the new checkpointId
-                            val newCheckpointId =
-                                checkpoints.size + anchorages.size + prohibitedProhibitedAnchoringZones.size + buoys.size + shipwrecks.size + anchorageZones.size + customPointsMarkers.size + 1
-
+                        if (!customPointsMarkers.any { it.position == latLng }) {
+                            // Add a new marker
                             val newMarker = map.addMarker(
                                 MarkerOptions().position(latLng).icon(
                                     bitmapDescriptorFromVector(
@@ -343,9 +344,7 @@ fun GoogleMaps(
                                     )
                                 )
                             )
-
-                            newMarker?.tag = "${newMarker?.id}"
-
+                            newMarker?.tag = "m${customPointsMarkers.size}"
                             newMarker?.let {
                                 customPointsMarkers.add(it)
                                 viewModel.onEvent(
@@ -356,25 +355,28 @@ fun GoogleMaps(
                                 )
                             }
 
+                            // Update polyline logic for two or more points
+                            if (customPointsMarkers.size >= 2) {
+                                // Clear all existing polylines
+                                customPointsPollyline.forEach { it?.remove() }
+                                customPointsPollyline.clear()
 
-                            // If exactly 2 points, draw a polyline and calculate distance/azimuth
-                            if (customPointsMarkers.size == 2) {
-                                customPointsPollyline.value?.remove() // Clear previous polyline
-                                customPointsPollyline.value = map.addPolyline(
-                                    PolylineOptions().add(
-                                        customPointsMarkers[0].position,
-                                        customPointsMarkers[1].position
-                                    ).color(0xFF001E31.toInt()).width(5f)
-                                )
+                                // Add new polylines between consecutive points
+                                for (i in 0 until customPointsMarkers.size - 1) {
+                                    val polylineOptions = PolylineOptions()
+                                        .add(customPointsMarkers[i].position, customPointsMarkers[i + 1].position)
+                                        .color(0xFFFFFFFF.toInt())
+                                        .width(5f)
+                                    customPointsPollyline.add(map.addPolyline(polylineOptions))
+                                }
+
+                                // Update the distance text offset to the midpoint of the first and last points
                                 updateDistanceTextOffset()
                             }
                         }
                     }
 
-                    // Marker click listener to remove a point
-
-
-                    // Ensure camera movements update the distance/azimuth offset when polyline is present
+                    // Ensure camera movements update the distance/azimuth offset when polylines are present
                     map.setOnCameraMoveListener {
                         updateDistanceTextOffset()
                     }
@@ -382,12 +384,108 @@ fun GoogleMaps(
                     // When the feature is disabled, remove all markers and clear the state
                     customPointsMarkers.forEach { it.remove() }
                     customPointsMarkers.clear()
-                    customPointsPollyline.value?.remove()
-                    customPointsPollyline.value = null
+
+                    // Clear all polylines
+                    customPointsPollyline.forEach { it?.remove() }
+                    customPointsPollyline.clear()
+
                     map.setOnMapClickListener(null) // Disable further map clicks
                     viewModel.onEvent(MapEvent.ClearCustomPoints)
                 }
             }
+
+//            MapEffect(key1 = state.shouldEnableCustomPointToPoint) { map ->
+//                if (state.shouldEnableCustomPointToPoint) {
+//                    // Function to update distance and azimuth UI offset
+//                    val updateDistanceTextOffset: () -> Unit = {
+//                        if (customPointsMarkers.size >= 2) {
+//                            val midpoint = getMidpoint(
+//                                customPointsMarkers.first().position,
+//                                customPointsMarkers.last().position
+//                            )
+//                            val projection = map.projection
+//                            val screenPosition = projection.toScreenLocation(midpoint)
+//                            viewModel.onEvent(
+//                                MapEvent.OnDistanceTextOffsetChange(
+//                                    Offset(screenPosition.x.toFloat(), screenPosition.y.toFloat())
+//                                )
+//                            )
+//                        } else {
+//                            viewModel.onEvent(MapEvent.ClearDistanceBetweenCustomPoints)
+//                        }
+//                    }
+//
+//                    // Map click listener to add new points
+//                    map.setOnMapClickListener { latLng ->
+//                        if (customPointsMarkers.size < 2) {
+//                            // Calculate the new checkpointId
+//                            val newCheckpointId =
+//                                checkpoints.size + anchorages.size + prohibitedProhibitedAnchoringZones.size +
+//                                        buoys.size + shipwrecks.size + anchorageZones.size + customPointsMarkers.size + 1
+//
+//                            val newMarker = map.addMarker(
+//                                MarkerOptions().position(latLng).icon(
+//                                    bitmapDescriptorFromVector(
+//                                        vectorResId = R.drawable.checkpoint_to, context = context
+//                                    )
+//                                )
+//                            )
+//
+//                            newMarker?.tag = "${newMarker?.id}"
+//
+//                            newMarker?.let {
+//                                customPointsMarkers.add(it)
+//                                viewModel.onEvent(
+//                                    MapEvent.OnMapTwoPointsClick(
+//                                        latLng,
+//                                        customPointsMarkers.size - 1
+//                                    )
+//                                )
+//                            }
+//
+//                            // If exactly 2 points, draw a polyline and calculate distance/azimuth
+//                            if (customPointsMarkers.size == 2) {
+//                                customPointsPollyline.value?.remove() // Clear previous polyline
+//                                customPointsPollyline.value = map.addPolyline(
+//                                    PolylineOptions().add(
+//                                        customPointsMarkers[0].position,
+//                                        customPointsMarkers[1].position
+//                                    ).color(0xFF001E31.toInt()).width(5f)
+//                                )
+//                                updateDistanceTextOffset()
+//                            }
+//                        }
+//
+//                        // Additional logic for handling more than 2 points
+//                        if (customPointsMarkers.size >= 2) {
+//                            // Clear previous polyline if necessary
+//                            customPointsPollyline.value?.remove()
+//
+//                            // Create a new polyline for all points
+//                            val polylineOptions = PolylineOptions().color(0xFF001E31.toInt()).width(5f)
+//                            customPointsMarkers.forEach { marker -> polylineOptions.add(marker.position) }
+//                            customPointsPollyline.value = map.addPolyline(polylineOptions)
+//
+//                            // Update the distance text offset to the midpoint of the first and last points
+//                            updateDistanceTextOffset()
+//                        }
+//                    }
+//
+//                    // Ensure camera movements update the distance/azimuth offset when polyline is present
+//                    map.setOnCameraMoveListener {
+//                        updateDistanceTextOffset()
+//                    }
+//                } else {
+//                    // When the feature is disabled, remove all markers and clear the state
+//                    customPointsMarkers.forEach { it.remove() }
+//                    customPointsMarkers.clear()
+//                    customPointsPollyline.value?.remove()
+//                    customPointsPollyline.value = null
+//                    map.setOnMapClickListener(null) // Disable further map clicks
+//                    viewModel.onEvent(MapEvent.ClearCustomPoints)
+//                }
+//            }
+
 
 
 
@@ -806,36 +904,21 @@ fun GoogleMaps(
                                         }
 
                                         // Reset polyline and recalculate everything
-                                        customPointsPollyline.value?.remove()
-                                        customPointsPollyline.value = null
+                                        customPointsPollyline.forEach { it?.remove() }
+                                        customPointsPollyline.clear()
 
                                         // Update logic for points after removal
-                                        if (customPointsMarkers.size == 2) {
-                                            // If 2 markers remain, recalculate and rebuild polyline
-                                            customPointsPollyline.value = map.addPolyline(
-                                                PolylineOptions().add(
-                                                    customPointsMarkers[0].position,
-                                                    customPointsMarkers[1].position
-                                                ).color(0xFF001E31.toInt()).width(5f)
-                                            )
+                                        for (i in 0 until customPointsMarkers.size - 1) {
+                                            val polylineOptions = PolylineOptions()
+                                                .add(customPointsMarkers[i].position, customPointsMarkers[i + 1].position)
+                                                .color(0xFFFFFFFF.toInt())
+                                                .width(5f)
+                                            customPointsPollyline.add(map.addPolyline(polylineOptions))
+                                        }
 
-                                            // Update ViewModel's distance and azimuth for the remaining points
-                                            viewModel.onEvent(
-                                                MapEvent.OnMapTwoPointsClick(
-                                                    customPointsMarkers[0].position, 0
-                                                )
-                                            )
-                                            viewModel.onEvent(
-                                                MapEvent.OnMapTwoPointsClick(
-                                                    customPointsMarkers[1].position, 1
-                                                )
-                                            )
-                                        } else if (customPointsMarkers.size == 1) {
-                                            // Clear polyline and calculations
+                                        // Update ViewModel events as necessary
+                                        if (customPointsMarkers.size < 2) {
                                             viewModel.onEvent(MapEvent.ClearDistanceBetweenCustomPoints)
-                                        } else {
-                                            // If no markers remain, reset everything
-                                            viewModel.onEvent(MapEvent.ClearCustomPoints)
                                         }
                                     }
 
@@ -1026,7 +1109,7 @@ fun GoogleMaps(
                                             }
                                         } else if (state.shouldEnableCustomPointToPoint) {
                                             // Handle custom point-to-point logic
-                                            if (customPointsMarkers.size < 2 && !customPointsMarkers.any { it.position == depthMarkerPosition }) {
+                                            if (!customPointsMarkers.any { it.position == depthMarkerPosition }) {
                                                 val newMarker = map.addMarker(
                                                     MarkerOptions()
                                                         .position(depthMarkerPosition)
@@ -1048,18 +1131,51 @@ fun GoogleMaps(
                                                     )
                                                 }
 
-                                                // Draw polyline if two points are selected
-                                                if (customPointsMarkers.size == 2) {
-                                                    customPointsPollyline.value?.remove()
-                                                    customPointsPollyline.value = map.addPolyline(
-                                                        PolylineOptions().add(
-                                                            customPointsMarkers[0].position,
-                                                            customPointsMarkers[1].position
-                                                        ).color(0xFFFFFFFF.toInt()).width(5f)
-                                                    )
+                                                // Update polyline logic for two or more points
+                                                if (customPointsMarkers.size >= 2) {
+                                                    customPointsPollyline.forEach { it?.remove() }
+                                                    customPointsPollyline.clear()
+
+                                                    val polylineOptions = PolylineOptions().color(0xFFFFFFFF.toInt()).width(5f)
+                                                    for (i in 0 until customPointsMarkers.size - 1) {
+                                                        polylineOptions.add(
+                                                            customPointsMarkers[i].position,
+                                                            customPointsMarkers[i + 1].position
+                                                        )
+                                                    }
+                                                    customPointsPollyline.add(map.addPolyline(polylineOptions))
+                                                }
+                                            } else {
+                                                // Marker exists: remove it and update the custom points
+                                                val existingMarkerIndex = customPointsMarkers.indexOfFirst { it.position == depthMarkerPosition }
+                                                if (existingMarkerIndex != -1) {
+                                                    val existingMarker = customPointsMarkers[existingMarkerIndex]
+                                                    existingMarker.remove() // Remove marker from the map
+                                                    customPointsMarkers.removeAt(existingMarkerIndex) // Remove marker from the list
+
+                                                    // Update ViewModel
+                                                    viewModel.onEvent(MapEvent.OnMarkerRemovedTwoPoints(existingMarkerIndex))
+
+                                                    // Clear and rebuild polyline for the remaining points
+                                                    customPointsPollyline.forEach { it?.remove() }
+                                                    customPointsPollyline.clear()
+
+                                                    if (customPointsMarkers.size >= 2) {
+                                                        val polylineOptions = PolylineOptions().color(0xFFFFFFFF.toInt()).width(5f)
+                                                        for (i in 0 until customPointsMarkers.size - 1) {
+                                                            polylineOptions.add(
+                                                                customPointsMarkers[i].position,
+                                                                customPointsMarkers[i + 1].position
+                                                            )
+                                                        }
+                                                        customPointsPollyline.add(map.addPolyline(polylineOptions))
+                                                    } else {
+                                                        viewModel.onEvent(MapEvent.ClearDistanceBetweenCustomPoints)
+                                                    }
                                                 }
                                             }
                                         }
+
 
                                         true // Indicate the click was handled
                                     }
