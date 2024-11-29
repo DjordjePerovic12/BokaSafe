@@ -1,6 +1,7 @@
 package llc.bokadev.bokabayseatrafficapp.presentation.more
 
 import android.content.Intent
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -47,16 +48,17 @@ fun MoreScreen(
         MoreOptions(2, "My routes"),
         MoreOptions(3, "External resources"),
         MoreOptions(4, "Safety hub"),
-        MoreOptions(5, "Safety hub"),
-        MoreOptions(6, "Notices for seafarers"),
+        MoreOptions(5, "Notices for seafarers"),
     )
 
     if (state.shouldShowAlertDialog)
-        ChangeSpeedUnitDialog(onConfirm = {
+        ChangeSpeedUnitDialog(preferredSpeedUnit = state.preferredSpeedUnit, onConfirm = {
             viewModel.onEvent(MoreEvent.OnConfirmAlertDialogClick)
         }) {
             viewModel.onEvent(MoreEvent.OnCancelAlertDialogClick)
         }
+
+    BackHandler { viewModel.onEvent(MoreEvent.OnBackClick) }
 
     Scaffold(
         topBar = {
@@ -120,7 +122,7 @@ fun MoreScreen(
                             modifier = Modifier.clickable {
                                 viewModel.onEvent(MoreEvent.OnOptionClick(it.id))
                             }) else Text(
-                        text = if (state.preferredSpeedUnit == "" || state.preferredSpeedUnit == "knots") "Change preferred unit to km/h" else "Change preferred unit to knots",
+                        text = if (state.preferredSpeedUnit == "knots") "Change preferred unit to km/h" else "Change preferred unit to knots",
                         color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
                         style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14,
                         textDecoration = TextDecoration.Underline,

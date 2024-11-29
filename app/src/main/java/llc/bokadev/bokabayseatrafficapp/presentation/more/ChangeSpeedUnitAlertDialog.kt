@@ -8,9 +8,11 @@ import llc.bokadev.bokabayseatrafficapp.ui.theme.BokaBaySeaTrafficAppTheme
 
 @Composable
 fun ChangeSpeedUnitDialog(
+    preferredSpeedUnit: String,
     onConfirm: () -> Unit,
     onCancel: () -> Unit
 ) {
+    val unitAfterChange = if (preferredSpeedUnit == "knots") "km/h" else "knots"
     AlertDialog(
         onDismissRequest = { onCancel() },
         title = {
@@ -21,7 +23,7 @@ fun ChangeSpeedUnitDialog(
         },
         text = {
             Text(
-                text = "Are you sure that you want to change your preferred speed unit?",
+                text = "Are you sure that you want to change your preferred speed unit from $preferredSpeedUnit to $unitAfterChange?",
                 color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
                 style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14
             )

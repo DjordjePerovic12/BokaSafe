@@ -1,3 +1,4 @@
+import java.io.FileInputStream
 import java.util.Properties
 
 plugins {
@@ -10,10 +11,25 @@ plugins {
 //    id("com.google.gms.google-services")
     id ("com.google.firebase.crashlytics")
 }
+val keystorePropertiesFile = rootProject.file("app/keystore.properties")
+// Initialize a new Properties() object called keystoreProperties.
+val keystoreProperties = Properties()
+// Load your keystore.properties file into the keystoreProperties object.
+keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 
 android {
     namespace = "llc.bokadev.bokabayseatrafficapp"
     compileSdk = 35
+
+
+    signingConfigs {
+        create("bokadev") {
+            keyAlias = keystoreProperties["KeyAlias"] as String
+            keyPassword = keystoreProperties["KeyPassword"] as String
+            storeFile = file(keystoreProperties["StorePath"]!!)
+            storePassword = keystoreProperties["StorePassword"] as String
+        }
+    }
 
     defaultConfig {
         applicationId = "llc.bokadev.bokabayseatrafficapp"
@@ -29,6 +45,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("bokadev")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

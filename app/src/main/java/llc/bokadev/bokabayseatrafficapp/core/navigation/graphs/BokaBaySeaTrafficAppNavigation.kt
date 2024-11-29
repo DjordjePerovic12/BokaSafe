@@ -19,6 +19,7 @@ import timber.log.Timber
 fun BokaBaySeaTrafficAppNavigation(
     navController: NavHostController,
     navigator: Navigator,
+    viewModel: BayMapViewModel,
     showSnackBar: (message: String) -> Unit,
     launchIntent: (intent: Intent) -> Unit,
     modifier: Modifier = Modifier
@@ -36,7 +37,7 @@ fun BokaBaySeaTrafficAppNavigation(
         modifier = modifier
     ) {
         bayMapScreenComposable(
-            navController = navController, showSnackBar = showSnackBar, launchPhoneIntent = launchIntent
+            navController = navController, showSnackBar = showSnackBar, launchPhoneIntent = launchIntent, viewModel = viewModel
         )
         moreScreenComposable(
             navController = navController, showSnackBar = showSnackBar, launchWebBrowserIntent = launchIntent

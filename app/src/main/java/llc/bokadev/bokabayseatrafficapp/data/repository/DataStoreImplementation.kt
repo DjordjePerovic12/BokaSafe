@@ -23,6 +23,7 @@ class DataStoreImplementation @Inject constructor(@ApplicationContext val contex
 
     companion object {
         val PREFERRED_SPEED_UNIT = stringPreferencesKey("PREFERRED_SPEED_UNIT")
+        private const val DEFAULT_SPEED_UNIT = "knots"
     }
 
     override suspend fun savePreferredSpeedUnit(unit: String) {
@@ -32,6 +33,6 @@ class DataStoreImplementation @Inject constructor(@ApplicationContext val contex
     }
 
     override suspend fun getPreferredSpeedUnit() = context.datastore.data.map { dataStore ->
-        dataStore[PREFERRED_SPEED_UNIT].toNonNull()
+        dataStore[PREFERRED_SPEED_UNIT] ?: DEFAULT_SPEED_UNIT
     }
 }

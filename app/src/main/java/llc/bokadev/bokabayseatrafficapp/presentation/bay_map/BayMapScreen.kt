@@ -91,6 +91,15 @@ fun BayMapScreen(
         else viewModel.onEvent(MapEvent.UpdateGpsState(Gps.OFF))
     }
 
+    LaunchedEffect(key1 = Unit) {
+        viewModel.getPreferredUnit()
+    }
+
+
+    LaunchedEffect(key1 = state.userCourseOfMovementAzimuth) {
+        Timber.e("COURSE main comp ${state.userCourseOfMovementAzimuth}")
+    }
+
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -362,7 +371,7 @@ fun BayMapScreen(
                 Text(
                     text = "${viewModel.state.selectedAnchorage?.name}",
                     color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular18,
+                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold18,
                     modifier = Modifier.padding(horizontal = 25.dp)
                 )
 
@@ -400,7 +409,7 @@ fun BayMapScreen(
                 Text(
                     text = "${viewModel.state.selectedAnchorageZone?.name}",
                     color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular18,
+                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold18,
                     modifier = Modifier.padding(horizontal = 25.dp)
                 )
 
@@ -438,7 +447,7 @@ fun BayMapScreen(
                 Text(
                     text = "${viewModel.state.selectedBuoy?.name}",
                     color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular18,
+                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold18,
                     modifier = Modifier.padding(horizontal = 25.dp)
                 )
 

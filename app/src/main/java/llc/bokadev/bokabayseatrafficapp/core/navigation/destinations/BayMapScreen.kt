@@ -25,6 +25,7 @@ import llc.bokadev.bokabayseatrafficapp.presentation.bay_map.BayMapViewModel
 fun NavGraphBuilder.bayMapScreenComposable(
     navController: NavController,
     showSnackBar: (message: String) -> Unit,
+    viewModel: BayMapViewModel,
     launchPhoneIntent: (intent: Intent) -> Unit
 ) {
     composable(route = Screen.BayMapScreen.route,
@@ -32,7 +33,6 @@ fun NavGraphBuilder.bayMapScreenComposable(
         val parentEntry = remember(backStackEntry) {
             navController.getBackStackEntry(Routes.ROOT)
         }
-        val viewModel = hiltViewModel<BayMapViewModel>()
         BayMapScreen(
             viewModel = viewModel,
             showSnackBar = showSnackBar,

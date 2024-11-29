@@ -1,5 +1,7 @@
 package llc.bokadev.bokabayseatrafficapp.presentation.bay_map
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -51,6 +53,7 @@ import llc.bokadev.bokabayseatrafficapp.domain.model.ShipWreck
 import llc.bokadev.bokabayseatrafficapp.ui.theme.BokaBaySeaTrafficAppTheme
 import timber.log.Timber
 
+@RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BokaBayMapScreenContent(
@@ -97,6 +100,10 @@ fun BokaBayMapScreenContent(
 
     LaunchedEffect(key1 = state.userMovementSpeed) {
         Timber.e("SPEED ${state.userMovementSpeed}")
+    }
+
+    LaunchedEffect(key1 = state.userCourseOfMovementAzimuth) {
+        Timber.e("COURSE ${state.userCourseOfMovementAzimuth}")
     }
 
 
@@ -287,7 +294,9 @@ fun BokaBayMapScreenContent(
         Column(
             verticalArrangement = Arrangement.spacedBy(40.dp),
             horizontalAlignment = Alignment.End,
-            modifier = Modifier.fillMaxWidth().padding(top = 90.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 90.dp)
         ) {
             Box(
                 modifier = Modifier
@@ -315,28 +324,30 @@ fun BokaBayMapScreenContent(
             horizontalAlignment = Alignment.Start,
             modifier = Modifier.padding(top = 70.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .padding(top = 25.dp, start = 25.dp)
-                    .size(70.dp)
-                    .clip(RoundedCornerShape(100.dp))
-                    .background(BokaBaySeaTrafficAppTheme.colors.lightGreen)
-                    .zIndex(1f),
-                contentAlignment = Alignment.Center
-            ) {
-                if (state.preferredSpeedUnit == "knots" || state.preferredSpeedUnit == "")
-                    Text(
-                        text = if (state.isUserStatic || viewModel.speedList.isEmpty()) "0.0 \n knots" else "${state.userMovementSpeed?.toKnots()} \n knots",
-                        style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular18,
+            if (state.preferredSpeedUnit != "") {
+                Box(
+                    modifier = Modifier
+                        .padding(top = 25.dp, start = 25.dp)
+                        .size(70.dp)
+                        .clip(RoundedCornerShape(100.dp))
+                        .background(BokaBaySeaTrafficAppTheme.colors.lightGreen)
+                        .zIndex(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (state.preferredSpeedUnit == "knots")
+                        Text(
+                            text = if (state.isUserStatic || viewModel.speedList.isEmpty()) "0.0 \n knots" else "${state.userMovementSpeed?.toKnots()} \n knots",
+                            style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular18,
+                            color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
+                            textAlign = TextAlign.Center
+                        )
+                    else Text(
+                        text = if (state.isUserStatic || viewModel.speedList.isEmpty()) "0.0 \n km/h" else "${state.userMovementSpeed?.toKilometersPerHour()} \n km/h",
+                        style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular20,
                         color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
                         textAlign = TextAlign.Center
                     )
-                else Text(
-                    text = if (state.isUserStatic || viewModel.speedList.isEmpty()) "0.0 \n km/h" else "${state.userMovementSpeed?.toKilometersPerHour()} \n km/h",
-                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular20,
-                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                    textAlign = TextAlign.Center
-                )
+                }
             }
 
             if (state.userCourseOfMovement != String() && state.userCourseOfMovementAzimuth != null) {

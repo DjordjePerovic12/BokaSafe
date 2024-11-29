@@ -57,7 +57,6 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     private var currentDegree = 0f
 
 
-
     @OptIn(ExperimentalPermissionsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -113,7 +112,8 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                                 },
                                 launchIntent = { intent ->
                                     startActivity(intent)
-                                }
+                                },
+                                viewModel = viewModel
                             )
                         } else {
                             // If permissions are denied, show a custom UI
@@ -147,9 +147,6 @@ class MainActivity : ComponentActivity(), SensorEventListener {
             }
         }
     }
-
-
-
 
 
     override fun onResume() {

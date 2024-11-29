@@ -752,7 +752,7 @@ fun GoogleMaps(
             MapEffect(
                 key1 = state.mapItemFilters?.shipwrecks,
                 key2 = state.shouldEnableCustomPointToPoint,
-                key3 = state.shouldEnableCustomRoute
+                key3 = state.shouldEnableCustomRoute,
             ) { map ->
                 if (state.mapItemFilters?.shipwrecks == true) {
                     for (shipwreck in shipwrecks) {

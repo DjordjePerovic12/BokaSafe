@@ -8,12 +8,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import llc.bokadev.bokabayseatrafficapp.core.navigation.Navigator
+import llc.bokadev.bokabayseatrafficapp.core.navigation.Routes.ROOT
+import llc.bokadev.bokabayseatrafficapp.core.navigation.Screen
 import llc.bokadev.bokabayseatrafficapp.domain.repository.DataStoreRepository
 import llc.bokadev.bokabayseatrafficapp.presentation.bay_map.GuideState
 import javax.inject.Inject
@@ -27,6 +30,14 @@ class MoreViewModel @Inject constructor(
     var state by mutableStateOf(MoreState())
     private val _launchIntentChannel = Channel<Intent>()
     val launchIntentChannel = _launchIntentChannel.receiveAsFlow()
+
+    init {
+        viewModelScope.launch {
+            state = state.copy(
+                preferredSpeedUnit = dataStoreRepository.getPreferredSpeedUnit().first()
+            )
+        }
+    }
 
     fun onEvent(event: MoreEvent) {
         when (event) {
@@ -42,7 +53,7 @@ class MoreViewModel @Inject constructor(
                         state = state.copy(shouldShowAlertDialog = !state.shouldShowAlertDialog)
                     }
 
-                    6 -> {
+                    5 -> {
                         val intent = Intent(
                             Intent.ACTION_VIEW,
                             Uri.parse("https://www.safesea.me/obavjestenja-za-pomorce")

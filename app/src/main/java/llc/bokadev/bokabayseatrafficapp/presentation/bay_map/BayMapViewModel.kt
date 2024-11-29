@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import llc.amplitudo.flourish_V2.core.utils.Constants
 import llc.bokadev.bokabayseatrafficapp.core.navigation.Navigator
+import llc.bokadev.bokabayseatrafficapp.core.navigation.Routes.ROOT
 import llc.bokadev.bokabayseatrafficapp.core.navigation.Screen
 import llc.bokadev.bokabayseatrafficapp.core.utils.Gps
 import llc.bokadev.bokabayseatrafficapp.core.utils.MapItems
@@ -105,6 +106,14 @@ class BayMapViewModel @Inject constructor(
             )
         }
 
+    }
+
+    fun getPreferredUnit() {
+        viewModelScope.launch {
+            state = state.copy(
+                preferredSpeedUnit = dataStoreRepository.getPreferredSpeedUnit().first()
+            )
+        }
     }
 
     private var buttonDebounceJob: Job? = null
