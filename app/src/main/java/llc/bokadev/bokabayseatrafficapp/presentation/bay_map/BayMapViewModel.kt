@@ -1,4 +1,4 @@
-package llc.bokadev.bokabayseatrafficapp.presentation
+package llc.bokadev.bokabayseatrafficapp.presentation.bay_map
 
 import android.app.Application
 import android.content.Intent
@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import llc.amplitudo.flourish_V2.core.utils.Constants
 import llc.bokadev.bokabayseatrafficapp.core.navigation.Navigator
+import llc.bokadev.bokabayseatrafficapp.core.navigation.Screen
 import llc.bokadev.bokabayseatrafficapp.core.utils.Gps
 import llc.bokadev.bokabayseatrafficapp.core.utils.MapItems
 import llc.bokadev.bokabayseatrafficapp.core.utils.calculateCentroid
@@ -381,11 +382,12 @@ class BayMapViewModel @Inject constructor(
             }
 
 
-
             is MapEvent.OnMarkerRemovedTwoPoints -> {
                 val updatedCustomPoints = state.customPoints.toMutableList()
-                val updatedConsecutiveDistances = state.customConsecutivePointsDistance.toMutableList()
-                val updatedConsecutiveAzimuths = state.customConsecutivePointsAzimuth.toMutableList()
+                val updatedConsecutiveDistances =
+                    state.customConsecutivePointsDistance.toMutableList()
+                val updatedConsecutiveAzimuths =
+                    state.customConsecutivePointsAzimuth.toMutableList()
 
                 if (event.index in updatedCustomPoints.indices) {
                     // Remove the point
@@ -440,8 +442,6 @@ class BayMapViewModel @Inject constructor(
                     Timber.e("Invalid index ${event.index} for custom points size ${updatedCustomPoints.size}")
                 }
             }
-
-
 
 
             is MapEvent.ClearCustomPoints -> {
@@ -639,6 +639,12 @@ class BayMapViewModel @Inject constructor(
                     userCourseOfMovement = event.direction,
                     userCourseOfMovementAzimuth = event.angle.toFloat()
                 )
+            }
+
+            is MapEvent.OnMoreClick -> {
+                viewModelScope.launch {
+                    navigator.navigateTo(Screen.MoreScreen.route)
+                }
             }
 
             else -> {}
@@ -1158,6 +1164,7 @@ sealed class MapEvent() {
     data class OnMarkerRemovedCustomRoute(val index: Int) : MapEvent()
     object ClearCustomRoutePoints : MapEvent()
     data class OnCourseChange(val direction: String, val angle: Double) : MapEvent()
+    object OnMoreClick : MapEvent()
 
 }
 

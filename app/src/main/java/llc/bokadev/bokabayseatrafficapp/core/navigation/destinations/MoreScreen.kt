@@ -15,28 +15,27 @@ import androidx.navigation.compose.composable
 import llc.amplitudo.flourish_V2.core.utils.Constants
 import llc.bokadev.bokabayseatrafficapp.core.navigation.Routes
 import llc.bokadev.bokabayseatrafficapp.core.navigation.Screen
-import llc.bokadev.bokabayseatrafficapp.presentation.bay_map.BayMapScreen
-import llc.bokadev.bokabayseatrafficapp.presentation.bay_map.BayMapViewModel
-
+import llc.bokadev.bokabayseatrafficapp.presentation.more.MoreScreen
+import llc.bokadev.bokabayseatrafficapp.presentation.more.MoreViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("RememberReturnType")
 @OptIn(ExperimentalAnimationApi::class)
-fun NavGraphBuilder.bayMapScreenComposable(
+fun NavGraphBuilder.moreScreenComposable(
     navController: NavController,
     showSnackBar: (message: String) -> Unit,
-    launchPhoneIntent: (intent: Intent) -> Unit
+    launchWebBrowserIntent: (intent: Intent) -> Unit
 ) {
-    composable(route = Screen.BayMapScreen.route,
+    composable(route = Screen.MoreScreen.route,
         enterTransition = { fadeIn(animationSpec = tween(Constants.ANIMATION_DURATION)) }) { backStackEntry ->
         val parentEntry = remember(backStackEntry) {
             navController.getBackStackEntry(Routes.ROOT)
         }
-        val viewModel = hiltViewModel<BayMapViewModel>()
-        BayMapScreen(
+        val viewModel = hiltViewModel<MoreViewModel>()
+        MoreScreen(
             viewModel = viewModel,
             showSnackBar = showSnackBar,
-            launchPhoneIntent = launchPhoneIntent
+            launchWebBrowserIntent = launchWebBrowserIntent
         )
     }
 }

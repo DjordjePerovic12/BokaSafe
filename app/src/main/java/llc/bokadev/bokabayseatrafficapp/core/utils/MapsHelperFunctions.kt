@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Typeface
 import android.view.View
 import android.widget.TextView
 import androidx.core.content.ContextCompat
@@ -522,6 +523,90 @@ fun bitmapDescriptorFromText(
     canvas.drawText(text, xPos.toFloat(), yPos.toFloat(), paint)
 
     // Convert the bitmap to a BitmapDescriptor and return it
+    return BitmapDescriptorFactory.fromBitmap(bitmap)
+}
+
+
+fun bitmapDescriptorFromVectorWithNumber(number: Int): BitmapDescriptor {
+    val size = 70 // Define the size of the marker icon
+    val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    val paint = Paint().apply {
+        color = Color.RED // Customize marker color
+        textSize = 34f    // Customize text size
+        typeface = Typeface.DEFAULT_BOLD
+        textAlign = Paint.Align.CENTER
+    }
+
+    // Draw a circle for the marker background
+    canvas.drawCircle(
+        (size / 2).toFloat(), // Center X
+        (size / 2).toFloat(), // Center Y
+        (size / 2).toFloat(), // Radius
+        Paint().apply {
+            color = Color.WHITE // Background color
+            style = Paint.Style.FILL
+        }
+    )
+
+    // Draw the number on top of the circle
+    canvas.drawText(
+        number.toString(),
+        (size / 2).toFloat(),
+        (size / 2 - ((paint.descent() + paint.ascent()) / 2)), // Center vertically
+        paint
+    )
+
+    return BitmapDescriptorFactory.fromBitmap(bitmap)
+}
+
+fun bitmapDescriptorFromVectorWithNumberOrLetter(number: Int): BitmapDescriptor {
+    val size = 70 // Define the size of the marker icon
+    val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+
+    // Calculate the corresponding letter for the number
+    // Numbers 1-26 -> A-Z, 27-52 -> A-Z again, etc.
+    val content = if (number in 1..26) {
+        'A' + (number - 1) // Convert number to letter
+    } else if (number > 26) {
+        val normalizedNumber = (number - 1) % 26
+        'A' + normalizedNumber // Wrap around after Z
+    } else {
+        number.toString() // Fallback for numbers less than 1
+    }.toString()
+
+    // Colors for customization
+    val backgroundColor = Color.parseColor("#4CAF50") // Green background
+    val textColor = Color.WHITE // White text
+
+    // Text paint for drawing the content
+    val paint = Paint().apply {
+        color = textColor
+        textSize = 34f
+        typeface = Typeface.DEFAULT_BOLD
+        textAlign = Paint.Align.CENTER
+    }
+
+    // Draw a circle for the marker background
+    canvas.drawCircle(
+        (size / 2).toFloat(), // Center X
+        (size / 2).toFloat(), // Center Y
+        (size / 2).toFloat(), // Radius
+        Paint().apply {
+            color = backgroundColor
+            style = Paint.Style.FILL
+        }
+    )
+
+    // Draw the content (number or letter) on top of the circle
+    canvas.drawText(
+        content.toString(),
+        (size / 2).toFloat(),
+        (size / 2 - ((paint.descent() + paint.ascent()) / 2)), // Center vertically
+        paint
+    )
+
     return BitmapDescriptorFactory.fromBitmap(bitmap)
 }
 

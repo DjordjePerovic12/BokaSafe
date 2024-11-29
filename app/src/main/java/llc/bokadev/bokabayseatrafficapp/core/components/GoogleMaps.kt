@@ -32,7 +32,6 @@ import com.google.android.gms.maps.model.Circle
 import com.google.android.gms.maps.model.Dash
 import com.google.android.gms.maps.model.Gap
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
@@ -50,6 +49,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import llc.bokadev.bokabayseatrafficapp.R
 import llc.bokadev.bokabayseatrafficapp.core.utils.bitmapDescriptorFromVector
+import llc.bokadev.bokabayseatrafficapp.core.utils.bitmapDescriptorFromVectorWithNumber
+import llc.bokadev.bokabayseatrafficapp.core.utils.bitmapDescriptorFromVectorWithNumberOrLetter
 import llc.bokadev.bokabayseatrafficapp.core.utils.calculateBoundingBoxCentroid
 import llc.bokadev.bokabayseatrafficapp.core.utils.calculateBounds
 import llc.bokadev.bokabayseatrafficapp.core.utils.calculateCentroid
@@ -72,10 +73,10 @@ import llc.bokadev.bokabayseatrafficapp.domain.model.Depth
 import llc.bokadev.bokabayseatrafficapp.domain.model.Pipeline
 import llc.bokadev.bokabayseatrafficapp.domain.model.ShipWreck
 import llc.bokadev.bokabayseatrafficapp.domain.model.UnderwaterCable
-import llc.bokadev.bokabayseatrafficapp.presentation.BayMapViewModel
-import llc.bokadev.bokabayseatrafficapp.presentation.CustomNauticalMilesMapScale
-import llc.bokadev.bokabayseatrafficapp.presentation.MapEvent
-import llc.bokadev.bokabayseatrafficapp.presentation.NotificationPreferencesBottomSheet
+import llc.bokadev.bokabayseatrafficapp.presentation.bay_map.BayMapViewModel
+import llc.bokadev.bokabayseatrafficapp.presentation.bay_map.CustomNauticalMilesMapScale
+import llc.bokadev.bokabayseatrafficapp.presentation.bay_map.MapEvent
+import llc.bokadev.bokabayseatrafficapp.presentation.bay_map.NotificationPreferencesBottomSheet
 import llc.bokadev.bokabayseatrafficapp.ui.theme.BokaBaySeaTrafficAppTheme
 import timber.log.Timber
 
@@ -339,8 +340,8 @@ fun GoogleMaps(
                             // Add a new marker
                             val newMarker = map.addMarker(
                                 MarkerOptions().position(latLng).icon(
-                                    bitmapDescriptorFromVector(
-                                        vectorResId = R.drawable.checkpoint_to, context = context
+                                    bitmapDescriptorFromVectorWithNumberOrLetter(
+                                        number = customPointsMarkers.size + 1
                                     )
                                 )
                             )
@@ -364,7 +365,10 @@ fun GoogleMaps(
                                 // Add new polylines between consecutive points
                                 for (i in 0 until customPointsMarkers.size - 1) {
                                     val polylineOptions = PolylineOptions()
-                                        .add(customPointsMarkers[i].position, customPointsMarkers[i + 1].position)
+                                        .add(
+                                            customPointsMarkers[i].position,
+                                            customPointsMarkers[i + 1].position
+                                        )
                                         .color(0xFFFFFFFF.toInt())
                                         .width(5f)
                                     customPointsPollyline.add(map.addPolyline(polylineOptions))
@@ -394,105 +398,6 @@ fun GoogleMaps(
                 }
             }
 
-//            MapEffect(key1 = state.shouldEnableCustomPointToPoint) { map ->
-//                if (state.shouldEnableCustomPointToPoint) {
-//                    // Function to update distance and azimuth UI offset
-//                    val updateDistanceTextOffset: () -> Unit = {
-//                        if (customPointsMarkers.size >= 2) {
-//                            val midpoint = getMidpoint(
-//                                customPointsMarkers.first().position,
-//                                customPointsMarkers.last().position
-//                            )
-//                            val projection = map.projection
-//                            val screenPosition = projection.toScreenLocation(midpoint)
-//                            viewModel.onEvent(
-//                                MapEvent.OnDistanceTextOffsetChange(
-//                                    Offset(screenPosition.x.toFloat(), screenPosition.y.toFloat())
-//                                )
-//                            )
-//                        } else {
-//                            viewModel.onEvent(MapEvent.ClearDistanceBetweenCustomPoints)
-//                        }
-//                    }
-//
-//                    // Map click listener to add new points
-//                    map.setOnMapClickListener { latLng ->
-//                        if (customPointsMarkers.size < 2) {
-//                            // Calculate the new checkpointId
-//                            val newCheckpointId =
-//                                checkpoints.size + anchorages.size + prohibitedProhibitedAnchoringZones.size +
-//                                        buoys.size + shipwrecks.size + anchorageZones.size + customPointsMarkers.size + 1
-//
-//                            val newMarker = map.addMarker(
-//                                MarkerOptions().position(latLng).icon(
-//                                    bitmapDescriptorFromVector(
-//                                        vectorResId = R.drawable.checkpoint_to, context = context
-//                                    )
-//                                )
-//                            )
-//
-//                            newMarker?.tag = "${newMarker?.id}"
-//
-//                            newMarker?.let {
-//                                customPointsMarkers.add(it)
-//                                viewModel.onEvent(
-//                                    MapEvent.OnMapTwoPointsClick(
-//                                        latLng,
-//                                        customPointsMarkers.size - 1
-//                                    )
-//                                )
-//                            }
-//
-//                            // If exactly 2 points, draw a polyline and calculate distance/azimuth
-//                            if (customPointsMarkers.size == 2) {
-//                                customPointsPollyline.value?.remove() // Clear previous polyline
-//                                customPointsPollyline.value = map.addPolyline(
-//                                    PolylineOptions().add(
-//                                        customPointsMarkers[0].position,
-//                                        customPointsMarkers[1].position
-//                                    ).color(0xFF001E31.toInt()).width(5f)
-//                                )
-//                                updateDistanceTextOffset()
-//                            }
-//                        }
-//
-//                        // Additional logic for handling more than 2 points
-//                        if (customPointsMarkers.size >= 2) {
-//                            // Clear previous polyline if necessary
-//                            customPointsPollyline.value?.remove()
-//
-//                            // Create a new polyline for all points
-//                            val polylineOptions = PolylineOptions().color(0xFF001E31.toInt()).width(5f)
-//                            customPointsMarkers.forEach { marker -> polylineOptions.add(marker.position) }
-//                            customPointsPollyline.value = map.addPolyline(polylineOptions)
-//
-//                            // Update the distance text offset to the midpoint of the first and last points
-//                            updateDistanceTextOffset()
-//                        }
-//                    }
-//
-//                    // Ensure camera movements update the distance/azimuth offset when polyline is present
-//                    map.setOnCameraMoveListener {
-//                        updateDistanceTextOffset()
-//                    }
-//                } else {
-//                    // When the feature is disabled, remove all markers and clear the state
-//                    customPointsMarkers.forEach { it.remove() }
-//                    customPointsMarkers.clear()
-//                    customPointsPollyline.value?.remove()
-//                    customPointsPollyline.value = null
-//                    map.setOnMapClickListener(null) // Disable further map clicks
-//                    viewModel.onEvent(MapEvent.ClearCustomPoints)
-//                }
-//            }
-
-
-
-
-
-
-
-
             MapEffect(key1 = state.shouldEnableCustomRoute) { map ->
                 if (state.shouldEnableCustomRoute) {
                     val updateDistanceTextOffset: () -> Unit = {
@@ -516,10 +421,12 @@ fun GoogleMaps(
                     // Enable map click listener for adding custom points
                     map.setOnMapClickListener { latLng ->
                         // Add a new marker with the correct custom index
+
+
                         val newMarker = map.addMarker(
                             MarkerOptions().position(latLng).icon(
-                                bitmapDescriptorFromVector(
-                                    vectorResId = R.drawable.checkpoint_to, context = context
+                                bitmapDescriptorFromVectorWithNumber(
+                                    number = customRoutePointsMarkers.size + 1
                                 )
                             )
                         )
@@ -867,325 +774,401 @@ fun GoogleMaps(
                         if (shipwreckMarker != null) {
                             shipwreckMarkers.add(shipwreckMarker)
                         }
-                            map.setOnMarkerClickListener { marker ->
-                                Timber.e("Marker ${marker.title} clicked ${marker.id}, tag ${marker.tag}")
-                                Timber.e("CustomCheckpointMarkers ${(checkpoints.size + anchorages.size + prohibitedProhibitedAnchoringZones.size + buoys.size + shipwrecks.size + anchorageZones.size)}")
-                                val tag =
-                                    marker.tag as? String ?: return@setOnMarkerClickListener true
+                        map.setOnMarkerClickListener { marker ->
+                            Timber.e("Marker ${marker.title} clicked ${marker.id}, tag ${marker.tag}")
+                            Timber.e("CustomCheckpointMarkers ${(checkpoints.size + anchorages.size + prohibitedProhibitedAnchoringZones.size + buoys.size + shipwrecks.size + anchorageZones.size)}")
+                            val tag =
+                                marker.tag as? String ?: return@setOnMarkerClickListener true
 
-                                when {
-                                    tag.startsWith("m") -> {
-                                        val checkpointId = tag.removePrefix("m").toInt()
-                                        Timber.e("Checkpoint ID: $checkpointId")
+                            when {
+                                tag.startsWith("m") -> {
+                                    val checkpointId = tag.removePrefix("m").toInt()
+                                    Timber.e("Checkpoint ID: $checkpointId")
 
-                                        // Find the marker's index in customPointsMarkers
-                                        val customPointIndex = customPointsMarkers.indexOf(marker)
-                                        if (customPointIndex == -1) {
-                                            // Marker not found in list
-                                            return@setOnMarkerClickListener false
-                                        }
+                                    // Find the marker's index in customPointsMarkers
+                                    val customPointIndex = customPointsMarkers.indexOf(marker)
+                                    if (customPointIndex == -1) {
+                                        // Marker not found in list
+                                        return@setOnMarkerClickListener false
+                                    }
 
-                                        // Remove the corresponding point from the ViewModel
-                                        viewModel.onEvent(
-                                            MapEvent.OnMarkerRemovedTwoPoints(
-                                                customPointIndex
+                                    // Remove the corresponding point from the ViewModel
+                                    viewModel.onEvent(
+                                        MapEvent.OnMarkerRemovedTwoPoints(
+                                            customPointIndex
+                                        )
+                                    )
+
+                                    // Remove the marker from the map and the marker list
+                                    marker.remove()
+                                    customPointsMarkers.removeAt(customPointIndex)
+
+                                    // Reindex markers
+                                    customPointsMarkers.forEachIndexed { index, marker ->
+                                        val newCheckpointId =
+                                            index + checkpoints.size + anchorages.size + prohibitedProhibitedAnchoringZones.size + buoys.size + shipwrecks.size + anchorageZones.size + 1
+                                        marker.tag = "m$newCheckpointId"
+                                    }
+
+                                    customPointsMarkers.forEachIndexed { index, updatedMarker ->
+                                        updatedMarker.setIcon(
+                                            bitmapDescriptorFromVectorWithNumberOrLetter(
+                                                number = index + 1 // Reassign numbers sequentially
                                             )
                                         )
-
-                                        // Remove the marker from the map and the marker list
-                                        marker.remove()
-                                        customPointsMarkers.removeAt(customPointIndex)
-
-                                        // Reindex markers
-                                        customPointsMarkers.forEachIndexed { index, marker ->
-                                            val newCheckpointId =
-                                                index + checkpoints.size + anchorages.size + prohibitedProhibitedAnchoringZones.size + buoys.size + shipwrecks.size + anchorageZones.size + 1
-                                            marker.tag = "m$newCheckpointId"
-                                        }
-
-                                        // Reset polyline and recalculate everything
-                                        customPointsPollyline.forEach { it?.remove() }
-                                        customPointsPollyline.clear()
-
-                                        // Update logic for points after removal
-                                        for (i in 0 until customPointsMarkers.size - 1) {
-                                            val polylineOptions = PolylineOptions()
-                                                .add(customPointsMarkers[i].position, customPointsMarkers[i + 1].position)
-                                                .color(0xFFFFFFFF.toInt())
-                                                .width(5f)
-                                            customPointsPollyline.add(map.addPolyline(polylineOptions))
-                                        }
-
-                                        // Update ViewModel events as necessary
-                                        if (customPointsMarkers.size < 2) {
-                                            viewModel.onEvent(MapEvent.ClearDistanceBetweenCustomPoints)
-                                        }
+                                        updatedMarker.tag =
+                                            "m${index + 1}" // Update marker tag
                                     }
 
 
-                                    // Marker tag handling code
+                                    // Reset polyline and recalculate everything
+                                    customPointsPollyline.forEach { it?.remove() }
+                                    customPointsPollyline.clear()
+
+                                    // Update logic for points after removal
+                                    for (i in 0 until customPointsMarkers.size - 1) {
+                                        val polylineOptions = PolylineOptions()
+                                            .add(
+                                                customPointsMarkers[i].position,
+                                                customPointsMarkers[i + 1].position
+                                            )
+                                            .color(0xFFFFFFFF.toInt())
+                                            .width(5f)
+                                        customPointsPollyline.add(map.addPolyline(polylineOptions))
+                                    }
+
+                                    // Update ViewModel events as necessary
+                                    if (customPointsMarkers.size < 2) {
+                                        viewModel.onEvent(MapEvent.ClearDistanceBetweenCustomPoints)
+                                    }
+                                }
 
 
-                                    tag.startsWith("routem") -> {
-                                        val checkpointId = tag.removePrefix("routem").toInt()
-
-                                        // The 'checkpointId' is the custom index we assigned earlier, so we can directly use it
-                                        val markerIndex = checkpointId
-
-                                        // Ensure the markerIndex is valid
-                                        if (markerIndex >= 0 && markerIndex < customRoutePointsMarkers.size) {
-                                            // Remove the marker at 'markerIndex'
-                                            customRoutePointsMarkers[markerIndex].remove() // Remove the marker from the map
-                                            customRoutePointsMarkers.removeAt(markerIndex) // Remove marker from the list
+                                // Marker tag handling code
 
 
-                                            viewModel.onEvent(
-                                                MapEvent.OnMarkerRemovedCustomRoute(
-                                                    markerIndex
+                                tag.startsWith("routem") -> {
+                                    val checkpointId = tag.removePrefix("routem").toInt()
+
+                                    // The 'checkpointId' is the custom index we assigned earlier, so we can directly use it
+                                    val markerIndex = checkpointId
+
+                                    // Ensure the markerIndex is valid
+                                    if (markerIndex >= 0 && markerIndex < customRoutePointsMarkers.size) {
+                                        // Remove the marker at 'markerIndex'
+                                        customRoutePointsMarkers[markerIndex].remove() // Remove the marker from the map
+                                        customRoutePointsMarkers.removeAt(markerIndex) // Remove marker from the list
+
+
+                                        viewModel.onEvent(
+                                            MapEvent.OnMarkerRemovedCustomRoute(
+                                                markerIndex
+                                            )
+                                        )
+
+                                        // Reassign custom indices (routem0, routem1, etc.) to the remaining markers
+                                        customRoutePointsMarkers.forEachIndexed { index, marker ->
+                                            marker.tag =
+                                                "routem${index}" // Update the marker tag with the new index
+                                        }
+
+                                        customRoutePointsMarkers.forEachIndexed { index, updatedMarker ->
+                                            updatedMarker.setIcon(
+                                                bitmapDescriptorFromVectorWithNumber(
+                                                    number = index + 1 // Reassign numbers sequentially
+                                                )
+                                            )
+                                            updatedMarker.tag =
+                                                "routem${index + 1}" // Update marker tag
+                                        }
+
+                                        // Clear the existing polylines from the map
+                                        customRoutePointsPollyline.forEach { it?.remove() }
+                                        customRoutePointsPollyline.clear()
+
+                                        // Rebuild the polyline if at least two markers remain
+                                        if (customRoutePointsMarkers.size >= 2) {
+                                            // Create a new PolylineOptions object
+                                            val polylineOptions =
+                                                PolylineOptions().color(0xFFDC6601.toInt())
+                                                    .width(5f)
+
+                                            // Rebuild the polyline by connecting consecutive markers
+                                            for (i in 0 until customRoutePointsMarkers.size - 1) {
+                                                val startPosition =
+                                                    customRoutePointsMarkers[i].position
+                                                val endPosition =
+                                                    customRoutePointsMarkers[i + 1].position
+                                                polylineOptions.add(startPosition, endPosition)
+                                            }
+
+                                            // Add the new polyline to the map
+                                            customRoutePointsPollyline.add(
+                                                map.addPolyline(
+                                                    polylineOptions
                                                 )
                                             )
 
-                                            // Reassign custom indices (routem0, routem1, etc.) to the remaining markers
-                                            customRoutePointsMarkers.forEachIndexed { index, marker ->
-                                                marker.tag =
-                                                    "routem${index}" // Update the marker tag with the new index
-                                            }
+                                            // Optionally update the distance text offset or other UI components
+                                            // updateDistanceTextOffset() // Uncomment if needed
+                                        } else {
+                                            // If fewer than two markers remain, clear the route distance and UI components
+                                            viewModel.onEvent(MapEvent.ClearCustomRouteDistance)
+                                        }
 
-                                            // Clear the existing polylines from the map
+                                        // Remove the marker from the map
+                                        marker.remove()
+                                    }
+                                }
+
+
+                                tag.startsWith("checkpoint_") -> {
+                                    val checkpointId = tag.removePrefix("checkpoint_").toInt()
+                                    val clickedCheckpoint =
+                                        localCheckpoints.firstOrNull { it.id == checkpointId }
+                                    clickedCheckpoint?.let { onCheckpointClick(it) }
+                                }
+
+                                tag.startsWith("shipwreck_") -> {
+                                    val shipwreckId = tag.removePrefix("shipwreck_").toInt()
+                                    val clickedShipwreck =
+                                        localShipwrecks.firstOrNull { it.id == shipwreckId }
+                                    clickedShipwreck?.let { onShipwreckClick(it) }
+                                }
+
+                                tag.startsWith("prohibitedAnchoringZone_") -> {
+                                    val prohibitedAnchoringZoneId =
+                                        tag.removePrefix("prohibitedAnchoringZone_").toInt()
+                                    val clickedProhibitedAnchoringZone =
+                                        localProhibitedProhibitedAnchoringZones.firstOrNull { it.id == prohibitedAnchoringZoneId }
+                                    clickedProhibitedAnchoringZone?.let {
+                                        onProhibitedAnchoringZoneClick(
+                                            it
+                                        )
+                                    }
+                                }
+
+                                tag.startsWith("anchorage_") -> {
+                                    val anchorageId = tag.removePrefix("anchorage_").toInt()
+                                    val clickedAnchorage =
+                                        localAnchorages.firstOrNull { it.id == anchorageId }
+                                    clickedAnchorage?.let {
+                                        onAnchorageClick(it)
+                                    }
+                                }
+
+                                tag.startsWith("anchorageZone_") -> {
+                                    val anchorageZoneId =
+                                        tag.removePrefix("anchorageZone_").toInt()
+                                    val clickedAnchorageZone =
+                                        localAnchorageZones.firstOrNull { it.id == anchorageZoneId }
+                                    clickedAnchorageZone?.let {
+                                        onAnchorageZoneClick(it)
+                                    }
+                                }
+
+                                tag.startsWith("buoy_") -> {
+                                    val buoyId = tag.removePrefix("buoy_").toInt()
+                                    val clickedBuoy = localBuoys.firstOrNull { it.id == buoyId }
+                                    clickedBuoy?.let {
+                                        onBuoyClick(it)
+                                    }
+                                }
+
+                                tag.startsWith("depth_") -> {
+                                    val depthMarkerPosition = marker.position
+
+                                    if (state.shouldEnableCustomRoute) {
+                                        // Check if the marker already exists in the custom route list
+                                        val existingMarkerIndex =
+                                            customRoutePointsMarkers.indexOfFirst { it.position == depthMarkerPosition }
+
+                                        if (existingMarkerIndex != -1) {
+                                            // Marker exists: remove it and update the route
+                                            val existingMarker =
+                                                customRoutePointsMarkers[existingMarkerIndex]
+                                            existingMarker.remove() // Remove marker from the map
+                                            customRoutePointsMarkers.removeAt(existingMarkerIndex) // Remove marker from the list
+
+                                            // Update ViewModel
+                                            viewModel.onEvent(
+                                                MapEvent.OnMarkerRemovedCustomRoute(
+                                                    existingMarkerIndex
+                                                )
+                                            )
+
+                                            customRoutePointsMarkers.forEachIndexed { index, updatedMarker ->
+                                                updatedMarker.setIcon(
+                                                    bitmapDescriptorFromVectorWithNumber(
+                                                        number = index + 1 // Reassign numbers sequentially
+                                                    )
+                                                )
+                                                updatedMarker.tag =
+                                                    "routem${index + 1}" // Update marker tag
+                                            }
+                                            // Rebuild polyline
                                             customRoutePointsPollyline.forEach { it?.remove() }
                                             customRoutePointsPollyline.clear()
 
-                                            // Rebuild the polyline if at least two markers remain
                                             if (customRoutePointsMarkers.size >= 2) {
-                                                // Create a new PolylineOptions object
                                                 val polylineOptions =
                                                     PolylineOptions().color(0xFFDC6601.toInt())
                                                         .width(5f)
-
-                                                // Rebuild the polyline by connecting consecutive markers
                                                 for (i in 0 until customRoutePointsMarkers.size - 1) {
-                                                    val startPosition =
-                                                        customRoutePointsMarkers[i].position
-                                                    val endPosition =
+                                                    polylineOptions.add(
+                                                        customRoutePointsMarkers[i].position,
                                                         customRoutePointsMarkers[i + 1].position
-                                                    polylineOptions.add(startPosition, endPosition)
+                                                    )
                                                 }
-
-                                                // Add the new polyline to the map
                                                 customRoutePointsPollyline.add(
                                                     map.addPolyline(
                                                         polylineOptions
                                                     )
                                                 )
-
-                                                // Optionally update the distance text offset or other UI components
-                                                // updateDistanceTextOffset() // Uncomment if needed
                                             } else {
-                                                // If fewer than two markers remain, clear the route distance and UI components
                                                 viewModel.onEvent(MapEvent.ClearCustomRouteDistance)
                                             }
-
-                                            // Remove the marker from the map
-                                            marker.remove()
-                                        }
-                                    }
-
-
-                                    tag.startsWith("checkpoint_") -> {
-                                        val checkpointId = tag.removePrefix("checkpoint_").toInt()
-                                        val clickedCheckpoint =
-                                            localCheckpoints.firstOrNull { it.id == checkpointId }
-                                        clickedCheckpoint?.let { onCheckpointClick(it) }
-                                    }
-
-                                    tag.startsWith("shipwreck_") -> {
-                                        val shipwreckId = tag.removePrefix("shipwreck_").toInt()
-                                        val clickedShipwreck =
-                                            localShipwrecks.firstOrNull { it.id == shipwreckId }
-                                        clickedShipwreck?.let { onShipwreckClick(it) }
-                                    }
-
-                                    tag.startsWith("prohibitedAnchoringZone_") -> {
-                                        val prohibitedAnchoringZoneId =
-                                            tag.removePrefix("prohibitedAnchoringZone_").toInt()
-                                        val clickedProhibitedAnchoringZone =
-                                            localProhibitedProhibitedAnchoringZones.firstOrNull { it.id == prohibitedAnchoringZoneId }
-                                        clickedProhibitedAnchoringZone?.let {
-                                            onProhibitedAnchoringZoneClick(
-                                                it
+                                        } else {
+                                            // Marker doesn't exist: add it to the custom route
+                                            val newMarker = map.addMarker(
+                                                MarkerOptions().position(depthMarkerPosition).icon(
+                                                    bitmapDescriptorFromVectorWithNumber(
+                                                        number = customRoutePointsMarkers.size + 1
+                                                    )
+                                                )
                                             )
-                                        }
-                                    }
+                                            newMarker?.tag =
+                                                "routem${customRoutePointsMarkers.size}"
+                                            newMarker?.let { customRoutePointsMarkers.add(it) }
+                                            viewModel.onEvent(
+                                                MapEvent.OnMapCustomRouteClick(
+                                                    depthMarkerPosition
+                                                )
+                                            )
 
-                                    tag.startsWith("anchorage_") -> {
-                                        val anchorageId = tag.removePrefix("anchorage_").toInt()
-                                        val clickedAnchorage =
-                                            localAnchorages.firstOrNull { it.id == anchorageId }
-                                        clickedAnchorage?.let {
-                                            onAnchorageClick(it)
-                                        }
-                                    }
-
-                                    tag.startsWith("anchorageZone_") -> {
-                                        val anchorageZoneId =
-                                            tag.removePrefix("anchorageZone_").toInt()
-                                        val clickedAnchorageZone =
-                                            localAnchorageZones.firstOrNull { it.id == anchorageZoneId }
-                                        clickedAnchorageZone?.let {
-                                            onAnchorageZoneClick(it)
-                                        }
-                                    }
-
-                                    tag.startsWith("buoy_") -> {
-                                        val buoyId = tag.removePrefix("buoy_").toInt()
-                                        val clickedBuoy = localBuoys.firstOrNull { it.id == buoyId }
-                                        clickedBuoy?.let {
-                                            onBuoyClick(it)
-                                        }
-                                    }
-
-                                    tag.startsWith("depth_") -> {
-                                        val depthMarkerPosition = marker.position
-
-                                        if (state.shouldEnableCustomRoute) {
-                                            // Check if the marker already exists in the custom route list
-                                            val existingMarkerIndex = customRoutePointsMarkers.indexOfFirst { it.position == depthMarkerPosition }
-
-                                            if (existingMarkerIndex != -1) {
-                                                // Marker exists: remove it and update the route
-                                                val existingMarker = customRoutePointsMarkers[existingMarkerIndex]
-                                                existingMarker.remove() // Remove marker from the map
-                                                customRoutePointsMarkers.removeAt(existingMarkerIndex) // Remove marker from the list
-
-                                                // Update ViewModel
-                                                viewModel.onEvent(MapEvent.OnMarkerRemovedCustomRoute(existingMarkerIndex))
-
-                                                // Rebuild polyline
+                                            // Rebuild polyline if at least two markers are present
+                                            if (customRoutePointsMarkers.size >= 2) {
                                                 customRoutePointsPollyline.forEach { it?.remove() }
                                                 customRoutePointsPollyline.clear()
 
-                                                if (customRoutePointsMarkers.size >= 2) {
-                                                    val polylineOptions = PolylineOptions().color(0xFFDC6601.toInt()).width(5f)
-                                                    for (i in 0 until customRoutePointsMarkers.size - 1) {
-                                                        polylineOptions.add(
-                                                            customRoutePointsMarkers[i].position,
-                                                            customRoutePointsMarkers[i + 1].position
-                                                        )
-                                                    }
-                                                    customRoutePointsPollyline.add(map.addPolyline(polylineOptions))
-                                                } else {
-                                                    viewModel.onEvent(MapEvent.ClearCustomRouteDistance)
-                                                }
-                                            } else {
-                                                // Marker doesn't exist: add it to the custom route
-                                                val newMarker = map.addMarker(
-                                                    MarkerOptions()
-                                                        .position(depthMarkerPosition)
-                                                        .icon(
-                                                            bitmapDescriptorFromVector(
-                                                                vectorResId = R.drawable.checkpoint_to,
-                                                                context = context
-                                                            )
-                                                        )
-                                                )
-                                                newMarker?.tag = "routem${customRoutePointsMarkers.size}"
-                                                newMarker?.let { customRoutePointsMarkers.add(it) }
-                                                viewModel.onEvent(MapEvent.OnMapCustomRouteClick(depthMarkerPosition))
-
-                                                // Rebuild polyline if at least two markers are present
-                                                if (customRoutePointsMarkers.size >= 2) {
-                                                    customRoutePointsPollyline.forEach { it?.remove() }
-                                                    customRoutePointsPollyline.clear()
-
-                                                    val polylineOptions = PolylineOptions().color(0xFFDC6601.toInt()).width(5f)
-                                                    for (i in 0 until customRoutePointsMarkers.size - 1) {
-                                                        polylineOptions.add(
-                                                            customRoutePointsMarkers[i].position,
-                                                            customRoutePointsMarkers[i + 1].position
-                                                        )
-                                                    }
-                                                    customRoutePointsPollyline.add(map.addPolyline(polylineOptions))
-                                                }
-                                            }
-                                        } else if (state.shouldEnableCustomPointToPoint) {
-                                            // Handle custom point-to-point logic
-                                            if (!customPointsMarkers.any { it.position == depthMarkerPosition }) {
-                                                val newMarker = map.addMarker(
-                                                    MarkerOptions()
-                                                        .position(depthMarkerPosition)
-                                                        .icon(
-                                                            bitmapDescriptorFromVector(
-                                                                vectorResId = R.drawable.checkpoint_to,
-                                                                context = context
-                                                            )
-                                                        )
-                                                )
-                                                newMarker?.tag = "m${customPointsMarkers.size}"
-                                                newMarker?.let {
-                                                    customPointsMarkers.add(it)
-                                                    viewModel.onEvent(
-                                                        MapEvent.OnMapTwoPointsClick(
-                                                            it.position,
-                                                            customPointsMarkers.size - 1
-                                                        )
+                                                val polylineOptions =
+                                                    PolylineOptions().color(0xFFDC6601.toInt())
+                                                        .width(5f)
+                                                for (i in 0 until customRoutePointsMarkers.size - 1) {
+                                                    polylineOptions.add(
+                                                        customRoutePointsMarkers[i].position,
+                                                        customRoutePointsMarkers[i + 1].position
                                                     )
                                                 }
+                                                customRoutePointsPollyline.add(
+                                                    map.addPolyline(
+                                                        polylineOptions
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    } else if (state.shouldEnableCustomPointToPoint) {
+                                        // Handle custom point-to-point logic
+                                        if (!customPointsMarkers.any { it.position == depthMarkerPosition }) {
+                                            val newMarker = map.addMarker(
+                                                MarkerOptions().position(depthMarkerPosition).icon(
+                                                    bitmapDescriptorFromVectorWithNumberOrLetter(
+                                                        number = customPointsMarkers.size + 1
+                                                    )
+                                                )
+                                            )
+                                            newMarker?.tag = "m${customPointsMarkers.size}"
+                                            newMarker?.let {
+                                                customPointsMarkers.add(it)
+                                                viewModel.onEvent(
+                                                    MapEvent.OnMapTwoPointsClick(
+                                                        it.position,
+                                                        customPointsMarkers.size - 1
+                                                    )
+                                                )
+                                            }
 
-                                                // Update polyline logic for two or more points
+                                            // Update polyline logic for two or more points
+                                            if (customPointsMarkers.size >= 2) {
+                                                customPointsPollyline.forEach { it?.remove() }
+                                                customPointsPollyline.clear()
+
+                                                val polylineOptions =
+                                                    PolylineOptions().color(0xFFFFFFFF.toInt())
+                                                        .width(5f)
+                                                for (i in 0 until customPointsMarkers.size - 1) {
+                                                    polylineOptions.add(
+                                                        customPointsMarkers[i].position,
+                                                        customPointsMarkers[i + 1].position
+                                                    )
+                                                }
+                                                customPointsPollyline.add(
+                                                    map.addPolyline(
+                                                        polylineOptions
+                                                    )
+                                                )
+                                            }
+                                        } else {
+                                            // Marker exists: remove it and update the custom points
+                                            val existingMarkerIndex =
+                                                customPointsMarkers.indexOfFirst { it.position == depthMarkerPosition }
+                                            if (existingMarkerIndex != -1) {
+                                                val existingMarker =
+                                                    customPointsMarkers[existingMarkerIndex]
+                                                existingMarker.remove() // Remove marker from the map
+                                                customPointsMarkers.removeAt(existingMarkerIndex) // Remove marker from the list
+
+                                                // Update ViewModel
+                                                viewModel.onEvent(
+                                                    MapEvent.OnMarkerRemovedTwoPoints(
+                                                        existingMarkerIndex
+                                                    )
+                                                )
+
+                                                customPointsMarkers.forEachIndexed { index, updatedMarker ->
+                                                    updatedMarker.setIcon(
+                                                        bitmapDescriptorFromVectorWithNumberOrLetter(
+                                                            number = index + 1 // Reassign numbers sequentially
+                                                        )
+                                                    )
+                                                    updatedMarker.tag =
+                                                        "m${index + 1}" // Update marker tag
+                                                }
+
+                                                // Clear and rebuild polyline for the remaining points
+                                                customPointsPollyline.forEach { it?.remove() }
+                                                customPointsPollyline.clear()
+
                                                 if (customPointsMarkers.size >= 2) {
-                                                    customPointsPollyline.forEach { it?.remove() }
-                                                    customPointsPollyline.clear()
-
-                                                    val polylineOptions = PolylineOptions().color(0xFFFFFFFF.toInt()).width(5f)
+                                                    val polylineOptions =
+                                                        PolylineOptions().color(0xFFFFFFFF.toInt())
+                                                            .width(5f)
                                                     for (i in 0 until customPointsMarkers.size - 1) {
                                                         polylineOptions.add(
                                                             customPointsMarkers[i].position,
                                                             customPointsMarkers[i + 1].position
                                                         )
                                                     }
-                                                    customPointsPollyline.add(map.addPolyline(polylineOptions))
-                                                }
-                                            } else {
-                                                // Marker exists: remove it and update the custom points
-                                                val existingMarkerIndex = customPointsMarkers.indexOfFirst { it.position == depthMarkerPosition }
-                                                if (existingMarkerIndex != -1) {
-                                                    val existingMarker = customPointsMarkers[existingMarkerIndex]
-                                                    existingMarker.remove() // Remove marker from the map
-                                                    customPointsMarkers.removeAt(existingMarkerIndex) // Remove marker from the list
-
-                                                    // Update ViewModel
-                                                    viewModel.onEvent(MapEvent.OnMarkerRemovedTwoPoints(existingMarkerIndex))
-
-                                                    // Clear and rebuild polyline for the remaining points
-                                                    customPointsPollyline.forEach { it?.remove() }
-                                                    customPointsPollyline.clear()
-
-                                                    if (customPointsMarkers.size >= 2) {
-                                                        val polylineOptions = PolylineOptions().color(0xFFFFFFFF.toInt()).width(5f)
-                                                        for (i in 0 until customPointsMarkers.size - 1) {
-                                                            polylineOptions.add(
-                                                                customPointsMarkers[i].position,
-                                                                customPointsMarkers[i + 1].position
-                                                            )
-                                                        }
-                                                        customPointsPollyline.add(map.addPolyline(polylineOptions))
-                                                    } else {
-                                                        viewModel.onEvent(MapEvent.ClearDistanceBetweenCustomPoints)
-                                                    }
+                                                    customPointsPollyline.add(
+                                                        map.addPolyline(
+                                                            polylineOptions
+                                                        )
+                                                    )
+                                                } else {
+                                                    viewModel.onEvent(MapEvent.ClearDistanceBetweenCustomPoints)
                                                 }
                                             }
                                         }
-
-
-                                        true // Indicate the click was handled
                                     }
 
 
-
-
+                                    true // Indicate the click was handled
                                 }
-                                true // Mark the event as handled
+
+
                             }
+                            true // Mark the event as handled
+                        }
 
 
                     }

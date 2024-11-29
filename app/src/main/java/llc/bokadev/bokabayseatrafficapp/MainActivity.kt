@@ -1,33 +1,21 @@
 package llc.bokadev.bokabayseatrafficapp
 
 import android.Manifest
-import android.content.Context
-import android.content.Intent
 import android.content.IntentSender
-import android.content.pm.PackageManager
 import android.hardware.GeomagneticField
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import android.location.Geocoder
 import android.location.Location
-import android.location.LocationManager
 import android.os.Bundle
-import android.os.Handler
-import android.provider.Settings
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.core.content.ContextCompat
-import androidx.core.location.LocationManagerCompat.isLocationEnabled
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.MultiplePermissionsState
 import com.google.accompanist.permissions.PermissionStatus
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.common.api.ResolvableApiException
@@ -36,19 +24,16 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.launch
 import llc.bokadev.bokabayseatrafficapp.core.navigation.Navigator
 import llc.bokadev.bokabayseatrafficapp.core.navigation.graphs.BokaBaySeaTrafficAppNavigation
 import llc.bokadev.bokabayseatrafficapp.core.utils.CustomModifiers
 import llc.bokadev.bokabayseatrafficapp.core.utils.rememberAppState
-import llc.bokadev.bokabayseatrafficapp.presentation.BayMapViewModel
-import llc.bokadev.bokabayseatrafficapp.presentation.MapEvent
+import llc.bokadev.bokabayseatrafficapp.presentation.bay_map.BayMapViewModel
+import llc.bokadev.bokabayseatrafficapp.presentation.bay_map.MapEvent
 import llc.bokadev.bokabayseatrafficapp.presentation.PermissionDenied
 import llc.bokadev.bokabayseatrafficapp.ui.theme.BokaBaySeaTrafficAppTheme
-import org.checkerframework.checker.units.qual.degrees
 import timber.log.Timber
-import java.util.Locale
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -121,7 +106,6 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                         if (hasLocationPermission) {
                             // If permissions are granted, proceed with the app's navigation and flow
                             BokaBaySeaTrafficAppNavigation(
-                                viewModel = viewModel,
                                 navController = appState.navController,
                                 navigator = navigator,
                                 showSnackBar = { message ->

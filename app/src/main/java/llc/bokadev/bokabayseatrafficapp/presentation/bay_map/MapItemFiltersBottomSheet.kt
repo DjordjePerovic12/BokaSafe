@@ -1,4 +1,4 @@
-package llc.bokadev.bokabayseatrafficapp.presentation
+package llc.bokadev.bokabayseatrafficapp.presentation.bay_map
 
 import llc.bokadev.bokabayseatrafficapp.domain.model.MapItemFilters
 import androidx.compose.foundation.background

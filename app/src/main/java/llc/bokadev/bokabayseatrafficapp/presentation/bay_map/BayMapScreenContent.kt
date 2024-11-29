@@ -1,6 +1,7 @@
-package llc.bokadev.bokabayseatrafficapp.presentation
+package llc.bokadev.bokabayseatrafficapp.presentation.bay_map
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -180,7 +181,9 @@ fun BokaBayMapScreenContent(
         if (state.customPointsDistance != null && state.customPointsDistance.toNauticalMiles() != "0.00") {
             Text(
                 text = "D: ${state.customPointsDistance.toNauticalMiles()} NM \n" +
-                        if(state.customPointsAzimuth != null)"W: ${state.customPointsAzimuth?.toInt()?.toThreeDigitString()}°" else "",
+                        if (state.customPointsAzimuth != null) "W: ${
+                            state.customPointsAzimuth?.toInt()?.toThreeDigitString()
+                        }°" else "",
                 modifier = Modifier.offset {
                     IntOffset(
                         textPosition.x.toInt(),
@@ -279,57 +282,81 @@ fun BokaBayMapScreenContent(
                 )
             }
 
-
         }
 
-            Column(
-                verticalArrangement = Arrangement.spacedBy(20.dp),
-                horizontalAlignment = Alignment.Start,
-                modifier = Modifier.padding(top = 70.dp)
+        Column(
+            verticalArrangement = Arrangement.spacedBy(40.dp),
+            horizontalAlignment = Alignment.End,
+            modifier = Modifier.fillMaxWidth().padding(top = 90.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .padding(end = 25.dp)
+                    .size(50.dp)
+                    .clip(RoundedCornerShape(100.dp))
+                    .background(BokaBaySeaTrafficAppTheme.colors.darkBlue)
+                    .align(Alignment.End)
+                    .clickable {
+                        viewModel.onEvent(MapEvent.OnMoreClick)
+                    }
+                    .zIndex(1f)
             ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.more),
+                    contentDescription = null,
+                    modifier = Modifier.padding(15.dp),
+                    tint = BokaBaySeaTrafficAppTheme.colors.lightBlue
+                )
+            }
+        }
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+            horizontalAlignment = Alignment.Start,
+            modifier = Modifier.padding(top = 70.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .padding(top = 25.dp, start = 25.dp)
+                    .size(70.dp)
+                    .clip(RoundedCornerShape(100.dp))
+                    .background(BokaBaySeaTrafficAppTheme.colors.lightGreen)
+                    .zIndex(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                if (state.preferredSpeedUnit == "knots" || state.preferredSpeedUnit == "")
+                    Text(
+                        text = if (state.isUserStatic || viewModel.speedList.isEmpty()) "0.0 \n knots" else "${state.userMovementSpeed?.toKnots()} \n knots",
+                        style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular18,
+                        color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
+                        textAlign = TextAlign.Center
+                    )
+                else Text(
+                    text = if (state.isUserStatic || viewModel.speedList.isEmpty()) "0.0 \n km/h" else "${state.userMovementSpeed?.toKilometersPerHour()} \n km/h",
+                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular20,
+                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            if (state.userCourseOfMovement != String() && state.userCourseOfMovementAzimuth != null) {
                 Box(
                     modifier = Modifier
-                        .padding(top = 25.dp, start = 25.dp)
-                        .size(70.dp)
+                        .padding(start = 25.dp)
+                        .size(50.dp)
                         .clip(RoundedCornerShape(100.dp))
                         .background(BokaBaySeaTrafficAppTheme.colors.lightGreen)
                         .zIndex(1f),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (state.preferredSpeedUnit == "knots" || state.preferredSpeedUnit == "")
-                        Text(
-                            text = if (state.isUserStatic || viewModel.speedList.isEmpty()) "0.0 \n knots" else "${state.userMovementSpeed?.toKnots()} \n knots",
-                            style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular18,
-                            color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                            textAlign = TextAlign.Center
-                        )
-                    else Text(
-                        text = if (state.isUserStatic || viewModel.speedList.isEmpty()) "0.0 \n km/h" else "${state.userMovementSpeed?.toKilometersPerHour()} \n km/h",
-                        style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular20,
-                        color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                        textAlign = TextAlign.Center
+                    Text(
+                        text = state.userCourseOfMovementAzimuth.toInt().toThreeDigitString(),
+                        style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular18,
+                        color = BokaBaySeaTrafficAppTheme.colors.darkBlue
                     )
                 }
-
-                if (state.userCourseOfMovement != String() && state.userCourseOfMovementAzimuth != null)
-                {
-                    Box(
-                        modifier = Modifier
-                            .padding(start = 25.dp)
-                            .size(50.dp)
-                            .clip(RoundedCornerShape(100.dp))
-                            .background(BokaBaySeaTrafficAppTheme.colors.lightGreen)
-                            .zIndex(1f),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = state.userCourseOfMovementAzimuth.toInt().toThreeDigitString(),
-                            style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular18,
-                            color = BokaBaySeaTrafficAppTheme.colors.darkBlue
-                        )
-                    }
-                }
             }
+        }
 
 
 
@@ -384,7 +411,6 @@ fun BokaBayMapScreenContent(
                 tint = BokaBaySeaTrafficAppTheme.colors.lightBlue
             )
         }
-
 
 
     }
