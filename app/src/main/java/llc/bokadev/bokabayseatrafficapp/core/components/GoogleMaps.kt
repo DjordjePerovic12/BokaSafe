@@ -7,6 +7,11 @@ import android.view.View
 import android.widget.TextView
 import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -15,8 +20,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
+import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,6 +31,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -83,7 +92,10 @@ import timber.log.Timber
 
 @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
 @SuppressLint("PotentialBehaviorOverride")
-@OptIn(MapsComposeExperimentalApi::class, ExperimentalMaterial3Api::class)
+@OptIn(
+    MapsComposeExperimentalApi::class, ExperimentalMaterial3Api::class,
+    ExperimentalFoundationApi::class
+)
 @Composable
 fun GoogleMaps(
     modifier: Modifier = Modifier,
@@ -171,7 +183,12 @@ fun GoogleMaps(
             zoomControlsEnabled = false,
             mapToolbarEnabled = false,
             compassEnabled = false,
-            rotationGesturesEnabled = false
+            rotationGesturesEnabled = false,
+            scrollGesturesEnabled = state.azimuthFromCursor == null,
+            tiltGesturesEnabled = state.azimuthFromCursor == null,
+            zoomGesturesEnabled = state.azimuthFromCursor == null,
+            scrollGesturesEnabledDuringRotateOrZoom = state.azimuthFromCursor == null,
+
         )
     }
     var markerCreated by remember {
@@ -233,21 +250,109 @@ fun GoogleMaps(
 
     var selectedMarker by remember { mutableStateOf<Marker?>(null) }
 
+    var showCursor by remember { mutableStateOf(false) }
+    var cursorPosition by remember { mutableStateOf<Offset?>(null) }
 
+    var googleMapInstance by remember { mutableStateOf<GoogleMap?>(null) }
 
+    var cursorActive by remember { mutableStateOf(false) }
 
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(cursorActive) {
+                if (cursorActive) {
+                    detectDragGestures(
+                        onDragStart = { offset ->
+                            Timber.e("Cursor drag started at offset: $offset")
+                            cursorActive = true // Ensure cursor is active
+                            showCursor = true  // Show the cursor immediately
 
+                            // Update cursor position
+                            cursorPosition = offset + Offset(0f, -250f)
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        var googleMapInstance by remember { mutableStateOf<GoogleMap?>(null) }
-        GoogleMap(
+                            // Update LatLng immediately
+                            googleMapInstance?.let { map ->
+                                val adjustedOffset = android.graphics.Point(
+                                    (cursorPosition!!.x).toInt(),
+                                    (cursorPosition!!.y + 250.dp.toPx()).toInt()
+                                )
+                                val updatedLatLng = map.projection.fromScreenLocation(adjustedOffset)
+                                viewModel.onEvent(MapEvent.OnCursorActive(updatedLatLng))
+                                viewModel.onEvent(
+                                    MapEvent.OnDistanceTextOffsetChange(
+                                        Offset(cursorPosition!!.x, cursorPosition!!.y)
+                                    )
+                                )
+                                Timber.e("Updated LatLng at drag start: $updatedLatLng")
+                            }
+                        },
+                        onDrag = { change, dragAmount ->
+                            // Cursor drag behavior
+                            val newOffset = cursorPosition?.let {
+                                Offset(it.x + dragAmount.x, it.y + dragAmount.y)
+                            } ?: (change.position + Offset(0f, -250f))
+                            cursorPosition = newOffset
+
+                            // Update LatLng based on cursor position
+                            googleMapInstance?.let { map ->
+                                val adjustedOffset = android.graphics.Point(
+                                    (newOffset.x).toInt(),
+                                    (newOffset.y + 250.dp.toPx()).toInt()
+                                )
+                                val updatedLatLng = map.projection.fromScreenLocation(adjustedOffset)
+                                viewModel.onEvent(MapEvent.OnCursorActive(updatedLatLng))
+                                viewModel.onEvent(
+                                    MapEvent.OnDistanceTextOffsetChange(
+                                        Offset(newOffset.x, newOffset.y)
+                                    )
+                                )
+                                Timber.e("Updated LatLng during drag: $updatedLatLng")
+                            }
+                        },
+                        onDragEnd = {
+                            Timber.e("Cursor drag ended")
+                            cursorActive = false
+                            showCursor = false
+                            viewModel.onEvent(MapEvent.OnCursorClear)
+                        },
+                        onDragCancel = {
+                            Timber.e("Cursor drag cancelled")
+                            cursorActive = false
+                            showCursor = false
+                            viewModel.onEvent(MapEvent.OnCursorClear)
+                        }
+                    )
+                } else {
+                    return@pointerInput
+                }
+            }
+    )
+
+    {GoogleMap(
             modifier = modifier,
             uiSettings = uiSettingsState,
             cameraPositionState = cameraPositionState,
             properties = mapProperties
         ) {
+
+
             MapEffect(key1 = Unit) { map ->
                 googleMapInstance = map
+            }
+
+            MapEffect(key1 = Unit) { map ->
+                map.setOnMapLongClickListener { latLng ->
+                    Timber.e("Map long click detected at LatLng: $latLng")
+                    cursorActive = true
+                    showCursor = true
+
+                    googleMapInstance?.let {
+                        val screenPosition = it.projection.toScreenLocation(latLng)
+                        cursorPosition = Offset(screenPosition.x.toFloat(), screenPosition.y.toFloat() - 250f)
+                        viewModel.onEvent(MapEvent.OnCursorActive(latLng))
+                    }
+                }
             }
 
 
@@ -779,6 +884,8 @@ fun GoogleMaps(
                             Timber.e("CustomCheckpointMarkers ${(checkpoints.size + anchorages.size + prohibitedProhibitedAnchoringZones.size + buoys.size + shipwrecks.size + anchorageZones.size)}")
                             val tag =
                                 marker.tag as? String ?: return@setOnMarkerClickListener true
+
+
 
                             when {
                                 tag.startsWith("m") -> {

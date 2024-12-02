@@ -2,6 +2,7 @@ package llc.bokadev.bokabayseatrafficapp.presentation.bay_map
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -30,6 +31,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -43,6 +47,8 @@ import llc.bokadev.bokabayseatrafficapp.core.components.GoogleMaps
 import llc.bokadev.bokabayseatrafficapp.core.utils.noRippleClickable
 import llc.bokadev.bokabayseatrafficapp.core.utils.toKilometersPerHour
 import llc.bokadev.bokabayseatrafficapp.core.utils.toKnots
+import llc.bokadev.bokabayseatrafficapp.core.utils.toLatitude
+import llc.bokadev.bokabayseatrafficapp.core.utils.toLongitude
 import llc.bokadev.bokabayseatrafficapp.core.utils.toThreeDigitString
 import llc.bokadev.bokabayseatrafficapp.domain.model.Anchorage
 import llc.bokadev.bokabayseatrafficapp.domain.model.AnchorageZone
@@ -98,13 +104,7 @@ fun BokaBayMapScreenContent(
         textPosition = state.distanceTextOffset
     }
 
-    LaunchedEffect(key1 = state.userMovementSpeed) {
-        Timber.e("SPEED ${state.userMovementSpeed}")
-    }
 
-    LaunchedEffect(key1 = state.userCourseOfMovementAzimuth) {
-        Timber.e("COURSE ${state.userCourseOfMovementAzimuth}")
-    }
 
 
 
@@ -201,6 +201,65 @@ fun BokaBayMapScreenContent(
                 style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold20
             )
         }
+
+        if (state.distanceFromCursor != null && state.azimuthFromCursor != null) {
+            Box(
+                modifier = Modifier
+                    .offset {
+                        IntOffset(
+                            state.distanceTextOffset.x.toInt(),
+                            state.distanceTextOffset.y.toInt()
+                        )
+                    }
+            ) {
+                // Draw cursor (a small '+' with a hole in the center)
+                Canvas(modifier = Modifier.size(30.dp)) { // Increased size for better visibility
+                    drawLine(
+                        color = Color.Red,
+                        start = Offset(15f, 0f), // Centered vertically
+                        end = Offset(15f, 30f), // Longer vertical line
+                        strokeWidth = 3f // Increased stroke width for visibility
+                    )
+                    drawLine(
+                        color = Color.Red,
+                        start = Offset(0f, 15f), // Centered horizontally
+                        end = Offset(30f, 15f), // Longer horizontal line
+                        strokeWidth = 3f // Increased stroke width for visibility
+                    )
+                    drawCircle(
+                        color = Color.Transparent,
+                        radius = 3f, // Slightly larger hole in the center
+                        center = Offset(15f, 15f) // Center of the canvas
+                    )
+                }
+
+                // Calculate dynamic offset for the text
+                val screenWidth = LocalContext.current.resources.displayMetrics.widthPixels
+                val density = LocalContext.current.resources.displayMetrics.density
+                val dynamicOffsetX = if (state.distanceTextOffset.x > screenWidth - (200 * density)) {
+                    (-200).dp // Offset to the left if near the right edge
+                } else {
+                    20.dp // Default offset to the right
+                }
+
+
+
+
+                // Draw text below the cursor
+                Text(
+                    text = "D: ${state.distanceFromCursor?.toNauticalMiles()} NM\n" +
+                            "W: ${state.azimuthFromCursor?.toInt()?.toThreeDigitString()}°\n" +
+                            "Latitude : ${state.cursorLatLng?.latitude?.toLatitude()} N\",\n" +
+                            "Longitude : ${state.cursorLatLng?.longitude?.toLongitude()} E\"",
+                    color = Color.White,
+                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold20,
+                    modifier = Modifier.offset(x = dynamicOffsetX) // Position text below cursor
+                )
+            }
+        }
+
+
+
 
 
 

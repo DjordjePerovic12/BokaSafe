@@ -4,7 +4,10 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.drag
+import androidx.compose.foundation.gestures.forEachGesture
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -15,7 +18,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.focus.FocusManager
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.PointerInputChange
+import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
@@ -28,6 +35,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import java.net.URLEncoder
+import kotlin.coroutines.cancellation.CancellationException
 
 @Composable
 inline fun <reified T> Flow<T>.observeWithLifecycle(
@@ -131,4 +139,54 @@ fun Double.toLongitude(): String {
     val degrees = this.toInt() // Extract the integer part for degrees
     val minutes = (Math.abs(this) - Math.abs(degrees)) * 60 // Calculate fractional part in minutes
     return String.format("%03d° %.3f'", degrees, minutes) // Use %03d for three digits
+}
+
+
+suspend fun PointerInputScope.detectDragGesturesWithLongPress(
+    longPressTimeout: Long = 500L,
+    onLongPressStart: (Offset) -> Unit,
+    onDrag: (PointerInputChange, Offset) -> Unit,
+    onShortDrag: (PointerInputChange, Offset) -> Unit,
+    onDragEnd: () -> Unit,
+    onDragCancel: () -> Unit
+) {
+    val handler = android.os.Handler(android.os.Looper.getMainLooper())
+    var isLongPress = false
+    var longPressActivated = false
+    var initialPosition: Offset? = null
+
+    forEachGesture {
+        awaitPointerEventScope {
+            val down = awaitFirstDown()
+            isLongPress = false
+            longPressActivated = false
+            initialPosition = down.position
+
+            // Schedule long press detection
+            handler.postDelayed({
+                isLongPress = true
+                longPressActivated = true
+                onLongPressStart(initialPosition!!)
+            }, longPressTimeout)
+
+            // Start detecting drag gestures
+            try {
+                drag(down.id) { change ->
+                    if (longPressActivated) {
+                        onDrag(change, change.positionChange())
+                    } else {
+                        onShortDrag(change, change.positionChange())
+                    }
+                }
+            } catch (e: CancellationException) {
+                onDragCancel()
+            } finally {
+                if (longPressActivated) {
+                    onDragEnd()
+                } else {
+                    handler.removeCallbacksAndMessages(null)
+                }
+            }
+        }
+    }
 }

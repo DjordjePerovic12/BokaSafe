@@ -656,47 +656,24 @@ class BayMapViewModel @Inject constructor(
                 }
             }
 
+            is MapEvent.OnCursorActive -> {
+                state = state.copy(cursorLatLng = event.cursorLocation)
+                calculateDistanceFromCursor(event.cursorLocation)
+                calculateAzimuthFromCursor(event.cursorLocation)
+                Timber.e("cursor called ${state.distanceFromCursor}, azimuth ${state.azimuthFromCursor}")
+            }
+            is MapEvent.OnCursorClear -> {
+                state = state.copy(
+                    distanceFromCursor = null,
+                    azimuthFromCursor = null,
+                    distanceTextOffset = Offset.Zero,
+                    cursorLatLng = null
+                )
+            }
+
             else -> {}
         }
     }
-
-    private fun updateCustomPoints(position: LatLng, index: Int) {
-        val updatedCustomPoints = state.customPoints.toMutableList()
-
-        if (index < updatedCustomPoints.size) {
-            updatedCustomPoints[index] = position
-        } else {
-            updatedCustomPoints.add(position)
-        }
-
-        state = state.copy(customPoints = updatedCustomPoints)
-
-        if (updatedCustomPoints.size == 2) {
-            calculateDistanceBetweenPoints(updatedCustomPoints[0], updatedCustomPoints[1])
-            calculateAzimuthBetweenPoints(updatedCustomPoints[0], updatedCustomPoints[1])
-        } else {
-            state = state.copy(customPointsDistance = null, customPointsAzimuth = null)
-        }
-    }
-
-    // Helper function to remove a custom point by index and recalculate if needed
-    private fun removeCustomPoint(index: Int) {
-        val updatedCustomPoints = state.customPoints.toMutableList()
-
-        if (index in updatedCustomPoints.indices) {
-            updatedCustomPoints.removeAt(index)
-        }
-
-        state = state.copy(customPoints = updatedCustomPoints)
-
-        if (updatedCustomPoints.size == 2) {
-            calculateDistanceBetweenPoints(updatedCustomPoints[0], updatedCustomPoints[1])
-            calculateAzimuthBetweenPoints(updatedCustomPoints[0], updatedCustomPoints[1])
-        } else {
-            state = state.copy(customPointsDistance = null, customPointsAzimuth = null)
-        }
-    }
-
 
     private fun calculateDistance(checkpointLocation: LatLng) {
         val loc1 = Location(LocationManager.GPS_PROVIDER)
@@ -706,6 +683,18 @@ class BayMapViewModel @Inject constructor(
         loc2.latitude = state.userLocation?.latitude ?: 0.0
         loc2.longitude = state.userLocation?.longitude ?: 0.0
         state = state.copy(distanceToCheckpoint = loc1.distanceTo(loc2))
+
+    }
+
+
+    private fun calculateDistanceFromCursor(checkpointLocation: LatLng) {
+        val loc1 = Location(LocationManager.GPS_PROVIDER)
+        val loc2 = Location(LocationManager.GPS_PROVIDER)
+        loc1.latitude = checkpointLocation.latitude
+        loc1.longitude = checkpointLocation.longitude
+        loc2.latitude = state.userLocation?.latitude ?: 0.0
+        loc2.longitude = state.userLocation?.longitude ?: 0.0
+        state = state.copy(distanceFromCursor = loc1.distanceTo(loc2))
 
     }
 
@@ -865,6 +854,33 @@ class BayMapViewModel @Inject constructor(
 
         // Update state with the calculated azimuth
         state = state.copy(azimuth = correctedBearing)
+
+    }
+
+    private fun calculateAzimuthFromCursor(pointLocation: LatLng) {
+        // Ensure current location is valid before calculating
+        val userLocation = state.userLocation ?: return
+
+        // Target location
+        val targetLocation = Location("").apply {
+            latitude = pointLocation.latitude
+            longitude = pointLocation.longitude
+        }
+
+        // Current location
+        val currentLocation = Location("").apply {
+            latitude = userLocation.latitude
+            longitude = userLocation.longitude
+        }
+
+        // Get the bearing from current to target
+        val bearing: Float = currentLocation.bearingTo(targetLocation)
+
+        // Correct the bearing to ensure it is within 0-360 degrees
+        val correctedBearing = (bearing + 360) % 360
+
+        // Update state with the calculated azimuth
+        state = state.copy(azimuthFromCursor = correctedBearing)
 
     }
 
@@ -1174,6 +1190,8 @@ sealed class MapEvent() {
     object ClearCustomRoutePoints : MapEvent()
     data class OnCourseChange(val direction: String, val angle: Double) : MapEvent()
     object OnMoreClick : MapEvent()
+    data class OnCursorActive(val cursorLocation: LatLng) : MapEvent()
+   object  OnCursorClear: MapEvent()
 
 }
 
@@ -1238,6 +1256,9 @@ data class GuideState(
     val isUserStatic: Boolean = true,
     val depth: ElevationResponse? = null,
     val depths: MutableList<Depth> = Constants.depths,
-    val preferredSpeedUnit: String = String()
+    val preferredSpeedUnit: String = String(),
+    val distanceFromCursor: Float? = null,
+    val azimuthFromCursor: Float? = null,
+    val cursorLatLng: LatLng? = null
 
 )
