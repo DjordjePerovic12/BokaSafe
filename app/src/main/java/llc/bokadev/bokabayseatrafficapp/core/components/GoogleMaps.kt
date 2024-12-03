@@ -390,7 +390,7 @@ fun GoogleMaps(
             }
 
             val userIconBitmap = bitmapDescriptorFromVector(
-                width = 70, height = 50, context = context, vectorResId = userIcon
+                width = 150, height = 150, context = context, vectorResId = userIcon
             )
 
             MapEffect(key1 = userLocation) { map ->

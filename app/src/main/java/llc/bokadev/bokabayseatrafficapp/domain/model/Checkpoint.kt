@@ -9,5 +9,5 @@ data class Checkpoint(
     val longitude: Double,
     val characteristics: String,
     var isSelected: Boolean,
-    var iconResId: Int = R.drawable.ic_lighthouse,
+    var iconResId: Int = R.drawable.light_purple,
 )

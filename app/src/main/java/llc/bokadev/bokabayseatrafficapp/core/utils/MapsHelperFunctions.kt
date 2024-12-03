@@ -474,7 +474,6 @@ fun bitmapDescriptorFromVector(
 
     // retrieve the actual drawable
     val drawable = ContextCompat.getDrawable(context, vectorResId) ?: return null
-    drawable.setTint(0XFFFFFFFF.toInt())
     drawable.setBounds(0, 0, width ?: drawable.intrinsicWidth, height ?: drawable.intrinsicHeight)
     val bm = Bitmap.createBitmap(
         width ?: drawable.intrinsicWidth,
