@@ -31,7 +31,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import llc.amplitudo.flourish_V2.core.utils.Constants
 import llc.bokadev.bokabayseatrafficapp.core.navigation.Navigator
-import llc.bokadev.bokabayseatrafficapp.core.navigation.Routes.ROOT
 import llc.bokadev.bokabayseatrafficapp.core.navigation.Screen
 import llc.bokadev.bokabayseatrafficapp.core.utils.Gps
 import llc.bokadev.bokabayseatrafficapp.core.utils.MapItems
@@ -102,7 +101,8 @@ class BayMapViewModel @Inject constructor(
         observeUserLocation()
         viewModelScope.launch {
             state = state.copy(
-                preferredSpeedUnit = dataStoreRepository.getPreferredSpeedUnit().first()
+                preferredSpeedUnit = dataStoreRepository.getPreferredSpeedUnit().first(),
+                showCursorInstruction = dataStoreRepository.getShouldShowCursorInstruction().first()
             )
         }
 
@@ -657,11 +657,13 @@ class BayMapViewModel @Inject constructor(
             }
 
             is MapEvent.OnCursorActive -> {
-                state = state.copy(cursorLatLng = event.cursorLocation)
+                state =
+                    state.copy(cursorLatLng = event.cursorLocation)
                 calculateDistanceFromCursor(event.cursorLocation)
                 calculateAzimuthFromCursor(event.cursorLocation)
                 Timber.e("cursor called ${state.distanceFromCursor}, azimuth ${state.azimuthFromCursor}")
             }
+
             is MapEvent.OnCursorClear -> {
                 state = state.copy(
                     distanceFromCursor = null,
@@ -669,6 +671,24 @@ class BayMapViewModel @Inject constructor(
                     distanceTextOffset = Offset.Zero,
                     cursorLatLng = null
                 )
+            }
+
+            is MapEvent.DismissCursorDialog -> {
+                state = state.copy(showCursorInstruction = false)
+            }
+
+            is MapEvent.OnDontShowAgainClick -> {
+                viewModelScope.launch {
+                    dataStoreRepository.saveShouldShowCursorInstruction(false)
+                }.invokeOnCompletion {
+                    viewModelScope.launch {
+                        state = state.copy(
+                            showCursorInstruction = dataStoreRepository.getShouldShowCursorInstruction()
+                                .first()
+                        )
+                    }
+
+                }
             }
 
             else -> {}
@@ -1191,7 +1211,9 @@ sealed class MapEvent() {
     data class OnCourseChange(val direction: String, val angle: Double) : MapEvent()
     object OnMoreClick : MapEvent()
     data class OnCursorActive(val cursorLocation: LatLng) : MapEvent()
-   object  OnCursorClear: MapEvent()
+    object OnCursorClear : MapEvent()
+    object DismissCursorDialog: MapEvent()
+    object OnDontShowAgainClick : MapEvent()
 
 }
 
@@ -1259,6 +1281,7 @@ data class GuideState(
     val preferredSpeedUnit: String = String(),
     val distanceFromCursor: Float? = null,
     val azimuthFromCursor: Float? = null,
-    val cursorLatLng: LatLng? = null
+    val cursorLatLng: LatLng? = null,
+    val showCursorInstruction: Boolean = false,
 
 )

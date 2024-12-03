@@ -178,18 +178,23 @@ fun GoogleMaps(
 
         )
     val context = LocalContext.current
+
+
+    var cursorActive by remember { mutableStateOf(false) }
+
+
     val uiSettingsState = remember {
         MapUiSettings(
             zoomControlsEnabled = false,
             mapToolbarEnabled = false,
             compassEnabled = false,
             rotationGesturesEnabled = false,
-            scrollGesturesEnabled = state.azimuthFromCursor == null,
-            tiltGesturesEnabled = state.azimuthFromCursor == null,
-            zoomGesturesEnabled = state.azimuthFromCursor == null,
-            scrollGesturesEnabledDuringRotateOrZoom = state.azimuthFromCursor == null,
+            scrollGesturesEnabled = !cursorActive,
+            tiltGesturesEnabled = false,
+            zoomGesturesEnabled = !cursorActive,
+            scrollGesturesEnabledDuringRotateOrZoom = !cursorActive,
 
-        )
+            )
     }
     var markerCreated by remember {
         mutableStateOf(false)
@@ -255,7 +260,14 @@ fun GoogleMaps(
 
     var googleMapInstance by remember { mutableStateOf<GoogleMap?>(null) }
 
-    var cursorActive by remember { mutableStateOf(false) }
+
+
+    LaunchedEffect(cursorActive) {
+        uiSettingsState.copy(
+            scrollGesturesEnabled = !cursorActive,
+            zoomGesturesEnabled = !cursorActive
+        )
+    }
 
     Box(
         modifier = Modifier
@@ -277,7 +289,8 @@ fun GoogleMaps(
                                     (cursorPosition!!.x).toInt(),
                                     (cursorPosition!!.y + 250.dp.toPx()).toInt()
                                 )
-                                val updatedLatLng = map.projection.fromScreenLocation(adjustedOffset)
+                                val updatedLatLng =
+                                    map.projection.fromScreenLocation(adjustedOffset)
                                 viewModel.onEvent(MapEvent.OnCursorActive(updatedLatLng))
                                 viewModel.onEvent(
                                     MapEvent.OnDistanceTextOffsetChange(
@@ -300,7 +313,8 @@ fun GoogleMaps(
                                     (newOffset.x).toInt(),
                                     (newOffset.y + 250.dp.toPx()).toInt()
                                 )
-                                val updatedLatLng = map.projection.fromScreenLocation(adjustedOffset)
+                                val updatedLatLng =
+                                    map.projection.fromScreenLocation(adjustedOffset)
                                 viewModel.onEvent(MapEvent.OnCursorActive(updatedLatLng))
                                 viewModel.onEvent(
                                     MapEvent.OnDistanceTextOffsetChange(
@@ -329,7 +343,9 @@ fun GoogleMaps(
             }
     )
 
-    {GoogleMap(
+
+    {
+        GoogleMap(
             modifier = modifier,
             uiSettings = uiSettingsState,
             cameraPositionState = cameraPositionState,
@@ -349,8 +365,14 @@ fun GoogleMaps(
 
                     googleMapInstance?.let {
                         val screenPosition = it.projection.toScreenLocation(latLng)
-                        cursorPosition = Offset(screenPosition.x.toFloat(), screenPosition.y.toFloat() - 250f)
+                        cursorPosition =
+                            Offset(screenPosition.x.toFloat(), screenPosition.y.toFloat() - 250f)
                         viewModel.onEvent(MapEvent.OnCursorActive(latLng))
+                        viewModel.onEvent(
+                            MapEvent.OnDistanceTextOffsetChange(
+                                Offset(cursorPosition!!.x, cursorPosition!!.y)
+                            )
+                        )
                     }
                 }
             }

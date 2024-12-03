@@ -33,7 +33,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -57,7 +56,6 @@ import llc.bokadev.bokabayseatrafficapp.domain.model.ProhibitedAnchoringZone
 import llc.bokadev.bokabayseatrafficapp.domain.model.Checkpoint
 import llc.bokadev.bokabayseatrafficapp.domain.model.ShipWreck
 import llc.bokadev.bokabayseatrafficapp.ui.theme.BokaBaySeaTrafficAppTheme
-import timber.log.Timber
 
 @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -105,9 +103,14 @@ fun BokaBayMapScreenContent(
     }
 
 
-
-
-
+    if (state.showCursorInstruction) {
+        CursorInstructionsAlertDialog(onConfirm = {
+            viewModel.onEvent(MapEvent.DismissCursorDialog)
+        },
+            onNeverShowThisAgain = {
+                viewModel.onEvent(MapEvent.OnDontShowAgainClick)
+            })
+    }
 
 
     Box(
@@ -236,13 +239,12 @@ fun BokaBayMapScreenContent(
                 // Calculate dynamic offset for the text
                 val screenWidth = LocalContext.current.resources.displayMetrics.widthPixels
                 val density = LocalContext.current.resources.displayMetrics.density
-                val dynamicOffsetX = if (state.distanceTextOffset.x > screenWidth - (200 * density)) {
-                    (-200).dp // Offset to the left if near the right edge
-                } else {
-                    20.dp // Default offset to the right
-                }
-
-
+                val dynamicOffsetX =
+                    if (state.distanceTextOffset.x > screenWidth - (200 * density)) {
+                        (-200).dp // Offset to the left if near the right edge
+                    } else {
+                        20.dp // Default offset to the right
+                    }
 
 
                 // Draw text below the cursor

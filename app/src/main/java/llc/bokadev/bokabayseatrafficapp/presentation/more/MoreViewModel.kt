@@ -1,6 +1,5 @@
 package llc.bokadev.bokabayseatrafficapp.presentation.more
 
-import android.app.AlertDialog
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.runtime.getValue
@@ -8,17 +7,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import llc.bokadev.bokabayseatrafficapp.core.navigation.Navigator
-import llc.bokadev.bokabayseatrafficapp.core.navigation.Routes.ROOT
-import llc.bokadev.bokabayseatrafficapp.core.navigation.Screen
 import llc.bokadev.bokabayseatrafficapp.domain.repository.DataStoreRepository
-import llc.bokadev.bokabayseatrafficapp.presentation.bay_map.GuideState
 import javax.inject.Inject
 
 @HiltViewModel
@@ -74,7 +69,7 @@ class MoreViewModel @Inject constructor(
                     state = state.copy(shouldShowAlertDialog = !state.shouldShowAlertDialog)
                 }.invokeOnCompletion {
                     viewModelScope.launch {
-                        state = state.copy(dataStoreRepository.getPreferredSpeedUnit().first())
+                        state = state.copy(preferredSpeedUnit = dataStoreRepository.getPreferredSpeedUnit().first())
                     }
 
                 }
