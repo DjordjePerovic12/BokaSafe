@@ -38,9 +38,17 @@ class CustomRouteDetailsViewModel @Inject constructor(
         }
     }
 
-    init {
-        Timber.e("ROUTE ID $routeId")
+    fun onEvent(event: RouteDetailsEvent) {
+        when (event) {
+            is RouteDetailsEvent.OnBackClick -> {
+                viewModelScope.launch {
+                    navigator.navigateUp()
+                }
+            }
+        }
     }
+
+
 }
 
 
@@ -49,5 +57,5 @@ data class RouteDetailsState(
 )
 
 sealed class RouteDetailsEvent {
-
+    object OnBackClick : RouteDetailsEvent()
 }
