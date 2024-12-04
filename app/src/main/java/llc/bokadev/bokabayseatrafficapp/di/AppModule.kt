@@ -1,6 +1,8 @@
 package llc.bokadev.bokabayseatrafficapp.di
 
+import android.app.Application
 import android.content.Context
+import androidx.room.Room
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.squareup.moshi.JsonAdapter
@@ -10,6 +12,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import llc.bokadev.bokabayseatrafficapp.data.local.db.BokaBaySeaTrafficAppDatabase
 import llc.bokadev.bokabayseatrafficapp.data.remote.dto.ApiErrorDto
 import llc.bokadev.bokabayseatrafficapp.data.remote.services.ApiService
 import okhttp3.Dispatcher
@@ -38,10 +41,10 @@ object AppModule {
             .dispatcher(dispatcher)
 
 
-            okHttpClient.addInterceptor(
-                HttpLoggingInterceptor()
-                    .apply { level = HttpLoggingInterceptor.Level.BODY }
-            )
+        okHttpClient.addInterceptor(
+            HttpLoggingInterceptor()
+                .apply { level = HttpLoggingInterceptor.Level.BODY }
+        )
 
         return okHttpClient.build()
     }
@@ -58,6 +61,7 @@ object AppModule {
             .build()
             .create(ApiService::class.java)
     }
+
     @Singleton
     @Provides
     fun provideErrorAdapter(): JsonAdapter<ApiErrorDto> {
@@ -70,6 +74,16 @@ object AppModule {
     fun provideFusedLocationProviderClient(
         @ApplicationContext context: Context
     ): FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
+
+    @Singleton
+    @Provides
+    fun provideDB(application: Application): BokaBaySeaTrafficAppDatabase {
+        return Room.databaseBuilder(
+            application,
+            BokaBaySeaTrafficAppDatabase::class.java,
+            "boka_bay_sea_traffic_app.db"
+        ).fallbackToDestructiveMigration().build()
+    }
 
 
 }

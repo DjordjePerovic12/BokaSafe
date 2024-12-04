@@ -144,4 +144,8 @@ dependencies {
     implementation (libs.gms.play.services.location)
 
     implementation(libs.accompanist.permissions)
+
+    implementation(libs.room.runtime)
+    ksp(libs.room.compiler)
+    implementation(libs.room.ktx)
 }

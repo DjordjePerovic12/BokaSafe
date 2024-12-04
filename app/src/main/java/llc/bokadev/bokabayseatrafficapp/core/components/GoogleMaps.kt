@@ -979,29 +979,28 @@ fun GoogleMaps(
                                 tag.startsWith("routem") -> {
                                     val checkpointId = tag.removePrefix("routem").toInt()
 
-                                    // The 'checkpointId' is the custom index we assigned earlier, so we can directly use it
-                                    val markerIndex = checkpointId
+                                    val customRoutePointIndex =
+                                        customRoutePointsMarkers.indexOf(marker)
+                                    if (customRoutePointIndex == -1) {
+                                        return@setOnMarkerClickListener false
+                                    }
 
-                                    // Ensure the markerIndex is valid
-                                    if (markerIndex >= 0 && markerIndex < customRoutePointsMarkers.size) {
-                                        // Remove the marker at 'markerIndex'
-                                        customRoutePointsMarkers[markerIndex].remove() // Remove the marker from the map
-                                        customRoutePointsMarkers.removeAt(markerIndex) // Remove marker from the list
-
-
-                                        viewModel.onEvent(
-                                            MapEvent.OnMarkerRemovedCustomRoute(
-                                                markerIndex
-                                            )
+                                    viewModel.onEvent(
+                                        MapEvent.OnMarkerRemovedCustomRoute(
+                                            customRoutePointIndex
                                         )
+                                    )
 
-                                        // Reassign custom indices (routem0, routem1, etc.) to the remaining markers
-                                        customRoutePointsMarkers.forEachIndexed { index, marker ->
-                                            marker.tag =
-                                                "routem${index}" // Update the marker tag with the new index
-                                        }
+                                    marker.remove()
+                                    customRoutePointsMarkers.removeAt(customRoutePointIndex)
 
-                                        customRoutePointsMarkers.forEachIndexed { index, updatedMarker ->
+                                    customRoutePointsMarkers.forEachIndexed { index, marker ->
+                                        val newCheckpointId =
+                                            index + checkpoints.size + anchorages.size + prohibitedProhibitedAnchoringZones.size + buoys.size + shipwrecks.size + anchorageZones.size + 1
+                                        marker.tag = "routem$newCheckpointId"
+                                    }
+
+                                    customRoutePointsMarkers.forEachIndexed { index, updatedMarker ->
                                             updatedMarker.setIcon(
                                                 bitmapDescriptorFromVectorWithNumber(
                                                     number = index + 1 // Reassign numbers sequentially
@@ -1047,7 +1046,7 @@ fun GoogleMaps(
 
                                         // Remove the marker from the map
                                         marker.remove()
-                                    }
+
                                 }
 
 

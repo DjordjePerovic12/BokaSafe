@@ -37,6 +37,8 @@ import llc.bokadev.bokabayseatrafficapp.core.utils.MapItems
 import llc.bokadev.bokabayseatrafficapp.core.utils.calculateCentroid
 import llc.bokadev.bokabayseatrafficapp.core.utils.createGpsReceiver
 import llc.bokadev.bokabayseatrafficapp.core.utils.toKnots
+import llc.bokadev.bokabayseatrafficapp.data.local.db.BokaBaySeaTrafficAppDatabase
+import llc.bokadev.bokabayseatrafficapp.data.local.model.RouteEntity
 import llc.bokadev.bokabayseatrafficapp.data.remote.dto.ElevationResponse
 import llc.bokadev.bokabayseatrafficapp.domain.model.Anchorage
 import llc.bokadev.bokabayseatrafficapp.domain.model.AnchorageZone
@@ -57,12 +59,10 @@ import javax.inject.Inject
 
 @HiltViewModel
 class BayMapViewModel @Inject constructor(
-    private val application: Application,
-    private val savedStateHandle: SavedStateHandle,
     private val locationRepository: LocationRepository,
     private val dataStoreRepository: DataStoreRepository,
-    private val repository: AppRepository,
-    private val navigator: Navigator
+    private val navigator: Navigator,
+    private val bokaBaySeaTrafficAppDatabase: BokaBaySeaTrafficAppDatabase
 ) : ViewModel() {
 
     var state by mutableStateOf(GuideState())
@@ -691,6 +691,32 @@ class BayMapViewModel @Inject constructor(
                 }
             }
 
+            is MapEvent.ToggleSaveRouteAlertDialog -> {
+                state =
+                    state.copy(
+                        shouldShowNameRouteAlertDialog = !state.shouldShowNameRouteAlertDialog,
+                        routeName = String()
+                    )
+            }
+
+            is MapEvent.OnRouteNameChange -> {
+                state = state.copy(routeName = event.routeName)
+            }
+
+
+            is MapEvent.OnConfirmSaveRouteClick -> {
+                saveRoute()
+                state = state.copy(
+                    shouldShowNameRouteAlertDialog = !state.shouldShowNameRouteAlertDialog,
+                    customRoutePoints = mutableListOf(),
+                    customRouteDistance = null,
+                    distanceTextOffset = Offset.Zero,
+                    shouldEnableCustomRoute = false,
+                    customRouteConsecutivePointsDistance = mutableListOf(),
+                    customRouteConsecutivePointsAzimuth = mutableListOf()
+                )
+            }
+
             else -> {}
         }
     }
@@ -1125,30 +1151,19 @@ class BayMapViewModel @Inject constructor(
         )
     }
 
-//    private fun getElevations() {
-//        viewModelScope.launch {
-//            when (val result = repository.getElevation(
-//                locations = "42.315645, 18.368939",
-//                apiKey = "AIzaSyAIhn_eoViubKHORi_rlliqVnHGgve2At0"
-//            )) {
-//                is Resource.Success -> {
-//                    result.data?.let { elevationResponse ->
-//                        state = state.copy(depth = elevationResponse)
-//                    }
-//                }
-//
-//                is Resource.Error -> {
-//
-//                }
-//
-//                is Resource.Loading -> {
-//
-//                }
-//            }
-//
-//        }
-//    }
-
+    private fun saveRoute() {
+        viewModelScope.launch {
+            bokaBaySeaTrafficAppDatabase.customRouteDao.saveRoute(
+                RouteEntity(
+                    name = state.routeName,
+                    pointS = state.customRoutePoints,
+                    azimuths = state.customRouteConsecutivePointsAzimuth,
+                    distances = state.customRouteConsecutivePointsDistance,
+                    totalDistance = state.customRouteDistance ?: -1f
+                )
+            )
+        }
+    }
 }
 
 sealed class MapEvent() {
@@ -1212,8 +1227,11 @@ sealed class MapEvent() {
     object OnMoreClick : MapEvent()
     data class OnCursorActive(val cursorLocation: LatLng) : MapEvent()
     object OnCursorClear : MapEvent()
-    object DismissCursorDialog: MapEvent()
+    object DismissCursorDialog : MapEvent()
     object OnDontShowAgainClick : MapEvent()
+    object ToggleSaveRouteAlertDialog : MapEvent()
+    data class OnRouteNameChange(val routeName: String) : MapEvent()
+    object OnConfirmSaveRouteClick : MapEvent()
 
 }
 
@@ -1271,6 +1289,7 @@ data class GuideState(
     val customRouteConsecutivePointsDistance: List<Float> = emptyList(),
     val customRouteConsecutivePointsAzimuth: List<Float> = emptyList(),
     val customRouteAzimuth: Float? = null,
+    val routeName: String = String(),
     val userCourseOfMovement: String? = String(),
     val userCourseOfMovementAzimuth: Float? = null,
     val userMovementSpeed: Float? = null,
@@ -1283,5 +1302,5 @@ data class GuideState(
     val azimuthFromCursor: Float? = null,
     val cursorLatLng: LatLng? = null,
     val showCursorInstruction: Boolean = false,
-
+    val shouldShowNameRouteAlertDialog: Boolean = false
 )

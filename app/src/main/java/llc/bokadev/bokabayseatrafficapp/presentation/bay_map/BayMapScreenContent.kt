@@ -112,6 +112,20 @@ fun BokaBayMapScreenContent(
             })
     }
 
+    if (state.shouldShowNameRouteAlertDialog) {
+        NameRouteAlertDialog(
+            routeName = state.routeName,
+            onNameChange = {
+                viewModel.onEvent(MapEvent.OnRouteNameChange(it))
+            },
+            onConfirm = {
+                viewModel.onEvent(MapEvent.OnConfirmSaveRouteClick)
+            },
+            onCancel = {
+                viewModel.onEvent(MapEvent.ToggleSaveRouteAlertDialog)
+            }
+        )
+    }
 
     Box(
         modifier = Modifier
@@ -444,7 +458,9 @@ fun BokaBayMapScreenContent(
                     .align(Alignment.BottomCenter)
                     .padding(top = 65.dp)
             ) {
-                CustomRouteBottomSheet(state = viewModel.state)
+                CustomRouteBottomSheet(state = viewModel.state, onSaveRouteClick = {
+                    viewModel.onEvent(MapEvent.ToggleSaveRouteAlertDialog)
+                })
             }
 
 //        if (state.locationAccuracy != null)
@@ -463,26 +479,27 @@ fun BokaBayMapScreenContent(
 //            }
 
 
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(bottom = 40.dp, end = 25.dp)
-                .size(50.dp)
-                .clip(RoundedCornerShape(100.dp))
-                .background(BokaBaySeaTrafficAppTheme.colors.darkBlue)
-                .noRippleClickable {
-                    onUserLocationClick()
+        if (!state.shouldEnableCustomRoute)
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(bottom = 40.dp, end = 25.dp)
+                    .size(50.dp)
+                    .clip(RoundedCornerShape(100.dp))
+                    .background(BokaBaySeaTrafficAppTheme.colors.darkBlue)
+                    .noRippleClickable {
+                        onUserLocationClick()
 
-                }
-                .zIndex(1f)
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.target),
-                contentDescription = null,
-                modifier = Modifier.padding(15.dp),
-                tint = BokaBaySeaTrafficAppTheme.colors.lightBlue
-            )
-        }
+                    }
+                    .zIndex(1f)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.target),
+                    contentDescription = null,
+                    modifier = Modifier.padding(15.dp),
+                    tint = BokaBaySeaTrafficAppTheme.colors.lightBlue
+                )
+            }
 
 
     }
