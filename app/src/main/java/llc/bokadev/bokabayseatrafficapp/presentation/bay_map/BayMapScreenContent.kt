@@ -460,7 +460,10 @@ fun BokaBayMapScreenContent(
             ) {
                 CustomRouteBottomSheet(state = viewModel.state, onSaveRouteClick = {
                     viewModel.onEvent(MapEvent.ToggleSaveRouteAlertDialog)
-                })
+                },
+                    onTogglePointsClick = {
+                        viewModel.onEvent(MapEvent.OnRoutePointsToggle(it))
+                    })
             }
 
 //        if (state.locationAccuracy != null)

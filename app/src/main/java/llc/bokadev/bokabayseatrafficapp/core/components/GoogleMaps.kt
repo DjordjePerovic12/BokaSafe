@@ -262,6 +262,7 @@ fun GoogleMaps(
 
 
 
+
     LaunchedEffect(cursorActive) {
         uiSettingsState.copy(
             scrollGesturesEnabled = !cursorActive,
@@ -615,6 +616,34 @@ fun GoogleMaps(
                 }
             }
 
+
+            MapEffect(key1 = state.swapCounter) { map ->
+                customRoutePointsMarkers.forEach { it.remove() }
+                customRoutePointsPollyline.forEach { it?.remove() }
+                customRoutePointsMarkers.clear()
+                customRoutePointsPollyline.clear()
+
+                // Add markers and polylines for the route
+                state.customRoutePoints.forEachIndexed { index, latLng ->
+                    // Add marker
+                    val marker = map.addMarker(
+                        MarkerOptions()
+                            .position(latLng)
+                            .icon(bitmapDescriptorFromVectorWithNumber(index + 1))
+                    )
+                    marker?.let { customRoutePointsMarkers.add(it) }
+                }
+
+                // Add polylines
+                for (i in 0 until (state.customRoutePoints.size.minus(1) ?: -1)) {
+                    val polylineOptions = PolylineOptions()
+                        .add(state.customRoutePoints[i], state.customRoutePoints[i + 1])
+                        .color(0xFFDC6601.toInt())
+                        .width(5f)
+                    val polyline = map.addPolyline(polylineOptions)
+                    customRoutePointsPollyline.add(polyline)
+                }
+            }
 
 
 

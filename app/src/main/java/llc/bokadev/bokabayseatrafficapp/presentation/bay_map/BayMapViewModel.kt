@@ -630,6 +630,64 @@ class BayMapViewModel @Inject constructor(
                 }
             }
 
+            is MapEvent.OnRoutePointsToggle -> {
+                val updatedPoints = state.customRoutePoints.toMutableList()
+                val updatedDistances = state.customRouteConsecutivePointsDistance.toMutableList()
+                val updatedAzimuths = state.customRouteConsecutivePointsAzimuth.toMutableList()
+
+                // Ensure the index is valid and adjacent points exist
+                if (event.index in 0 until updatedPoints.size - 1) {
+                    // Swap the two points
+                    val tempPoint = updatedPoints[event.index]
+                    updatedPoints[event.index] = updatedPoints[event.index + 1]
+                    updatedPoints[event.index + 1] = tempPoint
+
+                    // Recalculate distances and azimuths
+                    if (event.index > 0) {
+                        // Recalculate distance and azimuth for the point before the swapped points
+                        updatedDistances[event.index - 1] =
+                            calculateDistanceBetweenCustomRoutePoints(
+                                updatedPoints[event.index - 1],
+                                updatedPoints[event.index]
+                            )
+                        updatedAzimuths[event.index - 1] = calculateAzimuthBetweenCustomRoutePoints(
+                            updatedPoints[event.index - 1],
+                            updatedPoints[event.index]
+                        )
+                    }
+                    // Update distance and azimuth for the swapped points
+                    updatedDistances[event.index] = calculateDistanceBetweenCustomRoutePoints(
+                        updatedPoints[event.index],
+                        updatedPoints[event.index + 1]
+                    )
+                    updatedAzimuths[event.index] = calculateAzimuthBetweenCustomRoutePoints(
+                        updatedPoints[event.index],
+                        updatedPoints[event.index + 1]
+                    )
+
+                    // If there's a point after the swapped pair, update its distance and azimuth
+                    if (event.index + 1 < updatedPoints.size - 1) {
+                        updatedDistances[event.index + 1] =
+                            calculateDistanceBetweenCustomRoutePoints(
+                                updatedPoints[event.index + 1],
+                                updatedPoints[event.index + 2]
+                            )
+                        updatedAzimuths[event.index + 1] = calculateAzimuthBetweenCustomRoutePoints(
+                            updatedPoints[event.index + 1],
+                            updatedPoints[event.index + 2]
+                        )
+                    }
+
+                    // Update the state with recalculated points, distances, and azimuths
+                    state = state.copy(
+                        customRoutePoints = updatedPoints.toList(),
+                        customRouteConsecutivePointsDistance = updatedDistances.toList(),
+                        customRouteConsecutivePointsAzimuth = updatedAzimuths.toList(),
+                        swapCounter = state.swapCounter?.plus(1)
+                    )
+                }
+            }
+
 
             is MapEvent.ClearCustomRoutePoints -> {
                 state = state.copy(
@@ -1222,6 +1280,7 @@ sealed class MapEvent() {
     object ClearCustomRouteDistance : MapEvent()
     data class OnMapCustomRouteClick(val position: LatLng) : MapEvent()
     data class OnMarkerRemovedCustomRoute(val index: Int) : MapEvent()
+    data class OnRoutePointsToggle(val index: Int) : MapEvent()
     object ClearCustomRoutePoints : MapEvent()
     data class OnCourseChange(val direction: String, val angle: Double) : MapEvent()
     object OnMoreClick : MapEvent()
@@ -1302,5 +1361,6 @@ data class GuideState(
     val azimuthFromCursor: Float? = null,
     val cursorLatLng: LatLng? = null,
     val showCursorInstruction: Boolean = false,
-    val shouldShowNameRouteAlertDialog: Boolean = false
+    val shouldShowNameRouteAlertDialog: Boolean = false,
+    val swapCounter: Int? = 0
 )
