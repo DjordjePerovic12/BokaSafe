@@ -21,6 +21,7 @@ import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.PatternItem
 import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.PolylineOptions
+import llc.bokadev.bokabayseatrafficapp.data.local.model.RouteEntity
 import llc.bokadev.bokabayseatrafficapp.domain.model.Checkpoint
 import llc.bokadev.bokabayseatrafficapp.domain.model.ProhibitedAnchoringZone
 import kotlin.math.PI
@@ -462,6 +463,21 @@ fun calculateBounds(checkpoints: MutableList<Checkpoint>, context: Context): Lat
         }
     } else {
         checkpoints.forEach {
+            builder.include(LatLng(it.latitude, it.longitude))
+        }
+    }
+    return builder.build()
+}
+
+fun calculateBoundsCustomRoute(routeEntity: RouteEntity, context: Context): LatLngBounds {
+    val builder = LatLngBounds.Builder()
+
+    if (routeEntity.pointS.size >= 2) {
+        routeEntity.pointS.forEach {
+            builder.include(LatLng(it.latitude, it.longitude))
+        }
+    } else {
+        routeEntity.pointS.forEach {
             builder.include(LatLng(it.latitude, it.longitude))
         }
     }

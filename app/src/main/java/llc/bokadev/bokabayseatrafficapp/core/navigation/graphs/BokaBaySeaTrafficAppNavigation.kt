@@ -1,6 +1,8 @@
 package llc.bokadev.bokabayseatrafficapp.core.navigation.graphs
 
 import android.content.Intent
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -10,12 +12,15 @@ import llc.bokadev.bokabayseatrafficapp.core.navigation.Navigator
 import llc.bokadev.bokabayseatrafficapp.core.navigation.Routes.BAY_MAP_SCREEN
 import llc.bokadev.bokabayseatrafficapp.core.navigation.Routes.ROOT
 import llc.bokadev.bokabayseatrafficapp.core.navigation.destinations.bayMapScreenComposable
+import llc.bokadev.bokabayseatrafficapp.core.navigation.destinations.customRouteDetailsScreenComposable
 import llc.bokadev.bokabayseatrafficapp.core.navigation.destinations.moreScreenComposable
+import llc.bokadev.bokabayseatrafficapp.core.navigation.destinations.myRoutesScreenComposable
 import llc.bokadev.bokabayseatrafficapp.core.navigation.destinations.safetyHubScreenComposable
 import llc.bokadev.bokabayseatrafficapp.core.utils.observeWithLifecycle
 import llc.bokadev.bokabayseatrafficapp.presentation.bay_map.BayMapViewModel
 import timber.log.Timber
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun BokaBaySeaTrafficAppNavigation(
     navController: NavHostController,
@@ -53,6 +58,16 @@ fun BokaBaySeaTrafficAppNavigation(
             navController = navController,
             showSnackBar = showSnackBar,
             launchIntent = launchIntent
+        )
+
+        myRoutesScreenComposable(
+            navController = navController,
+            showSnackBar = showSnackBar
+        )
+
+        customRouteDetailsScreenComposable(
+            navController = navController,
+            showSnackBar = showSnackBar
         )
     }
 }

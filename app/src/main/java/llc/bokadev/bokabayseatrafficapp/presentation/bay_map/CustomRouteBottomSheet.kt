@@ -102,8 +102,8 @@ fun CustomRouteBottomSheet(state: GuideState,
                     if (index < state.customRouteConsecutivePointsDistance.size) {
                         Spacer(modifier = Modifier.height(5.dp))
                         Text(
-                            text = "Distance: ${state.customRouteConsecutivePointsDistance[index].toNauticalMiles()} NM, " +
-                                    "Course: ${state.customRouteConsecutivePointsAzimuth[index].toInt()}°",
+                            text = "D: ${state.customRouteConsecutivePointsDistance[index].toNauticalMiles()} NM, " +
+                                    "C: ${state.customRouteConsecutivePointsAzimuth[index].toInt()}°",
                             color = Color.Gray,
                             style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14,
                             modifier = Modifier.padding(start = 50.dp)

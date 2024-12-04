@@ -23,5 +23,8 @@ interface CustomRouteDao {
     @Query("SELECT * FROM routeentity")
     fun getAllRoutes(): List<RouteEntity>
 
+    @Query("SELECT * FROM routeentity WHERE id = :id ")
+    fun getRouteById(id: Int) : RouteEntity
+
 
 }

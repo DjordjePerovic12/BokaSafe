@@ -60,6 +60,12 @@ class MoreViewModel @Inject constructor(
                         }
                     }
 
+                    2 -> {
+                        viewModelScope.launch {
+                            navigator.navigateTo(Screen.MyRoutesScreen.route)
+                        }
+                    }
+
                     4 -> {
                         viewModelScope.launch {
                             navigator.navigateTo(Screen.SafetyHubScreen.route)
