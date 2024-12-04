@@ -47,7 +47,7 @@ fun CustomRouteBottomSheet(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start,
         modifier = Modifier
-            .fillMaxHeight(0.3f)
+            .fillMaxHeight(0.4f)
             .clip(RoundedCornerShape(topStart = 15.dp, topEnd = 15.dp))
             .fillMaxWidth()
             .background(BokaBaySeaTrafficAppTheme.colors.white)
