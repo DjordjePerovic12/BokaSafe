@@ -75,9 +75,11 @@ fun CustomRouteDetailsScreen(
 
 
     val cameraPositionState = rememberCameraPositionState()
+    val mapStyle =
+        LocalContext.current.assets.open("map_style.json").bufferedReader().use { it.readText() }
     val mapProperties = remember {
         MapProperties(
-            mapType = MapType.SATELLITE,
+            mapStyleOptions = MapStyleOptions(mapStyle),
             isBuildingEnabled = false
         )
     }
