@@ -10,6 +10,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -17,9 +18,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -34,11 +37,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import llc.bokadev.bokabayseatrafficapp.R
 import llc.bokadev.bokabayseatrafficapp.core.components.ColumnLayout
 import llc.bokadev.bokabayseatrafficapp.core.utils.Gps
 import llc.bokadev.bokabayseatrafficapp.core.utils.enableGps
@@ -51,9 +56,7 @@ import llc.bokadev.bokabayseatrafficapp.ui.theme.BokaBaySeaTrafficAppTheme
 
 import timber.log.Timber
 
-
-@OptIn(ExperimentalMaterial3Api::class)
-@RequiresApi(Build.VERSION_CODES.O)
+@RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
 @Composable
 fun BayMapScreen(
     viewModel: BayMapViewModel,
@@ -70,11 +73,7 @@ fun BayMapScreen(
     }
 
 
-
-
     val state = viewModel.state
-
-
 
 
     var lifecycle by remember {
@@ -198,7 +197,7 @@ fun BayMapScreen(
     }
 
     Column(
-        verticalArrangement = Arrangement.Top,
+        verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxSize()
@@ -212,13 +211,27 @@ fun BayMapScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight()
-                    .clip(RoundedCornerShape(5.dp))
-                    .background(BokaBaySeaTrafficAppTheme.colors.lightBlue.copy(.9f))
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(BokaBaySeaTrafficAppTheme.colors.defaultGray)
+                    .padding(end = 15.dp, top = 20.dp)
             ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_x),
+                    contentDescription = null,
+                    tint = BokaBaySeaTrafficAppTheme.colors.white,
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .size(22.dp)
+                        .clickable {
+                            viewModel.onEvent(MapEvent.OnLighthouseDetailsCloseClick)
+                        }
+
+                )
+
                 Text(
                     text = viewModel.state.selectedCheckpoint?.name ?: "",
-                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold18,
+                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.ralewayBold20,
                     modifier = Modifier.padding(horizontal = 25.dp)
                 )
 
@@ -226,8 +239,8 @@ fun BayMapScreen(
 
                 Text(
                     text = "Characteristics : ${viewModel.state.selectedCheckpoint?.characteristics}",
-                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular18
+                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular18
                 )
 
 
@@ -235,8 +248,8 @@ fun BayMapScreen(
 
                 Text(
                     text = "D: ${viewModel.state.distanceToCheckpoint?.toNauticalMiles()} NM",
-                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular18
+                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular18
                 )
 
                 Spacer(modifier = Modifier.height(15.dp))
@@ -244,9 +257,11 @@ fun BayMapScreen(
 
                 Text(
                     text = "W: ${viewModel.state.azimuth?.toInt()?.toThreeDigitString()}°",
-                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular18
+                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular18
                 )
+
+                Spacer(modifier = Modifier.height(15.dp))
 
 
             }
@@ -260,13 +275,26 @@ fun BayMapScreen(
                     .fillMaxWidth()
                     .wrapContentHeight()
                     .clip(RoundedCornerShape(5.dp))
-                    .background(BokaBaySeaTrafficAppTheme.colors.lightBlue.copy(.9f))
+                    .background(BokaBaySeaTrafficAppTheme.colors.defaultGray)
+                    .padding(end = 15.dp, top = 20.dp)
             ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_x),
+                    contentDescription = null,
+                    tint = BokaBaySeaTrafficAppTheme.colors.white,
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .size(22.dp)
+                        .clickable {
+                            viewModel.onEvent(MapEvent.OnShipwreckDetailsCloseClick)
+                        }
+
+                )
                 viewModel.state.selectedShipwreck?.name?.let {
                     Text(
                         text = it,
-                        color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                        style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold18,
+                        color = BokaBaySeaTrafficAppTheme.colors.white,
+                        style = BokaBaySeaTrafficAppTheme.typography.ralewayBold20,
                         modifier = Modifier.padding(horizontal = 25.dp),
                         textAlign = TextAlign.Center
                     )
@@ -275,18 +303,18 @@ fun BayMapScreen(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
-                    text = "D: ${viewModel.state.selectedShipwreck?.name} : ${state.distanceToCheckpoint?.toNauticalMiles()} NM",
-                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14,
+                    text = "D: ${state.distanceToCheckpoint?.toNauticalMiles()} NM",
+                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular16,
                     modifier = Modifier.padding(horizontal = 25.dp)
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
-                    text = "W: ${viewModel.state.selectedShipwreck?.name} : ${state.azimuth?.toInt()?.toThreeDigitString()}°",
-                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14,
+                    text = "W: ${state.azimuth?.toInt()?.toThreeDigitString()}°",
+                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular16,
                     modifier = Modifier.padding(horizontal = 25.dp)
                 )
 
@@ -295,8 +323,8 @@ fun BayMapScreen(
                 viewModel.state.selectedShipwreck?.description?.let {
                     Text(
                         text = it,
-                        color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                        style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14,
+                        color = BokaBaySeaTrafficAppTheme.colors.white,
+                        style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular16,
                         modifier = Modifier.padding(horizontal = 25.dp)
                     )
                 }
@@ -306,8 +334,8 @@ fun BayMapScreen(
                 viewModel.state.selectedShipwreck?.latitude?.let {
                     Text(
                         text = "Latitude : ${it.toLatitude()} N",
-                        color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                        style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14,
+                        color = BokaBaySeaTrafficAppTheme.colors.white,
+                        style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular16,
                         modifier = Modifier.padding(horizontal = 25.dp)
                     )
                 }
@@ -317,8 +345,8 @@ fun BayMapScreen(
                 viewModel.state.selectedShipwreck?.longitude?.let {
                     Text(
                         text = "Longitude : ${it.toLongitude()} E",
-                        color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                        style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14,
+                        color = BokaBaySeaTrafficAppTheme.colors.white,
+                        style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular16,
                         modifier = Modifier.padding(horizontal = 25.dp)
                     )
                 }
@@ -328,38 +356,56 @@ fun BayMapScreen(
                 viewModel.state.selectedShipwreck?.depth?.let {
                     Text(
                         text = "Depth : $it",
-                        color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                        style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14,
+                        color = BokaBaySeaTrafficAppTheme.colors.white,
+                        style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular16,
                         modifier = Modifier.padding(horizontal = 25.dp)
                     )
                 }
+                Spacer(modifier = Modifier.height(15.dp))
 
             }
         }
 
         AnimatedVisibility(visible = state.isProhibitedAnchoringZoneMarkerSelected) {
+
             Column(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(120.dp)
+                    .wrapContentHeight()
                     .clip(RoundedCornerShape(5.dp))
-                    .background(BokaBaySeaTrafficAppTheme.colors.lightBlue.copy(.9f))
+                    .background(BokaBaySeaTrafficAppTheme.colors.defaultGray)
+                    .padding(end = 15.dp, top = 20.dp)
             ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_x),
+                    contentDescription = null,
+                    tint = BokaBaySeaTrafficAppTheme.colors.white,
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .size(22.dp)
+                        .clickable {
+                            viewModel.onEvent(MapEvent.OnProhibitedAnhcoringZoneDetailsCloseClick)
+                        }
+
+                )
+                Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text =  viewModel.state.selectedProhibitedProhibitedAnchoringZone?.name?: "",
-                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold18,
+                    text = viewModel.state.selectedProhibitedProhibitedAnchoringZone?.name ?: "",
+                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.ralewayBold20,
                     modifier = Modifier.padding(horizontal = 25.dp),
                     textAlign = TextAlign.Center
                 )
+                Spacer(modifier = Modifier.height(15.dp))
                 Text(
                     text = "Anchoring prohibited area",
-                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular18,
+                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular16,
                     modifier = Modifier.padding(horizontal = 25.dp)
                 )
+                Spacer(modifier = Modifier.height(15.dp))
             }
         }
 
@@ -369,14 +415,27 @@ fun BayMapScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(120.dp)
+                    .wrapContentHeight()
                     .clip(RoundedCornerShape(5.dp))
-                    .background(BokaBaySeaTrafficAppTheme.colors.lightBlue.copy(.9f))
+                    .background(BokaBaySeaTrafficAppTheme.colors.defaultGray)
+                    .padding(end = 15.dp, top = 20.dp)
             ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_x),
+                    contentDescription = null,
+                    tint = BokaBaySeaTrafficAppTheme.colors.white,
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .size(22.dp)
+                        .clickable {
+                            viewModel.onEvent(MapEvent.OnAnchorageDetailsCloseClick)
+                        }
+
+                )
                 Text(
                     text = "${viewModel.state.selectedAnchorage?.name}",
-                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold18,
+                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.ralewayBold20,
                     modifier = Modifier.padding(horizontal = 25.dp)
                 )
 
@@ -384,20 +443,22 @@ fun BayMapScreen(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
-                    text = "D: ${viewModel.state.selectedAnchorage?.name} : ${state.distanceToCheckpoint?.toNauticalMiles()} NM",
-                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14,
+                    text = "D: ${state.distanceToCheckpoint?.toNauticalMiles()} NM",
+                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular16,
                     modifier = Modifier.padding(horizontal = 25.dp)
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
-                    text = "W: ${viewModel.state.selectedAnchorage?.name} : ${state.azimuth?.toInt()?.toThreeDigitString()}°",
-                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14,
+                    text = "W: ${state.azimuth?.toInt()?.toThreeDigitString()}°",
+                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular16,
                     modifier = Modifier.padding(horizontal = 25.dp)
                 )
+
+                Spacer(modifier = Modifier.height(15.dp))
 
             }
         }
@@ -407,14 +468,27 @@ fun BayMapScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(120.dp)
+                    .wrapContentHeight()
                     .clip(RoundedCornerShape(5.dp))
-                    .background(BokaBaySeaTrafficAppTheme.colors.lightBlue.copy(.9f))
+                    .background(BokaBaySeaTrafficAppTheme.colors.defaultGray)
+                    .padding(end = 15.dp, top = 20.dp)
             ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_x),
+                    contentDescription = null,
+                    tint = BokaBaySeaTrafficAppTheme.colors.white,
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .size(22.dp)
+                        .clickable {
+                            viewModel.onEvent(MapEvent.OnAnchorageZoneDetailsCloseClick)
+                        }
+
+                )
                 Text(
                     text = "${viewModel.state.selectedAnchorageZone?.name}",
-                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold18,
+                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.ralewayBold20,
                     modifier = Modifier.padding(horizontal = 25.dp)
                 )
 
@@ -422,20 +496,24 @@ fun BayMapScreen(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
-                    text = "D: ${viewModel.state.selectedAnchorageZone?.name} : ${state.distanceToCheckpoint?.toNauticalMiles()} NM",
-                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14,
+                    text = "D: ${state.distanceToCheckpoint?.toNauticalMiles()} NM",
+                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular16,
                     modifier = Modifier.padding(horizontal = 25.dp)
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
-                    text = "W: ${viewModel.state.selectedAnchorageZone?.name} : ${state.azimuth?.toInt()?.toThreeDigitString()}°",
-                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14,
+                    text = "W: ${
+                        state.azimuth?.toInt()?.toThreeDigitString()
+                    }°",
+                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular16,
                     modifier = Modifier.padding(horizontal = 25.dp)
                 )
+
+                Spacer(modifier = Modifier.height(15.dp))
 
             }
         }
@@ -445,14 +523,27 @@ fun BayMapScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(120.dp)
+                    .wrapContentHeight()
                     .clip(RoundedCornerShape(5.dp))
-                    .background(BokaBaySeaTrafficAppTheme.colors.lightBlue.copy(.9f))
+                    .background(BokaBaySeaTrafficAppTheme.colors.defaultGray)
+                    .padding(end = 15.dp, top = 20.dp)
             ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_x),
+                    contentDescription = null,
+                    tint = BokaBaySeaTrafficAppTheme.colors.white,
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .size(22.dp)
+                        .clickable {
+                            viewModel.onEvent(MapEvent.OnBuoyDetailsCloseClick)
+                        }
+
+                )
                 Text(
                     text = "${viewModel.state.selectedBuoy?.name}",
-                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold18,
+                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.ralewayBold20,
                     modifier = Modifier.padding(horizontal = 25.dp)
                 )
 
@@ -462,8 +553,8 @@ fun BayMapScreen(
 
                 Text(
                     text = "Characteristics: ${viewModel.state.selectedBuoy?.characteristic}",
-                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular18,
+                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular16,
                     modifier = Modifier.padding(horizontal = 25.dp)
                 )
 
@@ -474,8 +565,8 @@ fun BayMapScreen(
 
                 Text(
                     text = "D: ${state.distanceToCheckpoint?.toNauticalMiles()} NM",
-                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14,
+                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular16,
                     modifier = Modifier.padding(horizontal = 25.dp)
                 )
 
@@ -483,10 +574,12 @@ fun BayMapScreen(
 
                 Text(
                     text = "W: ${state.azimuth?.toInt()?.toThreeDigitString()}°",
-                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14,
+                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular16,
                     modifier = Modifier.padding(horizontal = 25.dp)
                 )
+
+                Spacer(modifier = Modifier.height(15.dp))
 
             }
         }

@@ -2,6 +2,7 @@ package llc.bokadev.bokabayseatrafficapp.presentation.bay_map
 
 import llc.bokadev.bokabayseatrafficapp.domain.model.MapItemFilters
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -52,7 +53,7 @@ fun NotificationPreferencesBottomSheet(
     LazyColumn(
         verticalArrangement = Arrangement.Top,
         modifier = Modifier
-            .background(Color.White)
+            .background(BokaBaySeaTrafficAppTheme.colors.defaultGray)
             .padding(horizontal = 25.dp)
             .padding(bottom = 25.dp)
 
@@ -67,8 +68,8 @@ fun NotificationPreferencesBottomSheet(
             ) {
                 Text(
                     text = "FILTER WHICH ITEMS TO SHOW ON MAP",
-                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold18
+                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.ralewayBold16
                 )
             }
         }
@@ -77,7 +78,7 @@ fun NotificationPreferencesBottomSheet(
                 modifier = Modifier
                     .padding(vertical = 10.dp)
                     .size(1.dp)
-                    .background(BokaBaySeaTrafficAppTheme.colors.lightGray)
+                    .background(BokaBaySeaTrafficAppTheme.colors.white)
             )
         }
         item {
@@ -89,8 +90,8 @@ fun NotificationPreferencesBottomSheet(
                 Column(verticalArrangement = Arrangement.SpaceEvenly) {
                     Text(
                         text = "Lighthouses",
-                        color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                        style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold14
+                        color = BokaBaySeaTrafficAppTheme.colors.white,
+                        style = BokaBaySeaTrafficAppTheme.typography.nunitoBold16
                     )
                 }
 
@@ -99,12 +100,12 @@ fun NotificationPreferencesBottomSheet(
                         onSwitchClick(it, MapItems.LIGHTHOUSE.mapItemTypeId)
                     },
                     colors = SwitchDefaults.colors(
-                        checkedThumbColor = BokaBaySeaTrafficAppTheme.colors.lightBlue,
-                        uncheckedThumbColor = BokaBaySeaTrafficAppTheme.colors.gray,
-                        uncheckedTrackColor = BokaBaySeaTrafficAppTheme.colors.white,
-                        checkedTrackColor = BokaBaySeaTrafficAppTheme.colors.white,
-                        checkedBorderColor = BokaBaySeaTrafficAppTheme.colors.lightBlue,
-                        uncheckedBorderColor = BokaBaySeaTrafficAppTheme.colors.gray
+                        checkedThumbColor = BokaBaySeaTrafficAppTheme.colors.confirmGreen,
+                        uncheckedThumbColor = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f),
+                        uncheckedTrackColor = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f),
+                        checkedTrackColor = BokaBaySeaTrafficAppTheme.colors.white.copy(.2f),
+                        checkedBorderColor = BokaBaySeaTrafficAppTheme.colors.confirmGreen,
+                        uncheckedBorderColor = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f)
                     ),
                     thumbContent = {
                         if (checked.lighthouses) {
@@ -117,7 +118,7 @@ fun NotificationPreferencesBottomSheet(
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_x),
                                 contentDescription = null,
-                                tint = BokaBaySeaTrafficAppTheme.colors.darkBlue
+                                tint = BokaBaySeaTrafficAppTheme.colors.white
                             )
                         }
                     }
@@ -143,8 +144,8 @@ fun NotificationPreferencesBottomSheet(
                 Column(verticalArrangement = Arrangement.SpaceEvenly) {
                     Text(
                         text = "Shipwrecks",
-                        color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                        style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold14
+                        color = BokaBaySeaTrafficAppTheme.colors.white,
+                        style = BokaBaySeaTrafficAppTheme.typography.nunitoBold16
                     )
                 }
 
@@ -153,12 +154,12 @@ fun NotificationPreferencesBottomSheet(
                         onSwitchClick(it, MapItems.SHIPWRECK.mapItemTypeId)
                     },
                     colors = SwitchDefaults.colors(
-                        checkedThumbColor = BokaBaySeaTrafficAppTheme.colors.lightBlue,
-                        uncheckedThumbColor = BokaBaySeaTrafficAppTheme.colors.gray,
-                        uncheckedTrackColor = BokaBaySeaTrafficAppTheme.colors.white,
-                        checkedTrackColor = BokaBaySeaTrafficAppTheme.colors.white,
-                        checkedBorderColor = BokaBaySeaTrafficAppTheme.colors.lightBlue,
-                        uncheckedBorderColor = BokaBaySeaTrafficAppTheme.colors.gray
+                        checkedThumbColor = BokaBaySeaTrafficAppTheme.colors.confirmGreen,
+                        uncheckedThumbColor = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f),
+                        uncheckedTrackColor = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f),
+                        checkedTrackColor = BokaBaySeaTrafficAppTheme.colors.white.copy(.2f),
+                        checkedBorderColor = BokaBaySeaTrafficAppTheme.colors.confirmGreen,
+                        uncheckedBorderColor = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f)
                     ),
                     thumbContent = {
                         if (checked.shipwrecks) {
@@ -171,7 +172,7 @@ fun NotificationPreferencesBottomSheet(
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_x),
                                 contentDescription = null,
-                                tint = BokaBaySeaTrafficAppTheme.colors.darkBlue
+                                tint = BokaBaySeaTrafficAppTheme.colors.white
                             )
                         }
                     }
@@ -197,8 +198,8 @@ fun NotificationPreferencesBottomSheet(
                 Column(verticalArrangement = Arrangement.SpaceEvenly) {
                     Text(
                         text = "Prohibited anchoring zones",
-                        color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                        style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold14
+                        color = BokaBaySeaTrafficAppTheme.colors.white,
+                        style = BokaBaySeaTrafficAppTheme.typography.nunitoBold16
                     )
 
                 }
@@ -208,12 +209,12 @@ fun NotificationPreferencesBottomSheet(
                         onSwitchClick(it, MapItems.PROHIBITED_ANCHORING_ZONE.mapItemTypeId)
                     },
                     colors = SwitchDefaults.colors(
-                        checkedThumbColor = BokaBaySeaTrafficAppTheme.colors.lightBlue,
-                        uncheckedThumbColor = BokaBaySeaTrafficAppTheme.colors.gray,
-                        uncheckedTrackColor = BokaBaySeaTrafficAppTheme.colors.white,
-                        checkedTrackColor = BokaBaySeaTrafficAppTheme.colors.white,
-                        checkedBorderColor = BokaBaySeaTrafficAppTheme.colors.lightBlue,
-                        uncheckedBorderColor = BokaBaySeaTrafficAppTheme.colors.gray
+                        checkedThumbColor = BokaBaySeaTrafficAppTheme.colors.confirmGreen,
+                        uncheckedThumbColor = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f),
+                        uncheckedTrackColor = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f),
+                        checkedTrackColor = BokaBaySeaTrafficAppTheme.colors.white.copy(.2f),
+                        checkedBorderColor = BokaBaySeaTrafficAppTheme.colors.confirmGreen,
+                        uncheckedBorderColor = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f)
                     ),
                     thumbContent = {
                         if (checked.prohibitedAnchoringZone) {
@@ -226,7 +227,7 @@ fun NotificationPreferencesBottomSheet(
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_x),
                                 contentDescription = null,
-                                tint = BokaBaySeaTrafficAppTheme.colors.darkBlue
+                                tint = BokaBaySeaTrafficAppTheme.colors.white
                             )
                         }
                     }
@@ -252,8 +253,8 @@ fun NotificationPreferencesBottomSheet(
                 Column(verticalArrangement = Arrangement.SpaceEvenly) {
                     Text(
                         text = "Anchorages",
-                        color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                        style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold14
+                        color = BokaBaySeaTrafficAppTheme.colors.white,
+                        style = BokaBaySeaTrafficAppTheme.typography.nunitoBold16
                     )
 
                 }
@@ -263,12 +264,12 @@ fun NotificationPreferencesBottomSheet(
                         onSwitchClick(it, MapItems.ANCHORAGE.mapItemTypeId)
                     },
                     colors = SwitchDefaults.colors(
-                        checkedThumbColor = BokaBaySeaTrafficAppTheme.colors.lightBlue,
-                        uncheckedThumbColor = BokaBaySeaTrafficAppTheme.colors.gray,
-                        uncheckedTrackColor = BokaBaySeaTrafficAppTheme.colors.white,
-                        checkedTrackColor = BokaBaySeaTrafficAppTheme.colors.white,
-                        checkedBorderColor = BokaBaySeaTrafficAppTheme.colors.lightBlue,
-                        uncheckedBorderColor = BokaBaySeaTrafficAppTheme.colors.gray
+                        checkedThumbColor = BokaBaySeaTrafficAppTheme.colors.confirmGreen,
+                        uncheckedThumbColor = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f),
+                        uncheckedTrackColor = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f),
+                        checkedTrackColor = BokaBaySeaTrafficAppTheme.colors.white.copy(.2f),
+                        checkedBorderColor = BokaBaySeaTrafficAppTheme.colors.confirmGreen,
+                        uncheckedBorderColor = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f)
                     ),
                     thumbContent = {
                         if (checked.anchorages) {
@@ -281,7 +282,7 @@ fun NotificationPreferencesBottomSheet(
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_x),
                                 contentDescription = null,
-                                tint = BokaBaySeaTrafficAppTheme.colors.darkBlue
+                                tint = BokaBaySeaTrafficAppTheme.colors.white
                             )
                         }
                     }
@@ -307,8 +308,8 @@ fun NotificationPreferencesBottomSheet(
                 Column(verticalArrangement = Arrangement.SpaceEvenly) {
                     Text(
                         text = "Underwater cables",
-                        color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                        style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold14
+                        color = BokaBaySeaTrafficAppTheme.colors.white,
+                        style = BokaBaySeaTrafficAppTheme.typography.nunitoBold16
                     )
                 }
 
@@ -317,12 +318,12 @@ fun NotificationPreferencesBottomSheet(
                         onSwitchClick(it, MapItems.UNDERWATER_CABLE.mapItemTypeId)
                     },
                     colors = SwitchDefaults.colors(
-                        checkedThumbColor = BokaBaySeaTrafficAppTheme.colors.lightBlue,
-                        uncheckedThumbColor = BokaBaySeaTrafficAppTheme.colors.gray,
-                        uncheckedTrackColor = BokaBaySeaTrafficAppTheme.colors.white,
-                        checkedTrackColor = BokaBaySeaTrafficAppTheme.colors.white,
-                        checkedBorderColor = BokaBaySeaTrafficAppTheme.colors.lightBlue,
-                        uncheckedBorderColor = BokaBaySeaTrafficAppTheme.colors.gray
+                        checkedThumbColor = BokaBaySeaTrafficAppTheme.colors.confirmGreen,
+                        uncheckedThumbColor = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f),
+                        uncheckedTrackColor = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f),
+                        checkedTrackColor = BokaBaySeaTrafficAppTheme.colors.white.copy(.2f),
+                        checkedBorderColor = BokaBaySeaTrafficAppTheme.colors.confirmGreen,
+                        uncheckedBorderColor = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f)
                     ),
                     thumbContent = {
                         if (checked.underwaterCables) {
@@ -335,7 +336,7 @@ fun NotificationPreferencesBottomSheet(
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_x),
                                 contentDescription = null,
-                                tint = BokaBaySeaTrafficAppTheme.colors.darkBlue
+                                tint = BokaBaySeaTrafficAppTheme.colors.white
                             )
                         }
                     }
@@ -357,8 +358,8 @@ fun NotificationPreferencesBottomSheet(
                 Column(verticalArrangement = Arrangement.SpaceEvenly) {
                     Text(
                         text = "Buoys",
-                        color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                        style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold14
+                        color = BokaBaySeaTrafficAppTheme.colors.white,
+                        style = BokaBaySeaTrafficAppTheme.typography.nunitoBold16
                     )
                 }
 
@@ -367,12 +368,12 @@ fun NotificationPreferencesBottomSheet(
                         onSwitchClick(it, MapItems.BUOY.mapItemTypeId)
                     },
                     colors = SwitchDefaults.colors(
-                        checkedThumbColor = BokaBaySeaTrafficAppTheme.colors.lightBlue,
-                        uncheckedThumbColor = BokaBaySeaTrafficAppTheme.colors.gray,
-                        uncheckedTrackColor = BokaBaySeaTrafficAppTheme.colors.white,
-                        checkedTrackColor = BokaBaySeaTrafficAppTheme.colors.white,
-                        checkedBorderColor = BokaBaySeaTrafficAppTheme.colors.lightBlue,
-                        uncheckedBorderColor = BokaBaySeaTrafficAppTheme.colors.gray
+                        checkedThumbColor = BokaBaySeaTrafficAppTheme.colors.confirmGreen,
+                        uncheckedThumbColor = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f),
+                        uncheckedTrackColor = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f),
+                        checkedTrackColor = BokaBaySeaTrafficAppTheme.colors.white.copy(.2f),
+                        checkedBorderColor = BokaBaySeaTrafficAppTheme.colors.confirmGreen,
+                        uncheckedBorderColor = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f)
                     ),
                     thumbContent = {
                         if (checked.buoys) {
@@ -385,7 +386,7 @@ fun NotificationPreferencesBottomSheet(
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_x),
                                 contentDescription = null,
-                                tint = BokaBaySeaTrafficAppTheme.colors.darkBlue
+                                tint = BokaBaySeaTrafficAppTheme.colors.white
                             )
                         }
                     }
@@ -406,30 +407,21 @@ fun NotificationPreferencesBottomSheet(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(15.dp)
             ) {
-                PrimaryButton(
-                    text = "Confirm",
-                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                    borderColor = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                    textColor = BokaBaySeaTrafficAppTheme.colors.white,
-                    textStyle = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold18,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(55.dp)
-                ) {
-                    onConfirmClick()
-                }
-                PrimaryButton(
-                    text = "Cancel",
-                    color = BokaBaySeaTrafficAppTheme.colors.gray,
-                    borderColor = BokaBaySeaTrafficAppTheme.colors.gray,
-                    textColor = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                    textStyle = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold18,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(55.dp)
-                ) {
-                    onCancelClick()
-                }
+                Text(
+                    text = "Confirm", color = BokaBaySeaTrafficAppTheme.colors.confirmGreen,
+                    style = BokaBaySeaTrafficAppTheme.typography.ralewayBold20,
+                    modifier = Modifier.clickable {
+                        onConfirmClick()
+                    }
+                )
+                Text(
+                    text = "Cancel", color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.ralewayBold20,
+                    modifier = Modifier.clickable {
+                        onCancelClick()
+                    }
+                )
+
 
             }
         }

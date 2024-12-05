@@ -217,8 +217,6 @@ fun GoogleMaps(
         MapProperties(
             mapStyleOptions = MapStyleOptions(mapStyle),
             isBuildingEnabled = false,
-
-
             )
     }
     val cameraPositionState = rememberCameraPositionState()

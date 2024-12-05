@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -296,8 +297,8 @@ fun BokaBayMapScreenContent(
                 modifier = Modifier
                     .padding(top = 25.dp, start = 25.dp)
                     .size(50.dp)
-                    .clip(RoundedCornerShape(100.dp))
-                    .background(BokaBaySeaTrafficAppTheme.colors.darkBlue)
+                    .clip(CircleShape)
+                    .background(BokaBaySeaTrafficAppTheme.colors.primaryRed)
                     .noRippleClickable {
                         viewModel.onEvent(MapEvent.OnPhoneClick)
                     }
@@ -305,15 +306,15 @@ fun BokaBayMapScreenContent(
                 Icon(
                     painter = painterResource(id = R.drawable.ic_phone), contentDescription = null,
                     modifier = Modifier.padding(15.dp),
-                    tint = BokaBaySeaTrafficAppTheme.colors.lightBlue
+                    tint = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f)
                 )
             }
             Box(
                 modifier = Modifier
                     .padding(top = 25.dp, start = 25.dp)
                     .size(50.dp)
-                    .clip(RoundedCornerShape(100.dp))
-                    .background(BokaBaySeaTrafficAppTheme.colors.darkBlue)
+                    .clip(CircleShape)
+                    .background(BokaBaySeaTrafficAppTheme.colors.primaryRed)
                     .noRippleClickable {
                         viewModel.onEvent(MapEvent.ResetSelection)
                         scope.launch {
@@ -326,7 +327,7 @@ fun BokaBayMapScreenContent(
                     painter = painterResource(id = R.drawable.ic_filters),
                     contentDescription = null,
                     modifier = Modifier.padding(15.dp),
-                    tint = BokaBaySeaTrafficAppTheme.colors.lightBlue
+                    tint = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f)
                 )
             }
 
@@ -334,8 +335,8 @@ fun BokaBayMapScreenContent(
                 modifier = Modifier
                     .padding(top = 25.dp, start = 25.dp)
                     .size(50.dp)
-                    .clip(RoundedCornerShape(100.dp))
-                    .background(if (state.shouldEnableCustomPointToPoint) BokaBaySeaTrafficAppTheme.colors.lightGreen else BokaBaySeaTrafficAppTheme.colors.darkBlue)
+                    .clip(CircleShape)
+                    .background(if (state.shouldEnableCustomPointToPoint) BokaBaySeaTrafficAppTheme.colors.confirmGreen else BokaBaySeaTrafficAppTheme.colors.primaryRed)
                     .noRippleClickable {
                         viewModel.onEvent(MapEvent.ResetSelection)
                         viewModel.onEvent(MapEvent.OnCompassIconClick)
@@ -347,7 +348,7 @@ fun BokaBayMapScreenContent(
                     painter = painterResource(id = R.drawable.compass),
                     contentDescription = null,
                     modifier = Modifier.padding(15.dp),
-                    tint = if (state.shouldEnableCustomPointToPoint) BokaBaySeaTrafficAppTheme.colors.darkBlue else BokaBaySeaTrafficAppTheme.colors.lightBlue
+                    tint =  if(state.shouldEnableCustomPointToPoint) BokaBaySeaTrafficAppTheme.colors.primaryRed else BokaBaySeaTrafficAppTheme.colors.white.copy(.5f)
                 )
             }
 
@@ -355,8 +356,8 @@ fun BokaBayMapScreenContent(
                 modifier = Modifier
                     .padding(top = 25.dp, start = 25.dp)
                     .size(50.dp)
-                    .clip(RoundedCornerShape(100.dp))
-                    .background(BokaBaySeaTrafficAppTheme.colors.darkBlue)
+                    .clip(CircleShape)
+                    .background(BokaBaySeaTrafficAppTheme.colors.primaryRed)
                     .noRippleClickable {
                         viewModel.onEvent(MapEvent.ResetSelection)
                         viewModel.onEvent(MapEvent.OnRouteIconClick)
@@ -368,7 +369,7 @@ fun BokaBayMapScreenContent(
                     painter = painterResource(id = R.drawable.ic_route),
                     contentDescription = null,
                     modifier = Modifier.padding(15.dp),
-                    tint = BokaBaySeaTrafficAppTheme.colors.lightBlue
+                    tint = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f)
                 )
             }
 
@@ -385,8 +386,8 @@ fun BokaBayMapScreenContent(
                 modifier = Modifier
                     .padding(end = 25.dp)
                     .size(50.dp)
-                    .clip(RoundedCornerShape(100.dp))
-                    .background(BokaBaySeaTrafficAppTheme.colors.darkBlue)
+                    .clip(CircleShape)
+                    .background(BokaBaySeaTrafficAppTheme.colors.primaryRed)
                     .align(Alignment.End)
                     .clickable {
                         viewModel.onEvent(MapEvent.OnMoreClick)
@@ -397,7 +398,7 @@ fun BokaBayMapScreenContent(
                     painter = painterResource(id = R.drawable.more),
                     contentDescription = null,
                     modifier = Modifier.padding(15.dp),
-                    tint = BokaBaySeaTrafficAppTheme.colors.lightBlue
+                    tint = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f)
                 )
             }
         }
@@ -412,7 +413,7 @@ fun BokaBayMapScreenContent(
                     modifier = Modifier
                         .padding(top = 25.dp, start = 25.dp)
                         .size(70.dp)
-                        .clip(RoundedCornerShape(100.dp))
+                        .clip(CircleShape)
                         .background(BokaBaySeaTrafficAppTheme.colors.lightGreen)
                         .zIndex(1f),
                     contentAlignment = Alignment.Center
@@ -420,13 +421,13 @@ fun BokaBayMapScreenContent(
                     if (state.preferredSpeedUnit == "knots")
                         Text(
                             text = if (state.isUserStatic || viewModel.speedList.isEmpty()) "0.0 \n knots" else "${state.userMovementSpeed?.toKnots()} \n knots",
-                            style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular18,
+                            style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular18,
                             color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
                             textAlign = TextAlign.Center
                         )
                     else Text(
                         text = if (state.isUserStatic || viewModel.speedList.isEmpty()) "0.0 \n km/h" else "${state.userMovementSpeed?.toKilometersPerHour()} \n km/h",
-                        style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular20,
+                        style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular18,
                         color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
                         textAlign = TextAlign.Center
                     )
@@ -438,14 +439,14 @@ fun BokaBayMapScreenContent(
                     modifier = Modifier
                         .padding(start = 25.dp)
                         .size(50.dp)
-                        .clip(RoundedCornerShape(100.dp))
+                        .clip(CircleShape)
                         .background(BokaBaySeaTrafficAppTheme.colors.lightGreen)
                         .zIndex(1f),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = state.userCourseOfMovementAzimuth.toInt().toThreeDigitString(),
-                        style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular18,
+                        style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular18,
                         color = BokaBaySeaTrafficAppTheme.colors.darkBlue
                     )
                 }
@@ -474,21 +475,6 @@ fun BokaBayMapScreenContent(
                     })
             }
 
-//        if (state.locationAccuracy != null)
-//            Row(
-//                verticalAlignment = Alignment.CenterVertically,
-//                horizontalArrangement = Arrangement.Center,
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(top = 125.dp)
-//            ) {
-//                Text(
-//                    text = "ACCURACY: ${state.locationAccuracy}",
-//                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14,
-//                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue
-//                )
-//            }
-
 
         if (!state.shouldEnableCustomRoute)
             Box(
@@ -496,8 +482,8 @@ fun BokaBayMapScreenContent(
                     .align(Alignment.BottomEnd)
                     .padding(bottom = 55.dp, end = 25.dp)
                     .size(50.dp)
-                    .clip(RoundedCornerShape(100.dp))
-                    .background(BokaBaySeaTrafficAppTheme.colors.darkBlue)
+                    .clip(CircleShape)
+                    .background(BokaBaySeaTrafficAppTheme.colors.primaryRed)
                     .noRippleClickable {
                         onUserLocationClick()
 
@@ -508,7 +494,7 @@ fun BokaBayMapScreenContent(
                     painter = painterResource(id = R.drawable.target),
                     contentDescription = null,
                     modifier = Modifier.padding(15.dp),
-                    tint = BokaBaySeaTrafficAppTheme.colors.lightBlue
+                    tint = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f)
                 )
             }
 

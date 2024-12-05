@@ -762,7 +762,10 @@ class BayMapViewModel @Inject constructor(
             }
 
             is MapEvent.OnRouteNameChange -> {
-                state = state.copy(routeName = event.routeName, shouldShowNameError = if(event.routeName.isNotEmpty() || event.routeName.isNotBlank()) false else true)
+                state = state.copy(
+                    routeName = event.routeName,
+                    shouldShowNameError = if (event.routeName.isNotEmpty() || event.routeName.isNotBlank()) false else true
+                )
             }
 
             is MapEvent.OnEmptyNameSaveClick -> {
@@ -781,6 +784,55 @@ class BayMapViewModel @Inject constructor(
                     customRouteConsecutivePointsAzimuth = mutableListOf()
                 )
             }
+
+            is MapEvent.OnLighthouseDetailsCloseClick -> {
+                state = state.copy(
+                    isLighthouseMarkerVisible = false,
+                    isLighthouseMarkerSelected = false,
+                    selectedCheckpoint = null
+                )
+            }
+
+            is MapEvent.OnShipwreckDetailsCloseClick -> {
+                state = state.copy(
+                    isShipwreckMarkerVisible = false,
+                    isShipwreckMarkerSelected = false,
+                    selectedShipwreck = null
+                )
+            }
+
+            is MapEvent.OnAnchorageDetailsCloseClick -> {
+                state = state.copy(
+                    isAnchorageVisible = false,
+                    isAnchorageMarkerSelected = false,
+                    selectedAnchorage = null
+                )
+            }
+
+            is MapEvent.OnAnchorageZoneDetailsCloseClick -> {
+                state = state.copy(
+                    isAnchorageZoneVisible = false,
+                    isAnchorageZoneMarkerSelected = false,
+                    selectedAnchorageZone = null
+                )
+            }
+
+            is MapEvent.OnProhibitedAnhcoringZoneDetailsCloseClick -> {
+                state = state.copy(
+                    isProhibitedAnchoringZoneVisible = false,
+                    isProhibitedAnchoringZoneMarkerSelected = false,
+                    selectedProhibitedProhibitedAnchoringZone = null
+                )
+            }
+
+            is MapEvent.OnBuoyDetailsCloseClick -> {
+                state = state.copy(
+                    isBuoyMarkerSelected = false,
+                    isBuoyVisible = false,
+                    selectedBuoy = null
+                )
+            }
+
 
             else -> {}
         }
@@ -1299,6 +1351,13 @@ sealed class MapEvent() {
     data class OnRouteNameChange(val routeName: String) : MapEvent()
     object OnEmptyNameSaveClick : MapEvent()
     object OnConfirmSaveRouteClick : MapEvent()
+    object OnLighthouseDetailsCloseClick : MapEvent()
+    object OnShipwreckDetailsCloseClick : MapEvent()
+    object OnAnchorageDetailsCloseClick : MapEvent()
+    object OnAnchorageZoneDetailsCloseClick : MapEvent()
+    object OnProhibitedAnhcoringZoneDetailsCloseClick : MapEvent()
+    object OnBuoyDetailsCloseClick : MapEvent()
+
 
 }
 
