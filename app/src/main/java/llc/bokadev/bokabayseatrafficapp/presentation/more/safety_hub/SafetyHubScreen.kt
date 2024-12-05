@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -59,8 +60,9 @@ fun SafetyHubScreen(
             horizontalArrangement = Arrangement.spacedBy(15.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .background(BokaBaySeaTrafficAppTheme.colors.darkBlue)
+                .background(BokaBaySeaTrafficAppTheme.colors.primaryRed)
                 .padding(25.dp)
+                .padding(top = 30.dp)
 
         ) {
             Icon(painter = painterResource(R.drawable.arrow),
@@ -75,7 +77,7 @@ fun SafetyHubScreen(
             Text(
                 text = "Safety Hub",
                 color = BokaBaySeaTrafficAppTheme.colors.white,
-                style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold20
+                style = BokaBaySeaTrafficAppTheme.typography.ralewayBold20
             )
         }
     }) { innerPadding ->
@@ -84,6 +86,7 @@ fun SafetyHubScreen(
             horizontalAlignment = Alignment.Start,
             modifier = Modifier
                 .fillMaxSize()
+                .background(BokaBaySeaTrafficAppTheme.colors.defaultGray)
                 .padding(innerPadding)
                 .padding(
                     horizontal = 20.dp,
@@ -96,9 +99,10 @@ fun SafetyHubScreen(
                         .fillMaxWidth()
                         .wrapContentHeight()
                         .clip(RoundedCornerShape(6.dp))
+                        .background(BokaBaySeaTrafficAppTheme.colors.primaryRed.copy(.8f))
                         .border(
                             width = 1.dp,
-                            color = BokaBaySeaTrafficAppTheme.colors.darkBlue.copy(.2f),
+                            color = BokaBaySeaTrafficAppTheme.colors.white.copy(.4f),
                             shape = RoundedCornerShape(6.dp)
                         ),
                     contentAlignment = Alignment.Center
@@ -111,16 +115,16 @@ fun SafetyHubScreen(
                         Icon(
                             painter = painterResource(R.drawable.location),
                             contentDescription = null,
-                            tint = BokaBaySeaTrafficAppTheme.colors.lightBlue,
-                            modifier = Modifier.size(40.dp)
+                            tint = BokaBaySeaTrafficAppTheme.colors.white.copy(.8f),
+                            modifier = Modifier.size(40.dp),
                         )
 
                         Spacer(modifier = Modifier.height(20.dp))
 
                         Text(
                             text = "Current location",
-                            color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                            style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold20
+                            color = BokaBaySeaTrafficAppTheme.colors.white.copy(.8f),
+                            style = BokaBaySeaTrafficAppTheme.typography.nunitoBold20
                         )
 
                         Spacer(modifier = Modifier.height(20.dp))
@@ -134,18 +138,18 @@ fun SafetyHubScreen(
                             ) {
                                 Text(
                                     text = "Latitude",
-                                    color = BokaBaySeaTrafficAppTheme.colors.darkGreen,
+                                    color = BokaBaySeaTrafficAppTheme.colors.white.copy(.8f),
                                     style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14
                                 )
 
                                 if (state.userLocation == null) CircularProgressIndicator(
                                     modifier = Modifier.size(20.dp),
-                                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue
+                                    color = BokaBaySeaTrafficAppTheme.colors.white
                                 ) else
                                     Text(
                                         text = "${state.userLocation.latitude.toLatitude()} N",
-                                        color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                                        style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold18
+                                        color = BokaBaySeaTrafficAppTheme.colors.white.copy(.8f),
+                                        style = BokaBaySeaTrafficAppTheme.typography.nunitoBold18
                                     )
                             }
 
@@ -155,18 +159,18 @@ fun SafetyHubScreen(
                             ) {
                                 Text(
                                     text = "Longitude",
-                                    color = BokaBaySeaTrafficAppTheme.colors.darkGreen,
-                                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14
+                                    color = BokaBaySeaTrafficAppTheme.colors.white.copy(.8f),
+                                    style = BokaBaySeaTrafficAppTheme.typography.nunitoLight14
                                 )
 
                                 if (state.userLocation == null) CircularProgressIndicator(
                                     modifier = Modifier.size(20.dp),
-                                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue
+                                    color = BokaBaySeaTrafficAppTheme.colors.white
                                 ) else
                                 Text(
                                     text = "${state.userLocation.longitude.toLongitude()} E",
-                                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold18
+                                    color = BokaBaySeaTrafficAppTheme.colors.white.copy(.8f),
+                                    style = BokaBaySeaTrafficAppTheme.typography.nunitoBold18
                                 )
                             }
                         }
@@ -183,7 +187,7 @@ fun SafetyHubScreen(
                         .clip(RoundedCornerShape(6.dp))
                         .border(
                             width = 1.dp,
-                            color = BokaBaySeaTrafficAppTheme.colors.darkBlue.copy(.2f),
+                            color = BokaBaySeaTrafficAppTheme.colors.white.copy(.4f),
                             shape = RoundedCornerShape(6.dp)
                         )
                 ) {
@@ -192,12 +196,13 @@ fun SafetyHubScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                         modifier = Modifier
                             .fillMaxWidth()
+                            .background(BokaBaySeaTrafficAppTheme.colors.primaryRed.copy(.8f))
                             .padding(20.dp)
                     ) {
                         Text(
                             text = "Nearest SAR contact",
-                            color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                            style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold14
+                            color = BokaBaySeaTrafficAppTheme.colors.white.copy(.8f),
+                            style = BokaBaySeaTrafficAppTheme.typography.nunitoBold14
                         )
 
                         Row(
@@ -208,16 +213,17 @@ fun SafetyHubScreen(
 
                             Text(
                                 text = state.nearestSARContact,
-                                color = BokaBaySeaTrafficAppTheme.colors.darkGreen,
-                                style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold18
+                                color = BokaBaySeaTrafficAppTheme.colors.white.copy(.8f),
+                                style = BokaBaySeaTrafficAppTheme.typography.nunitoBold18
                             )
 
                             Box(
                                 modifier = Modifier
                                     .padding(top = 25.dp, start = 25.dp)
                                     .size(50.dp)
-                                    .clip(RoundedCornerShape(100.dp))
-                                    .background(BokaBaySeaTrafficAppTheme.colors.darkGreen)
+                                    .clip(CircleShape)
+                                    .background(BokaBaySeaTrafficAppTheme.colors.white)
+                                    .border(width = 1.dp, shape = CircleShape, color = BokaBaySeaTrafficAppTheme.colors.black)
                                     .noRippleClickable {
                                         viewModel.onEvent(SafetyHubEvent.OnCallNowClick)
                                     }
@@ -226,7 +232,7 @@ fun SafetyHubScreen(
                                     painter = painterResource(id = R.drawable.ic_phone),
                                     contentDescription = null,
                                     modifier = Modifier.padding(15.dp),
-                                    tint = BokaBaySeaTrafficAppTheme.colors.white
+                                    tint = BokaBaySeaTrafficAppTheme.colors.black
                                 )
                             }
                         }

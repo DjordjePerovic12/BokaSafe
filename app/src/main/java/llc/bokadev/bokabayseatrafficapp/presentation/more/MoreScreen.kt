@@ -68,8 +68,9 @@ fun MoreScreen(
                 horizontalArrangement = Arrangement.spacedBy(15.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(BokaBaySeaTrafficAppTheme.colors.darkBlue)
+                    .background(BokaBaySeaTrafficAppTheme.colors.primaryRed)
                     .padding(25.dp)
+                    .padding(top = 30.dp)
 
             ) {
                 Icon(painter = painterResource(R.drawable.arrow),
@@ -84,7 +85,7 @@ fun MoreScreen(
                 Text(
                     text = "More Options",
                     color = BokaBaySeaTrafficAppTheme.colors.white,
-                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold20
+                    style = BokaBaySeaTrafficAppTheme.typography.ralewayBold20
                 )
             }
         }
@@ -94,6 +95,7 @@ fun MoreScreen(
             horizontalAlignment = Alignment.Start,
             modifier = Modifier
                 .fillMaxSize()
+                .background(BokaBaySeaTrafficAppTheme.colors.defaultGray.copy(.9f))
                 .padding(innerPadidng)
         ) {
             items(options) {
@@ -113,19 +115,20 @@ fun MoreScreen(
                 ) {
                     Text(
                         text = it.name,
-                        color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                        style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14
+                        color = BokaBaySeaTrafficAppTheme.colors.white,
+                        style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular16
                     )
 
                     if (it.id != 1)
                         Icon(painter = painterResource(R.drawable.tabler_icon_chevron_right),
+                            tint = BokaBaySeaTrafficAppTheme.colors.white,
                             contentDescription = null,
                             modifier = Modifier.clickable {
                                 viewModel.onEvent(MoreEvent.OnOptionClick(it.id))
                             }) else Text(
                         text = if (state.preferredSpeedUnit == "knots") "Change preferred unit to km/h" else "Change preferred unit to knots",
-                        color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                        style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14,
+                        color = BokaBaySeaTrafficAppTheme.colors.white,
+                        style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular12,
                         textDecoration = TextDecoration.Underline,
                     )
                 }
@@ -135,7 +138,7 @@ fun MoreScreen(
                         .padding(vertical = 20.dp)
                         .fillMaxWidth()
                         .height(1.dp)
-                        .background(BokaBaySeaTrafficAppTheme.colors.gray)
+                        .background(BokaBaySeaTrafficAppTheme.colors.white)
                 )
             }
         }

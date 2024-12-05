@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -98,6 +100,7 @@ fun BokaBayMapScreenContent(
 
     var shouldShowPopup by remember { mutableStateOf(false) }
 
+
     LaunchedEffect(key1 = state.distanceTextOffset) {
         textPosition = state.distanceTextOffset
     }
@@ -115,6 +118,7 @@ fun BokaBayMapScreenContent(
     if (state.shouldShowNameRouteAlertDialog) {
         NameRouteAlertDialog(
             routeName = state.routeName,
+            shouldShowNameError = state.shouldShowNameError,
             onNameChange = {
                 viewModel.onEvent(MapEvent.OnRouteNameChange(it))
             },
@@ -123,6 +127,9 @@ fun BokaBayMapScreenContent(
             },
             onCancel = {
                 viewModel.onEvent(MapEvent.ToggleSaveRouteAlertDialog)
+            },
+            onEmptyNameSaveClick = {
+                viewModel.onEvent(MapEvent.OnEmptyNameSaveClick)
             }
         )
     }
@@ -283,6 +290,7 @@ fun BokaBayMapScreenContent(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(20.dp),
             modifier = Modifier.fillMaxWidth()
+                .padding(top = 20.dp)
         ) {
             Box(
                 modifier = Modifier
@@ -371,7 +379,7 @@ fun BokaBayMapScreenContent(
             horizontalAlignment = Alignment.End,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 90.dp)
+                .padding(top = 110.dp)
         ) {
             Box(
                 modifier = Modifier
@@ -397,7 +405,7 @@ fun BokaBayMapScreenContent(
         Column(
             verticalArrangement = Arrangement.spacedBy(20.dp),
             horizontalAlignment = Alignment.Start,
-            modifier = Modifier.padding(top = 70.dp)
+            modifier = Modifier.padding(top = 90.dp)
         ) {
             if (state.preferredSpeedUnit != "") {
                 Box(
@@ -486,7 +494,7 @@ fun BokaBayMapScreenContent(
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(bottom = 40.dp, end = 25.dp)
+                    .padding(bottom = 55.dp, end = 25.dp)
                     .size(50.dp)
                     .clip(RoundedCornerShape(100.dp))
                     .background(BokaBaySeaTrafficAppTheme.colors.darkBlue)

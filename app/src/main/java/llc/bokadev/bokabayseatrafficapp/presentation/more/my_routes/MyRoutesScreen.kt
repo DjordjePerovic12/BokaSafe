@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -65,8 +66,9 @@ fun MyRoutesScreen(
             horizontalArrangement = Arrangement.spacedBy(15.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .background(BokaBaySeaTrafficAppTheme.colors.darkBlue)
+                .background(BokaBaySeaTrafficAppTheme.colors.primaryRed)
                 .padding(25.dp)
+                .padding(top = 30.dp)
 
         ) {
             Icon(painter = painterResource(R.drawable.arrow),
@@ -81,7 +83,7 @@ fun MyRoutesScreen(
             Text(
                 text = "My routes",
                 color = BokaBaySeaTrafficAppTheme.colors.white,
-                style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold20
+                style = BokaBaySeaTrafficAppTheme.typography.ralewayBold20
             )
         }
     }) { innerPadding ->
@@ -89,6 +91,8 @@ fun MyRoutesScreen(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start,
             modifier = Modifier
+                .fillMaxSize()
+                .background(BokaBaySeaTrafficAppTheme.colors.defaultGray.copy(.9f))
                 .padding(innerPadding)
                 .padding(25.dp)
         ) {
@@ -98,10 +102,11 @@ fun MyRoutesScreen(
                         .fillMaxWidth()
                         .wrapContentHeight()
                         .clip(RoundedCornerShape(8.dp))
+                        .background(BokaBaySeaTrafficAppTheme.colors.primaryRed.copy(.8f))
                         .border(
                             width = 1.dp,
                             shape = RoundedCornerShape(8.dp),
-                            color = BokaBaySeaTrafficAppTheme.colors.darkBlue.copy(.4f)
+                            color = BokaBaySeaTrafficAppTheme.colors.white.copy(.4f)
                         )
                         .clickable {
                             viewModel.onEvent(MyRoutesEvent.OnRouteClick(route.id))
@@ -119,21 +124,23 @@ fun MyRoutesScreen(
                         ) {
                             Text(
                                 text = route.name,
-                                color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                                style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold18
+                                color = BokaBaySeaTrafficAppTheme.colors.white,
+                                style = BokaBaySeaTrafficAppTheme.typography.nunitoBold18
                             )
 
                             Icon(
                                 painter = painterResource(R.drawable.delete),
                                 contentDescription = null,
-                                tint = BokaBaySeaTrafficAppTheme.colors.red,
-                                modifier = Modifier.size(25.dp).clickable {
-                                    viewModel.onEvent(
-                                        MyRoutesEvent.ToggleDeleteRouteAlertDialog(
-                                            route
+                                tint = BokaBaySeaTrafficAppTheme.colors.secondaryRed,
+                                modifier = Modifier
+                                    .size(25.dp)
+                                    .clickable {
+                                        viewModel.onEvent(
+                                            MyRoutesEvent.ToggleDeleteRouteAlertDialog(
+                                                route
+                                            )
                                         )
-                                    )
-                                }
+                                    }
                             )
                         }
 
@@ -149,15 +156,15 @@ fun MyRoutesScreen(
                                         append("${route.totalDistance.toNauticalMiles()} NM")
                                     }
                                 },
-                                color = BokaBaySeaTrafficAppTheme.colors.darkBlue, // Replace with your desired color
+                                color = BokaBaySeaTrafficAppTheme.colors.white, // Replace with your desired color
                                 textAlign = TextAlign.Start,
-                                style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14
+                                style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular14
                             )
 
                             Text(
                                 text = "${route.pointS.size} points",
-                                color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                                style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14
+                                color = BokaBaySeaTrafficAppTheme.colors.white,
+                                style = BokaBaySeaTrafficAppTheme.typography.nunitoBold14
                             )
                         }
 
@@ -169,14 +176,14 @@ fun MyRoutesScreen(
                             ) {
                                 Text(
                                     text = "Point ${index + 1} to point ${index + 2}",
-                                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14
+                                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                                    style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular14
                                 )
 
                                 Text(
                                     text = "D: ${route.distances[index].toNauticalMiles()} NM, C: ${route.azimuths[index].toInt()}°",
-                                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14
+                                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                                    style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular14
                                 )
 
                             }
@@ -185,8 +192,8 @@ fun MyRoutesScreen(
                         if (route.pointS.size > 3) {
                             Text(
                                 text = "See more",
-                                color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                                style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14,
+                                color = BokaBaySeaTrafficAppTheme.colors.white,
+                                style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular14,
                                 textDecoration = TextDecoration.Underline,
                                 textAlign = TextAlign.Center
                             )

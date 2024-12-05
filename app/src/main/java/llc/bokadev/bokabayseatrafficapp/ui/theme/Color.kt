@@ -4,7 +4,15 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
-val DarkBlue = Color(0xFF001E31)
+val PrimaryRed = Color(0xFF78211E)
+val TextRed = Color(0Xffff7070)
+val ConfirmGreen = Color(0xFFA8E6CF)
+val CancelPurple = Color(0xFFE1BEE7)
+val SecondaryRed = Color(0xFFD05353)
+val Black = Color(0xFF000000)
+val DefaultGray = Color(0XFF6f6f72)
+val WoodyBrown = Color(0XFF483737)
+val DarkBlue = Color(0xFF132958)
 val LightBlue = Color(0xFFB9D9EB)
 val DarkBlueHeader = Color(0xFF222B45)
 val Red = Color(0xFFF16364)
@@ -12,7 +20,7 @@ val White = Color(0xFFFFFFFF)
 val Gray = Color(0xFFE6E6E6)
 val GrayButton = Color(0xFFDEDEDE)
 val GrayBorder = Color(0xFFC3C3C3)
-val DarkGreen = Color(0xFF008675)
+val DarkGreen = Color(0xFF103713)
 val LightGreen = Color(0xFFADDFB3)
 val LightGray = Color(0xFFEFEFEF)
 val SpacerGray = Color(0xB7B7B7B7)
@@ -24,6 +32,14 @@ val CountriesSearchFieldColor = Color(0xFFE9E9E9)
 
 @Immutable
 data class BokaBaySeaTrafficAppColors(
+    val primaryRed: Color,
+    val textRed: Color,
+    val confirmGreen: Color,
+    val cancelPurple: Color,
+    val secondaryRed: Color,
+    val black: Color,
+    val defaultGray: Color,
+    val woodyBrown: Color,
     val darkBlue: Color,
     val lightBlue: Color,
     val darkBlueHeader: Color,
@@ -43,6 +59,14 @@ data class BokaBaySeaTrafficAppColors(
 
 val LocalBokaBaySeaTrafficAppColors = staticCompositionLocalOf {
     BokaBaySeaTrafficAppColors(
+        primaryRed = Color.Unspecified,
+        textRed = Color.Unspecified,
+        confirmGreen = Color.Unspecified,
+        cancelPurple = Color.Unspecified,
+        secondaryRed = Color.Unspecified,
+        black = Color.Unspecified,
+        defaultGray = Color.Unspecified,
+        woodyBrown = Color.Unspecified,
         darkBlue = Color.Unspecified,
         lightBlue = Color.Unspecified,
         darkBlueHeader = Color.Unspecified,
@@ -62,6 +86,14 @@ val LocalBokaBaySeaTrafficAppColors = staticCompositionLocalOf {
 }
 
 val bokaBaySeaTrafficAppColors = BokaBaySeaTrafficAppColors(
+    primaryRed = PrimaryRed,
+    textRed = TextRed,
+    confirmGreen = ConfirmGreen,
+    cancelPurple = CancelPurple,
+    secondaryRed = SecondaryRed,
+    black = Black,
+    defaultGray = DefaultGray,
+    woodyBrown = WoodyBrown,
     darkBlue = DarkBlue,
     lightBlue = LightBlue,
     darkBlueHeader = DarkBlueHeader,

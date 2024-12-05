@@ -13,7 +13,11 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -141,6 +145,8 @@ fun GoogleMaps(
     )
 
     if (sheetState.isVisible) ModalBottomSheet(
+        modifier = Modifier
+            .navigationBarsPadding(),
         dragHandle = {},
         onDismissRequest = {
             scope.launch {
@@ -209,7 +215,6 @@ fun GoogleMaps(
         LocalContext.current.assets.open("map_style.json").bufferedReader().use { it.readText() }
     val mapProperties = remember {
         MapProperties(
-            mapType = MapType.SATELLITE,
             mapStyleOptions = MapStyleOptions(mapStyle),
             isBuildingEnabled = false,
 
@@ -1030,51 +1035,51 @@ fun GoogleMaps(
                                     }
 
                                     customRoutePointsMarkers.forEachIndexed { index, updatedMarker ->
-                                            updatedMarker.setIcon(
-                                                bitmapDescriptorFromVectorWithNumber(
-                                                    number = index + 1 // Reassign numbers sequentially
-                                                )
+                                        updatedMarker.setIcon(
+                                            bitmapDescriptorFromVectorWithNumber(
+                                                number = index + 1 // Reassign numbers sequentially
                                             )
-                                            updatedMarker.tag =
-                                                "routem${index + 1}" // Update marker tag
+                                        )
+                                        updatedMarker.tag =
+                                            "routem${index + 1}" // Update marker tag
+                                    }
+
+                                    // Clear the existing polylines from the map
+                                    customRoutePointsPollyline.forEach { it?.remove() }
+                                    customRoutePointsPollyline.clear()
+
+                                    // Rebuild the polyline if at least two markers remain
+                                    if (customRoutePointsMarkers.size >= 2) {
+                                        // Create a new PolylineOptions object
+                                        val polylineOptions =
+                                            PolylineOptions().color(0xFFDC6601.toInt())
+                                                .width(5f)
+
+                                        // Rebuild the polyline by connecting consecutive markers
+                                        for (i in 0 until customRoutePointsMarkers.size - 1) {
+                                            val startPosition =
+                                                customRoutePointsMarkers[i].position
+                                            val endPosition =
+                                                customRoutePointsMarkers[i + 1].position
+                                            polylineOptions.add(startPosition, endPosition)
                                         }
 
-                                        // Clear the existing polylines from the map
-                                        customRoutePointsPollyline.forEach { it?.remove() }
-                                        customRoutePointsPollyline.clear()
-
-                                        // Rebuild the polyline if at least two markers remain
-                                        if (customRoutePointsMarkers.size >= 2) {
-                                            // Create a new PolylineOptions object
-                                            val polylineOptions =
-                                                PolylineOptions().color(0xFFDC6601.toInt())
-                                                    .width(5f)
-
-                                            // Rebuild the polyline by connecting consecutive markers
-                                            for (i in 0 until customRoutePointsMarkers.size - 1) {
-                                                val startPosition =
-                                                    customRoutePointsMarkers[i].position
-                                                val endPosition =
-                                                    customRoutePointsMarkers[i + 1].position
-                                                polylineOptions.add(startPosition, endPosition)
-                                            }
-
-                                            // Add the new polyline to the map
-                                            customRoutePointsPollyline.add(
-                                                map.addPolyline(
-                                                    polylineOptions
-                                                )
+                                        // Add the new polyline to the map
+                                        customRoutePointsPollyline.add(
+                                            map.addPolyline(
+                                                polylineOptions
                                             )
+                                        )
 
-                                            // Optionally update the distance text offset or other UI components
-                                            // updateDistanceTextOffset() // Uncomment if needed
-                                        } else {
-                                            // If fewer than two markers remain, clear the route distance and UI components
-                                            viewModel.onEvent(MapEvent.ClearCustomRouteDistance)
-                                        }
+                                        // Optionally update the distance text offset or other UI components
+                                        // updateDistanceTextOffset() // Uncomment if needed
+                                    } else {
+                                        // If fewer than two markers remain, clear the route distance and UI components
+                                        viewModel.onEvent(MapEvent.ClearCustomRouteDistance)
+                                    }
 
-                                        // Remove the marker from the map
-                                        marker.remove()
+                                    // Remove the marker from the map
+                                    marker.remove()
 
                                 }
 

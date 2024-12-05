@@ -144,6 +144,7 @@ fun CustomRouteDetailsScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(25.dp)
+                .padding(top = 30.dp)
         ) {
             Icon(
                 painter = painterResource(R.drawable.arrow),
@@ -152,13 +153,13 @@ fun CustomRouteDetailsScreen(
                 clickable {
                     viewModel.onEvent(RouteDetailsEvent.OnBackClick)
                 },
-                tint = BokaBaySeaTrafficAppTheme.colors.lightBlue
+                tint = BokaBaySeaTrafficAppTheme.colors.white
             )
 
             Text(
                 text = state.customRoute?.name ?: "",
-                color = BokaBaySeaTrafficAppTheme.colors.lightBlue,
-                style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold20
+                color = BokaBaySeaTrafficAppTheme.colors.white,
+                style = BokaBaySeaTrafficAppTheme.typography.nunitoBold20
             )
         }
     }

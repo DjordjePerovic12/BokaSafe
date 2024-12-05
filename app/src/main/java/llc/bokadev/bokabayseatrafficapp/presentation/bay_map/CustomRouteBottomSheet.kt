@@ -1,6 +1,7 @@
 package llc.bokadev.bokabayseatrafficapp.presentation.bay_map
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -35,6 +37,7 @@ import llc.bokadev.bokabayseatrafficapp.core.utils.toLatitude
 import llc.bokadev.bokabayseatrafficapp.core.utils.toLongitude
 import llc.bokadev.bokabayseatrafficapp.ui.theme.BokaBaySeaTrafficAppTheme
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CustomRouteBottomSheet(
     state: GuideState,
@@ -48,23 +51,27 @@ fun CustomRouteBottomSheet(
         horizontalAlignment = Alignment.Start,
         modifier = Modifier
             .fillMaxHeight(0.4f)
+            .navigationBarsPadding()
             .clip(RoundedCornerShape(topStart = 15.dp, topEnd = 15.dp))
             .fillMaxWidth()
-            .background(BokaBaySeaTrafficAppTheme.colors.white)
+            .background(BokaBaySeaTrafficAppTheme.colors.defaultGray)
             .padding(horizontal = 20.dp)
     ) {
         item {
             Spacer(modifier = Modifier.height(15.dp))
         }
 
-        item {
+        stickyHeader {
             Text(
-                text = "Create a custom route and calculate\\n the distance between custom points on the sea",
-                color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold14,
+                text = "Create a custom route and calculate the distance between custom points on the sea.",
+                color = BokaBaySeaTrafficAppTheme.colors.white,
+                style = BokaBaySeaTrafficAppTheme.typography.ralewayBold14,
                 modifier = Modifier
-                    .padding(vertical = 10.dp)
-            )
+                    .background(BokaBaySeaTrafficAppTheme.colors.defaultGray)
+                    .padding(vertical = 10.dp),
+
+
+                )
         }
 
         item {
@@ -87,13 +94,13 @@ fun CustomRouteBottomSheet(
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(Color(0xFFE0F7FA)) // Light blue background
+                                .background(BokaBaySeaTrafficAppTheme.colors.secondaryRed) // Light blue background
                                 .padding(horizontal = 10.dp, vertical = 5.dp)
                         ) {
                             Text(
                                 text = "Point ${index + 1}",
-                                color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                                style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold14,
+                                color = BokaBaySeaTrafficAppTheme.colors.white,
+                                style = BokaBaySeaTrafficAppTheme.typography.nunitoLight14,
                                 textAlign = TextAlign.Center
                             )
                         }
@@ -101,36 +108,44 @@ fun CustomRouteBottomSheet(
                         Spacer(modifier = Modifier.width(15.dp))
 
                         Text(
-                            text = "Latitude: ${point.latitude.toLatitude()}° N, Longitude: ${point.longitude.toLongitude()}° W",
-                            color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                            style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14
+                            text = "Latitude: ${point.latitude.toLatitude()} N\nLongitude: ${point.longitude.toLongitude()} E",
+                            color = BokaBaySeaTrafficAppTheme.colors.white,
+                            style = BokaBaySeaTrafficAppTheme.typography.nunitoLight14
                         )
                     }
 
-                    if (index < state.customRouteConsecutivePointsDistance.size) {
-                        Spacer(modifier = Modifier.height(5.dp))
-                        Text(
-                            text = "D: ${state.customRouteConsecutivePointsDistance[index].toNauticalMiles()} NM, " +
-                                    "C: ${state.customRouteConsecutivePointsAzimuth[index].toInt()}°",
-                            color = Color.Gray,
-                            style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14,
-                            modifier = Modifier.padding(start = 50.dp)
-                        )
-
-                        Spacer(modifier = Modifier.height(5.dp))
-
-
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Start,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 20.dp)
+                            .padding(top = 15.dp)
+                    ) {
                         if (index < points.size - 1) {
                             Icon(
                                 painter = painterResource(R.drawable.up_and_down_arrow),
                                 contentDescription = null,
+                                tint = BokaBaySeaTrafficAppTheme.colors.secondaryRed,
                                 modifier = Modifier
                                     .size(20.dp)
                                     .clickable {
                                         onTogglePointsClick(index)
                                     })
                         }
+
+                        if (index < state.customRouteConsecutivePointsDistance.size) {
+                            Text(
+                                text = "D: ${state.customRouteConsecutivePointsDistance[index].toNauticalMiles()} NM, " +
+                                        "C: ${state.customRouteConsecutivePointsAzimuth[index].toInt()}°",
+                                color = BokaBaySeaTrafficAppTheme.colors.white,
+                                style = BokaBaySeaTrafficAppTheme.typography.nunitoLight14,
+                                modifier = Modifier.padding(start = 40.dp)
+                            )
+                        }
                     }
+
+
                 }
             }
         }
@@ -144,7 +159,9 @@ fun CustomRouteBottomSheet(
             state.customRouteConsecutivePointsDistance.forEach {
                 distance += it
             }
-            item { Text(text = "Total distance: ${distance.toNauticalMiles()} NM") }
+            item { Text(text = "Total distance: ${distance.toNauticalMiles()} NM",
+                color = BokaBaySeaTrafficAppTheme.colors.white,
+                style = BokaBaySeaTrafficAppTheme.typography.nunitoBold14)}
         }
 
         item {
@@ -160,15 +177,15 @@ fun CustomRouteBottomSheet(
                         .height(50.dp)
                         .clip(RoundedCornerShape(10.dp)),
                     colors = ButtonColors(
-                        containerColor = BokaBaySeaTrafficAppTheme.colors.lightBlue,
-                        disabledContainerColor = BokaBaySeaTrafficAppTheme.colors.lightBlue,
+                        containerColor = BokaBaySeaTrafficAppTheme.colors.secondaryRed,
+                        disabledContainerColor = BokaBaySeaTrafficAppTheme.colors.secondaryRed,
                         contentColor = BokaBaySeaTrafficAppTheme.colors.white,
                         disabledContentColor = BokaBaySeaTrafficAppTheme.colors.white
                     )
                 ) {
                     Text(
                         text = "SAVE ROUTE",
-                        style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold18,
+                        style = BokaBaySeaTrafficAppTheme.typography.ralewayBold20,
                         color = BokaBaySeaTrafficAppTheme.colors.white
                     )
                 }

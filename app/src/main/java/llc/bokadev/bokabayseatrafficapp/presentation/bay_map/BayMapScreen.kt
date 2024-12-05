@@ -65,6 +65,11 @@ fun BayMapScreen(
         launchPhoneIntent(intent)
     }
 
+    viewModel.snackBarChannel.observeWithLifecycle { message ->
+        showSnackBar(message)
+    }
+
+
 
 
     val state = viewModel.state

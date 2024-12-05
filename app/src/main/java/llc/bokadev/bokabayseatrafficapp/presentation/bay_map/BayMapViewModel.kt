@@ -89,6 +89,10 @@ class BayMapViewModel @Inject constructor(
     private val _launchIntentChannel = Channel<Intent>()
     val launchIntentChannel = _launchIntentChannel.receiveAsFlow()
 
+
+    private val _snackBarChannel = Channel<String>()
+    val snackBarChannel = _snackBarChannel.receiveAsFlow()
+
     val gpsReceiver = createGpsReceiver(onGpsON = {
         state = state.copy(gpsState = Gps.ON)
         observeUserLocation()
@@ -758,9 +762,12 @@ class BayMapViewModel @Inject constructor(
             }
 
             is MapEvent.OnRouteNameChange -> {
-                state = state.copy(routeName = event.routeName)
+                state = state.copy(routeName = event.routeName, shouldShowNameError = if(event.routeName.isNotEmpty() || event.routeName.isNotBlank()) false else true)
             }
 
+            is MapEvent.OnEmptyNameSaveClick -> {
+                state = state.copy(shouldShowNameError = true)
+            }
 
             is MapEvent.OnConfirmSaveRouteClick -> {
                 saveRoute()
@@ -1290,6 +1297,7 @@ sealed class MapEvent() {
     object OnDontShowAgainClick : MapEvent()
     object ToggleSaveRouteAlertDialog : MapEvent()
     data class OnRouteNameChange(val routeName: String) : MapEvent()
+    object OnEmptyNameSaveClick : MapEvent()
     object OnConfirmSaveRouteClick : MapEvent()
 
 }
@@ -1362,5 +1370,6 @@ data class GuideState(
     val cursorLatLng: LatLng? = null,
     val showCursorInstruction: Boolean = false,
     val shouldShowNameRouteAlertDialog: Boolean = false,
+    val shouldShowNameError: Boolean = false,
     val swapCounter: Int? = 0
 )

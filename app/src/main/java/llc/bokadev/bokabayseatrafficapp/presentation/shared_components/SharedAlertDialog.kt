@@ -16,27 +16,28 @@ fun SharedAlertDialog(
     onCancel: () -> Unit
 ) {
     AlertDialog(
+        containerColor = BokaBaySeaTrafficAppTheme.colors.defaultGray,
         onDismissRequest = { onCancel() },
         title = {
             Text(
                 text = title,
-                color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold14
+                color = BokaBaySeaTrafficAppTheme.colors.white,
+                style = BokaBaySeaTrafficAppTheme.typography.ralewayBold16
             )
         },
         text = {
             Text(
                 text = text,
-                color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                style = BokaBaySeaTrafficAppTheme.typography.neueMontrealRegular14
+                color = BokaBaySeaTrafficAppTheme.colors.white,
+                style = BokaBaySeaTrafficAppTheme.typography.ralewayRegular14
             )
         },
         confirmButton = {
             TextButton(onClick = { onConfirm() }) {
                 Text(
                     text = confirmButtonText,
-                    color = BokaBaySeaTrafficAppTheme.colors.darkGreen,
-                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold14
+                    color = BokaBaySeaTrafficAppTheme.colors.confirmGreen,
+                    style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular14
                 )
             }
         },
@@ -44,8 +45,8 @@ fun SharedAlertDialog(
             TextButton(onClick = { onCancel() }) {
                 Text(
                     text = cancelButtonText,
-                    color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold14
+                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.nunitoLight14
                 )
             }
         }
