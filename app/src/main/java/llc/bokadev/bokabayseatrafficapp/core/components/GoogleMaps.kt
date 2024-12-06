@@ -48,6 +48,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.PolygonOptions
 import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.maps.android.compose.GoogleMap
@@ -217,7 +218,7 @@ fun GoogleMaps(
         MapProperties(
             mapStyleOptions = MapStyleOptions(mapStyle),
             isBuildingEnabled = false,
-            )
+        )
     }
     val cameraPositionState = rememberCameraPositionState()
     val width = context.resources.displayMetrics.widthPixels
@@ -355,6 +356,203 @@ fun GoogleMaps(
             cameraPositionState = cameraPositionState,
             properties = mapProperties
         ) {
+
+
+            MapEffect(key1 = Unit) { map ->
+                val risanPonta = PolygonOptions()
+                    .add(
+                        LatLng(42.51343409174908, 18.69421335836189),
+                        LatLng(42.51266704067093, 18.69456451829592),
+                        LatLng(42.51277679340598, 18.69491739403726),
+                        LatLng(42.51248716115117, 18.69520280191108),
+                        LatLng(42.51254542537956, 18.69547984741136),
+                        LatLng(42.51305989979508, 18.6952471255272),
+                        LatLng(42.51284542835696, 18.69470461563031),
+                        LatLng(42.51349023982936, 18.69443376829531),
+                        LatLng(42.51343409174908, 18.69421335836189) // Closing point
+                    )
+                    .fillColor(0xFF4d4d4d.toInt()) // Semi-transparent gray fill
+                    .strokeColor(0xFF4d4d4d.toInt())                  // Gray border
+                    .strokeWidth(3f)
+
+                // Border width
+                map.addPolygon(risanPonta)
+
+                val portoBigger = PolygonOptions()
+                    .add(
+                        LatLng(42.43585129303195, 18.68856581133421),
+                        LatLng(42.43590998143019, 18.68855785707708),
+                        LatLng(42.43586889589382, 18.68832725043108),
+                        LatLng(42.43653794465092, 18.68821589579027),
+                        LatLng(42.43652033419271, 18.68797733355455),
+                        LatLng(42.43326314339419, 18.68868515484798),
+                        LatLng(42.43328075793485, 18.68920996350058),
+                        LatLng(42.43340987195155, 18.68920996158295),
+                        LatLng(42.43334531047817, 18.68889189635706),
+                        LatLng(42.43342747380068, 18.68882828158946),
+                        LatLng(42.43563414406449, 18.68838292214406),
+                        LatLng(42.43582056165457, 18.69059313071287),
+                        LatLng(42.43376294483451, 18.69108576423822),
+                        LatLng(42.4337744536253, 18.6912925411343),
+                        LatLng(42.43608351305846, 18.69073579690654),
+                        LatLng(42.43585129303195, 18.68856581133421) // Closing the polygon
+                    ).fillColor(0xFF4d4d4d.toInt()) // Semi-transparent gray fill
+                    .strokeColor(0xFF4d4d4d.toInt())                  // Outline color
+                    .strokeWidth(3f)
+
+                map.addPolygon(portoBigger)
+
+                val portoSmaller = PolygonOptions()
+                    .add(
+                        LatLng(42.43106329571025 + 0.000276, 18.68782746020326),
+                        LatLng(42.43107092612271 + 0.000276, 18.68793080759222),
+                        LatLng(42.43047976434112 + 0.000276, 18.68807551029373),
+                        LatLng(42.43049120779435 + 0.000276, 18.68815818664175),
+                        LatLng(42.43107474107704 + 0.000276, 18.6880031498555),
+                        LatLng(42.43180421668636 + 0.000276, 18.69354454325169),
+                        LatLng(42.432044604425 + 0.000276, 18.69347893186501),
+                        LatLng(42.43194338176769 + 0.000276, 18.69286014741089),
+                        LatLng(42.4329585712887 + 0.000276, 18.69261689971157),
+                        LatLng(42.43295652085294 + 0.000276, 18.69256967177043),
+                        LatLng(42.43193229601361 + 0.000276, 18.69281302331027),
+                        LatLng(42.43181925596899 + 0.000276, 18.6918471074427),
+                        LatLng(42.4328150382072 + 0.000276, 18.69160844618676),
+                        LatLng(42.43279863443195 + 0.000276, 18.69155010584482),
+                        LatLng(42.43181095827022 + 0.000276, 18.69180284407425),
+                        LatLng(42.43163870848683 + 0.000276, 18.69068850317813),
+                        LatLng(42.43266763640719 + 0.000276, 18.69043030493287),
+                        LatLng(42.4326614850141 + 0.000276, 18.69036918701118),
+                        LatLng(42.43161989660175 + 0.000276, 18.69063309554553),
+                        LatLng(42.4314230143014 + 0.000276, 18.6892496339788),
+                        LatLng(42.43236006210153 + 0.000276, 18.68899682743974),
+                        LatLng(42.43237236490067 + 0.000276, 18.68905516719201),
+                        LatLng(42.43250769366347 + 0.000276, 18.6890246073946),
+                        LatLng(42.43248923942027 + 0.000276, 18.68889403723449),
+                        LatLng(42.431406610453 + 0.000276, 18.6891551808493),
+                        LatLng(42.43124257567006 + 0.000276, 18.68788005877403),
+                        LatLng(42.43393753204431 + 0.000276, 18.68719962920882),
+                        LatLng(42.43392719471085 + 0.000276, 18.6871109312536),
+                        LatLng(42.43122594143016 + 0.000276, 18.6878158689756)
+                    ).fillColor(0xFF4d4d4d.toInt()) // Semi-transparent gray fill
+                    .strokeColor(0xFF4d4d4d.toInt())                  // Outline color
+                    .strokeWidth(3f)
+                map.addPolygon(portoSmaller)
+
+
+                val portoNoviBottom = PolygonOptions()
+                    .add(
+                        LatLng(42.43335102000229, 18.60118825862439),  // Adjusted starting point
+                        LatLng(42.4331026011171, 18.60204842147725),
+                        LatLng(42.43363908376387, 18.60236521373901),
+                        LatLng(42.43370508861859, 18.60216111201835),
+                        LatLng(42.43373023765257, 18.60217877517858),
+                        LatLng(42.43354320352971, 18.60276515601285),
+                        LatLng(42.43351441611615, 18.60274267879554),
+                        LatLng(42.43361921644027, 18.60241406213506),
+                        LatLng(42.43308620766614, 18.60209887883594),
+                        LatLng(42.43307356689315, 18.60214394236489),
+                        LatLng(42.43311417386749, 18.60216570515138),
+                        LatLng(42.43302415398459, 18.6024435650618),
+                        LatLng(42.4329793248717, 18.6024138356079),
+                        LatLng(42.4328383588028, 18.60289246195724),
+                        LatLng(42.43287306456577, 18.60291528175777),
+                        LatLng(42.43278578875431, 18.60318358528157),
+                        LatLng(42.4332822989998, 18.603465647962),
+                        LatLng(42.43333741997111, 18.60329000485308),
+                        LatLng(42.43336855313787, 18.60331005860061),
+                        LatLng(42.43329505834532, 18.60353203281304),
+                        LatLng(42.43268049471521, 18.60318434075018),
+                        LatLng(42.43232628941481, 18.60429143270373),
+                        LatLng(42.43240846040933, 18.60433776359487),
+                        LatLng(42.43236711916885, 18.60446914843524),
+                        LatLng(42.43255726009965, 18.6047621210988),
+                        LatLng(42.43258919070994, 18.60472492051116),
+                        LatLng(42.4326260662203, 18.60472771628247),
+                        LatLng(42.43273123460676, 18.60486114667582),
+                        LatLng(42.43272852615893, 18.60491317338183),
+                        LatLng(42.43264345200297, 18.60502860654871),
+                        LatLng(42.43259328448078, 18.6050470647465),
+                        LatLng(42.43231081450904, 18.60464196893047),
+                        LatLng(42.43215547233217, 18.60434026642319),
+                        LatLng(42.43221731235193, 18.60435695300049),
+                        LatLng(42.43323289498506, 18.6011223549834) // Closing the loop
+                    ).fillColor(0xFF4d4d4d.toInt()) // Semi-transparent gray fill
+                    .strokeColor(0xFF4d4d4d.toInt())                  // Outline color
+                    .strokeWidth(3f)
+                map.addPolygon(portoNoviBottom)// Path width
+
+                val bottomPonton = PolygonOptions().add(
+                    LatLng(42.43163944787811+ 0.000276, 18.60565889375784), // Point 1
+                    LatLng(42.43161678198076+ 0.000276, 18.60572280080413), // Point 2
+                    LatLng(42.43302922232052+ 0.000276, 18.60674436942687), // Point 3
+                    LatLng(42.43305218785689+ 0.000276, 18.60668425951488), // Point 4
+                    LatLng(42.43163944787811+ 0.000276, 18.60565889375784)  // Closing back to Point 1
+                )
+                    .strokeColor(0xFF4d4d4d.toInt()) // Outline color (dark gray)
+                    .fillColor(0xFF4d4d4d.toInt())   // Semi-transparent gray fill
+                    .strokeWidth(3f)
+
+                map.addPolygon(bottomPonton)
+
+                val firstPonton = PolygonOptions().add(
+                    LatLng(42.43467646449475+ 0.000276, 18.60272841467844), // Point 1
+                    LatLng(42.43378924334428+ 0.000276, 18.60280255708607), // Point 2
+                    LatLng(42.43379136807557+ 0.000276, 18.60284228612519), // Point 3
+                    LatLng(42.43467986817681+ 0.000276, 18.60277116089924), // Point 4
+                    LatLng(42.43467646449475+ 0.000276, 18.60272841467844),
+                )
+                    .strokeColor(0xFF4d4d4d.toInt()) // Outline color (dark gray)
+                    .fillColor(0xFF4d4d4d.toInt())   // Semi-transparent gray fill
+                    .strokeWidth(3f)
+
+                map.addPolygon(firstPonton)
+                val firstPontonTop = PolygonOptions().add(
+                    LatLng(42.43379747142445+ 0.000276, 18.60269962213035), // Point 1
+                    LatLng(42.43377417238224+ 0.000276, 18.60270029381828), // Point 2
+                    LatLng(42.43378433474902+ 0.000276, 18.60295854741479), // Point 3
+                    LatLng(42.43381110390273+ 0.000276, 18.60295518920831), // Point 4
+                    LatLng(42.43379747142445+ 0.000276, 18.60269962213035)
+                )
+                    .strokeColor(0xFF4d4d4d.toInt()) // Outline color (dark gray)
+                    .fillColor(0xFF4d4d4d.toInt())   // Semi-transparent gray fill
+                    .strokeWidth(3f)
+
+                map.addPolygon(firstPontonTop)
+
+                val secondPonton = PolygonOptions() .add(
+                        LatLng(42.43469521754036+ 0.000276, 18.60326420305033), // Point 1
+                LatLng(42.43366867456357+ 0.000276, 18.60336993078505), // Point 2
+                LatLng(42.43366389702791+ 0.000276, 18.60322603077579), // Point 3
+                LatLng(42.43363633467168+ 0.000276, 18.60322901837575), // Point 4
+                LatLng(42.43365287201944+ 0.000276, 18.60356262722907), // Point 5
+                LatLng(42.43367822935721+ 0.000276, 18.60355963967305), // Point 6
+                LatLng(42.43367161452424+ 0.000276, 18.60340827085893), // Point 7
+                LatLng(42.43469667815919+ 0.000276, 18.60331526254028), // Point 8
+                LatLng(42.43469521754036+ 0.000276, 18.60326420305033)  // Closing back to Point 1
+                )
+                    .strokeColor(0xFF4d4d4d.toInt()) // Outline color (dark gray)
+                    .fillColor(0xFF4d4d4d.toInt())   // Semi-transparent gray fill
+                    .strokeWidth(3f)
+
+                map.addPolygon(secondPonton)
+                val thirdPonton = PolygonOptions().add(
+                    LatLng(42.434677054895+ 0.000276, 18.60380111743136), // Point 1
+                    LatLng(42.43381629293683+ 0.000276, 18.603890598372), // Point 2
+                    LatLng(42.43381157472728+ 0.000276, 18.60378536516129), // Point 3
+                    LatLng(42.43378471748977+ 0.000276, 18.60378929916724), // Point 4
+                    LatLng(42.43380213824156+ 0.000276, 18.60408336201836), // Point 5
+                    LatLng(42.43382681784473+ 0.000276, 18.6040794281201), // Point 6
+                    LatLng(42.43382101110287+ 0.000276, 18.60392797095043), // Point 7
+                    LatLng(42.43467613918225+ 0.000276, 18.60385108065288), // Point 8
+                    LatLng(42.434677054895+ 0.000276, 18.60380111743136)  // Closing the polygon
+                )
+                    .strokeColor(0xFF4d4d4d.toInt()) // Outline color (dark gray)
+                    .fillColor(0xFF4d4d4d.toInt())   // Semi-transparent gray fill
+                    .strokeWidth(3f)
+
+                map.addPolygon(thirdPonton)
+            }
+
 
 
             MapEffect(key1 = Unit) { map ->
