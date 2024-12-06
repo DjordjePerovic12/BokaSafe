@@ -9,6 +9,7 @@ val TextRed = Color(0Xffff7070)
 val ConfirmGreen = Color(0xFFA8E6CF)
 val CancelPurple = Color(0xFFE1BEE7)
 val SecondaryRed = Color(0xFFD05353)
+val Yellow = Color(0xFFffd65c)
 val Black = Color(0xFF000000)
 val DefaultGray = Color(0XFF6f6f72)
 val WoodyBrown = Color(0XFF483737)
@@ -21,6 +22,7 @@ val Gray = Color(0xFFE6E6E6)
 val GrayButton = Color(0xFFDEDEDE)
 val GrayBorder = Color(0xFFC3C3C3)
 val DarkGreen = Color(0xFF103713)
+val Green = Color(0xFF338e56)
 val LightGreen = Color(0xFFADDFB3)
 val LightGray = Color(0xFFEFEFEF)
 val SpacerGray = Color(0xB7B7B7B7)
@@ -35,8 +37,10 @@ data class BokaBaySeaTrafficAppColors(
     val primaryRed: Color,
     val textRed: Color,
     val confirmGreen: Color,
+    val green: Color,
     val cancelPurple: Color,
     val secondaryRed: Color,
+    val yellow: Color,
     val black: Color,
     val defaultGray: Color,
     val woodyBrown: Color,
@@ -64,6 +68,7 @@ val LocalBokaBaySeaTrafficAppColors = staticCompositionLocalOf {
         confirmGreen = Color.Unspecified,
         cancelPurple = Color.Unspecified,
         secondaryRed = Color.Unspecified,
+        yellow = Color.Unspecified,
         black = Color.Unspecified,
         defaultGray = Color.Unspecified,
         woodyBrown = Color.Unspecified,
@@ -76,6 +81,7 @@ val LocalBokaBaySeaTrafficAppColors = staticCompositionLocalOf {
         grayButton = Color.Unspecified,
         grayBorder = Color.Unspecified,
         darkGreen = Color.Unspecified,
+        green = Color.Unspecified,
         lightGreen = Color.Unspecified,
         lightGray = Color.Unspecified,
         pickLocationBarGray = Color.Unspecified,
@@ -91,6 +97,7 @@ val bokaBaySeaTrafficAppColors = BokaBaySeaTrafficAppColors(
     confirmGreen = ConfirmGreen,
     cancelPurple = CancelPurple,
     secondaryRed = SecondaryRed,
+    yellow = Yellow,
     black = Black,
     defaultGray = DefaultGray,
     woodyBrown = WoodyBrown,
@@ -103,6 +110,7 @@ val bokaBaySeaTrafficAppColors = BokaBaySeaTrafficAppColors(
     grayButton = GrayButton,
     grayBorder = GrayBorder,
     darkGreen = DarkGreen,
+    green = Green,
     lightGreen = LightGreen,
     lightGray = LightGray,
     pickLocationBarGray = PickLocationBarGray,

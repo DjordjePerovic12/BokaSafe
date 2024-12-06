@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import llc.bokadev.bokabayseatrafficapp.R
 import llc.bokadev.bokabayseatrafficapp.core.components.PrimaryButton
@@ -77,7 +78,6 @@ fun NotificationPreferencesBottomSheet(
             Spacer(
                 modifier = Modifier
                     .padding(vertical = 10.dp)
-                    .size(1.dp)
                     .background(BokaBaySeaTrafficAppTheme.colors.white)
             )
         }
@@ -346,7 +346,8 @@ fun NotificationPreferencesBottomSheet(
         }
         item {
             Spacer(
-                modifier = Modifier.height(25.dp)
+                modifier = Modifier.height(1.dp).fillMaxWidth()
+                    .background(BokaBaySeaTrafficAppTheme.colors.lightGray)
             )
         }
         item {
@@ -405,21 +406,24 @@ fun NotificationPreferencesBottomSheet(
         item {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(15.dp)
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
                     text = "Confirm", color = BokaBaySeaTrafficAppTheme.colors.confirmGreen,
                     style = BokaBaySeaTrafficAppTheme.typography.ralewayBold20,
                     modifier = Modifier.clickable {
                         onConfirmClick()
-                    }
+                    }.weight(1f),
+                    textAlign = TextAlign.Center
                 )
                 Text(
                     text = "Cancel", color = BokaBaySeaTrafficAppTheme.colors.white,
                     style = BokaBaySeaTrafficAppTheme.typography.ralewayBold20,
                     modifier = Modifier.clickable {
                         onCancelClick()
-                    }
+                    }.weight(1f),
+                    textAlign = TextAlign.Center
                 )
 
 

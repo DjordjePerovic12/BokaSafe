@@ -28,7 +28,8 @@ import llc.bokadev.bokabayseatrafficapp.presentation.more.my_routes.MyRoutesView
 @OptIn(ExperimentalAnimationApi::class)
 fun NavGraphBuilder.myRoutesScreenComposable(
     navController: NavController,
-    showSnackBar: (message: String) -> Unit
+    showSnackBar: (message: String) -> Unit,
+    activateCustomRoute: () -> Unit
 ) {
     composable(route = Screen.MyRoutesScreen.route,
         enterTransition = { fadeIn(animationSpec = tween(Constants.ANIMATION_DURATION)) }) { backStackEntry ->
@@ -38,7 +39,8 @@ fun NavGraphBuilder.myRoutesScreenComposable(
         val viewModel = hiltViewModel<MyRoutesViewModel>()
         MyRoutesScreen(
             viewModel = viewModel,
-            showSnackBar = showSnackBar
+            showSnackBar = showSnackBar,
+                    activateCustomRoute = activateCustomRoute
         )
     }
 }

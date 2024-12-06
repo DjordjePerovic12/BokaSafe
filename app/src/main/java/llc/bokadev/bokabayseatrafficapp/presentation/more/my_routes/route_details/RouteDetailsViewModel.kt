@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import llc.bokadev.bokabayseatrafficapp.core.navigation.Navigator
+import llc.bokadev.bokabayseatrafficapp.core.navigation.Screen
 import llc.bokadev.bokabayseatrafficapp.core.navigation.destinations.ROUTE_ID_ARGUMENT_KEY
 import llc.bokadev.bokabayseatrafficapp.data.local.db.BokaBaySeaTrafficAppDatabase
 import llc.bokadev.bokabayseatrafficapp.data.local.model.RouteEntity
@@ -45,6 +46,7 @@ class CustomRouteDetailsViewModel @Inject constructor(
                     navigator.navigateUp()
                 }
             }
+
         }
     }
 
@@ -58,4 +60,5 @@ data class RouteDetailsState(
 
 sealed class RouteDetailsEvent {
     object OnBackClick : RouteDetailsEvent()
+
 }

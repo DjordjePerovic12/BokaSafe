@@ -1,18 +1,23 @@
 package llc.bokadev.bokabayseatrafficapp.presentation.more.my_routes
 
+import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import llc.bokadev.bokabayseatrafficapp.core.navigation.Navigator
 import llc.bokadev.bokabayseatrafficapp.core.navigation.Routes
+import llc.bokadev.bokabayseatrafficapp.core.navigation.Routes.ROOT
 import llc.bokadev.bokabayseatrafficapp.core.navigation.Screen
 import llc.bokadev.bokabayseatrafficapp.data.local.db.BokaBaySeaTrafficAppDatabase
 import llc.bokadev.bokabayseatrafficapp.data.local.model.RouteEntity
+import llc.bokadev.bokabayseatrafficapp.presentation.more.my_routes.route_details.RouteDetailsEvent
 import javax.inject.Inject
 
 @HiltViewModel
@@ -24,6 +29,10 @@ class MyRoutesViewModel @Inject constructor(
 
     protected val state by lazy { MutableStateFlow(MyRoutesState()) }
     val viewStateFlow: StateFlow<MyRoutesState> by lazy { state }
+
+    private val _activateCustomRouteChannel = Channel<Boolean>()
+    val activateCustomRouteChannel = _activateCustomRouteChannel.receiveAsFlow()
+
 
     init {
         getMyRoutes()
@@ -65,6 +74,15 @@ class MyRoutesViewModel @Inject constructor(
                 viewModelScope.launch {
                     navigator.navigateTo(Screen.CustomRouteDetailsScreen.passRouteId(event.routeId))
                 }
+
+            }
+
+
+            is MyRoutesEvent.OnAddNewRouteClick -> {
+                viewModelScope.launch {
+                    _activateCustomRouteChannel.send(true)
+                    navigator.navigateTo(Screen.BayMapScreen.route)
+                }
             }
         }
     }
@@ -94,4 +112,5 @@ sealed class MyRoutesEvent {
     object OnBackClick : MyRoutesEvent()
     data class ToggleDeleteRouteAlertDialog(val selectedRoute: RouteEntity?) : MyRoutesEvent()
     object OnConfirmDeleteClick : MyRoutesEvent()
+    object OnAddNewRouteClick: MyRoutesEvent()
 }

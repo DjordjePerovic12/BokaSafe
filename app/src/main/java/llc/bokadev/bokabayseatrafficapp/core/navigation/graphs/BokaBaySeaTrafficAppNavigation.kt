@@ -27,6 +27,7 @@ fun BokaBaySeaTrafficAppNavigation(
     navigator: Navigator,
     viewModel: BayMapViewModel,
     showSnackBar: (message: String) -> Unit,
+    activateCustomRoute: () -> Unit,
     launchIntent: (intent: Intent) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -46,7 +47,7 @@ fun BokaBaySeaTrafficAppNavigation(
             navController = navController,
             showSnackBar = showSnackBar,
             launchPhoneIntent = launchIntent,
-            viewModel = viewModel
+            viewModel = viewModel,
         )
         moreScreenComposable(
             navController = navController,
@@ -62,7 +63,8 @@ fun BokaBaySeaTrafficAppNavigation(
 
         myRoutesScreenComposable(
             navController = navController,
-            showSnackBar = showSnackBar
+            showSnackBar = showSnackBar,
+            activateCustomRoute = activateCustomRoute
         )
 
         customRouteDetailsScreenComposable(

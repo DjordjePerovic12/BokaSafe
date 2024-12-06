@@ -21,6 +21,10 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -86,6 +90,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
 
 
 
+
         setContent {
             BokaBaySeaTrafficAppTheme {
                 val appState = rememberAppState()
@@ -129,7 +134,11 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                                 launchIntent = { intent ->
                                     startActivity(intent)
                                 },
-                                viewModel = viewModel
+                                viewModel = viewModel,
+                                activateCustomRoute = {
+                                    viewModel.onEvent(MapEvent.OnAddNewRoute)
+                                },
+
                             )
                         } else {
                             // If permissions are denied, show a custom UI

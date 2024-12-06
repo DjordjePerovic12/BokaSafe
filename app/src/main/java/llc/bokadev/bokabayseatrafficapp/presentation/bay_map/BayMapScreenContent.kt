@@ -85,7 +85,6 @@ fun BokaBayMapScreenContent(
     state: GuideState
 ) {
 
-    val speed = viewModel.smoothedSpeed.collectAsState()
     val bottomSheetState =
         rememberModalBottomSheetState(
             confirmValueChange = {
@@ -290,7 +289,8 @@ fun BokaBayMapScreenContent(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(20.dp),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .padding(top = 20.dp)
         ) {
             Box(
@@ -348,7 +348,9 @@ fun BokaBayMapScreenContent(
                     painter = painterResource(id = R.drawable.compass),
                     contentDescription = null,
                     modifier = Modifier.padding(15.dp),
-                    tint =  if(state.shouldEnableCustomPointToPoint) BokaBaySeaTrafficAppTheme.colors.primaryRed else BokaBaySeaTrafficAppTheme.colors.white.copy(.5f)
+                    tint = if (state.shouldEnableCustomPointToPoint) BokaBaySeaTrafficAppTheme.colors.primaryRed else BokaBaySeaTrafficAppTheme.colors.white.copy(
+                        .5f
+                    )
                 )
             }
 
@@ -406,50 +408,34 @@ fun BokaBayMapScreenContent(
         Column(
             verticalArrangement = Arrangement.spacedBy(20.dp),
             horizontalAlignment = Alignment.Start,
-            modifier = Modifier.padding(top = 90.dp)
+            modifier = Modifier.padding(top = 120.dp, start = 20.dp)
         ) {
-            if (state.preferredSpeedUnit != "") {
-                Box(
-                    modifier = Modifier
-                        .padding(top = 25.dp, start = 25.dp)
-                        .size(70.dp)
-                        .clip(CircleShape)
-                        .background(BokaBaySeaTrafficAppTheme.colors.lightGreen)
-                        .zIndex(1f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (state.preferredSpeedUnit == "knots")
-                        Text(
-                            text = if (state.isUserStatic || viewModel.speedList.isEmpty()) "0.0 \n knots" else "${state.userMovementSpeed?.toKnots()} \n knots",
-                            style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular18,
-                            color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                            textAlign = TextAlign.Center
-                        )
-                    else Text(
-                        text = if (state.isUserStatic || viewModel.speedList.isEmpty()) "0.0 \n km/h" else "${state.userMovementSpeed?.toKilometersPerHour()} \n km/h",
-                        style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular18,
-                        color = BokaBaySeaTrafficAppTheme.colors.darkBlue,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
+            if (state.preferredSpeedUnit != "")
+                SpeedometerItem(
+                    preferredSpeedUnit = state.preferredSpeedUnit,
+                    isUserStatic = state.isUserStatic,
+                    speedList = viewModel.speedList,
+                    userMovementSpeed = state.userMovementSpeed ?: -1f
+                )
+
 
             if (state.userCourseOfMovement != String() && state.userCourseOfMovementAzimuth != null) {
-                Box(
-                    modifier = Modifier
-                        .padding(start = 25.dp)
-                        .size(50.dp)
-                        .clip(CircleShape)
-                        .background(BokaBaySeaTrafficAppTheme.colors.lightGreen)
-                        .zIndex(1f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = state.userCourseOfMovementAzimuth.toInt().toThreeDigitString(),
-                        style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular18,
-                        color = BokaBaySeaTrafficAppTheme.colors.darkBlue
-                    )
-                }
+                CompassItem(userCourse = state.userCourseOfMovementAzimuth)
+//                Box(
+//                    modifier = Modifier
+//                        .padding(start = 25.dp)
+//                        .size(50.dp)
+//                        .clip(CircleShape)
+//                        .background(BokaBaySeaTrafficAppTheme.colors.lightGreen)
+//                        .zIndex(1f),
+//                    contentAlignment = Alignment.Center
+//                ) {
+//                    Text(
+//                        text = state.userCourseOfMovementAzimuth.toInt().toThreeDigitString(),
+//                        style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular18,
+//                        color = BokaBaySeaTrafficAppTheme.colors.darkBlue
+//                    )
+//                }
             }
         }
 

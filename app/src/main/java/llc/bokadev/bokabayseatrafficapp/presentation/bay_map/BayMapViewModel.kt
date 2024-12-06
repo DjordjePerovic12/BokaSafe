@@ -713,6 +713,7 @@ class BayMapViewModel @Inject constructor(
             }
 
             is MapEvent.OnMoreClick -> {
+                state = GuideState()
                 viewModelScope.launch {
                     navigator.navigateTo(Screen.MoreScreen.route)
                 }
@@ -833,9 +834,18 @@ class BayMapViewModel @Inject constructor(
                 )
             }
 
+            is MapEvent.OnAddNewRoute -> {
+                Timber.e("what?")
+                state = state.copy(shouldEnableCustomRoute = true)
+            }
+
 
             else -> {}
         }
+    }
+
+    fun enableCustomRoute() {
+        state = state.copy(shouldEnableCustomRoute = true)
     }
 
     private fun calculateDistance(checkpointLocation: LatLng) {
@@ -1357,6 +1367,7 @@ sealed class MapEvent() {
     object OnAnchorageZoneDetailsCloseClick : MapEvent()
     object OnProhibitedAnhcoringZoneDetailsCloseClick : MapEvent()
     object OnBuoyDetailsCloseClick : MapEvent()
+    object OnAddNewRoute : MapEvent()
 
 
 }
