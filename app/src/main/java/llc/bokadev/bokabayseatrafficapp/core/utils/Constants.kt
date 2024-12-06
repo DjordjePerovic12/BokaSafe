@@ -107,7 +107,7 @@ object Constants {
         Checkpoint(
             id = 12,
             name = "Porto Novi",
-            latitude = 42.43315,
+            latitude = 42.43315 + 0.000276,
             longitude = 18.59753,
             isSelected = false,
             characteristics = "Fl R"
@@ -115,7 +115,7 @@ object Constants {
         Checkpoint(
             id = 13,
             name = "Porto Novi, južni lukobran",
-            latitude = 42.43190,
+            latitude = 42.43190 + 0.000276,
             longitude = 18.60535,
             isSelected = false,
             characteristics = "Fl G 3s"
@@ -123,7 +123,7 @@ object Constants {
         Checkpoint(
             id = 14,
             name = "Porto Novi, glava sjevernog lukobrana",
-            latitude = 42.43288,
+            latitude = 42.43288 + 0.000276,
             longitude = 18.60533,
             isSelected = false,
             characteristics = "F G"
@@ -131,7 +131,7 @@ object Constants {
         Checkpoint(
             id = 15,
             name = "Porto Novi, glava južnog lukobrana",
-            latitude = 42.43233,
+            latitude = 42.43233 + 0.000276,
             longitude = 18.60503,
             isSelected = false,
             characteristics = "F R"
@@ -147,7 +147,7 @@ object Constants {
         Checkpoint(
             id = 17,
             name = "Porto Novi, južni kraj plutajućeg valobrana",
-            latitude = 42.43163,
+            latitude = 42.43163+ 0.000276,
             longitude = 18.60607,
             isSelected = false,
             characteristics = "Fl(2) W 5s"
@@ -155,7 +155,7 @@ object Constants {
         Checkpoint(
             id = 18,
             name = "Porto Novi, kardinalna plutača istočnog kvadranta",
-            latitude = 42.43220,
+            latitude = 42.43220+ 0.000276,
             longitude = 18.60667,
             isSelected = false,
             characteristics = "Q(3) 10s"
