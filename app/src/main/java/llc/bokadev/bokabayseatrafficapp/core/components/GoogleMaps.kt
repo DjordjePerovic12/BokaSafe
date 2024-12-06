@@ -209,7 +209,6 @@ fun GoogleMaps(
     val mapProperties = remember {
         MapProperties(
             mapStyleOptions = MapStyleOptions(mapStyle),
-            mapType = MapType.SATELLITE,
             isBuildingEnabled = false,
         )
     }
@@ -685,6 +684,7 @@ fun GoogleMaps(
             // MapEffect code
 
             MapEffect(key1 = depths) { map ->
+                val zoomThreshold = 13F // Adjust this value as needed
                 for (depth in depths) {
                     val depthMarkerOptions = MarkerOptions()
                         .position(LatLng(depth.coordinates.latitude, depth.coordinates.longitude))
@@ -704,7 +704,26 @@ fun GoogleMaps(
                         depthMarkers.add(depthMarker)
                     }
                     Timber.e("Local depths $localCheckpoints")
+                }
+                map.setOnCameraIdleListener {
+                    val currentZoom = map.cameraPosition.zoom
+                    val isZoomAboveThreshold = currentZoom >= zoomThreshold
 
+                    for (marker in depthMarkers) {
+                        marker.isVisible = isZoomAboveThreshold
+                    }
+                    for (marker in shipwreckMarkers) {
+                        marker.isVisible = isZoomAboveThreshold
+                    }
+                    for (marker in buoyMarkers) {
+                        marker.isVisible = isZoomAboveThreshold
+                    }
+                    for ((index, marker) in lightHouseMarkers.withIndex()) {
+                        // Toggle visibility for every other marker (e.g., even-indexed markers)
+                        if (index % 3 == 0) { // Change to `index % 2 != 0` for odd-indexed markers
+                            marker.isVisible = isZoomAboveThreshold
+                        }
+                    }
                 }
             }
 
