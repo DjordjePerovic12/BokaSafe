@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "BokaBaySeaTrafficApp"
+rootProject.name = "BokaSafe"
 include(":app")
  

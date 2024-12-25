@@ -1,0 +1,1655 @@
+package llc.bokadev.bokasafe.core.components
+
+import android.annotation.SuppressLint
+import android.os.Build
+import android.view.LayoutInflater
+import android.view.View
+import android.widget.TextView
+import androidx.annotation.DrawableRes
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetState
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.model.Circle
+import com.google.android.gms.maps.model.Dash
+import com.google.android.gms.maps.model.Gap
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MapStyleOptions
+import com.google.android.gms.maps.model.Marker
+import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.PolygonOptions
+import com.google.android.gms.maps.model.Polyline
+import com.google.android.gms.maps.model.PolylineOptions
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapEffect
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.MapsComposeExperimentalApi
+import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.widgets.ScaleBar
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import llc.bokadev.bokasafe.R
+import llc.bokadev.bokasafe.core.utils.bitmapDescriptorFromVector
+import llc.bokadev.bokasafe.core.utils.bitmapDescriptorFromVectorWithNumber
+import llc.bokadev.bokasafe.core.utils.bitmapDescriptorFromVectorWithNumberOrLetter
+import llc.bokadev.bokasafe.core.utils.calculateBoundingBoxCentroid
+import llc.bokadev.bokasafe.core.utils.calculateBounds
+import llc.bokadev.bokasafe.core.utils.calculateCentroid
+import llc.bokadev.bokasafe.core.utils.clearAllPolylines
+import llc.bokadev.bokasafe.core.utils.clearPipelineLinesAndCircles
+import llc.bokadev.bokasafe.core.utils.createWavyPolyline
+import llc.bokadev.bokasafe.core.utils.drawAnchoringZoneLines
+import llc.bokadev.bokasafe.core.utils.drawAnchoringZoneLinesWith8Points
+import llc.bokadev.bokasafe.core.utils.drawAnchoringZoneLinesWithSixPoints
+import llc.bokadev.bokasafe.core.utils.drawCustomDashedPolylineWithCircles
+import llc.bokadev.bokasafe.core.utils.drawLinesBetweenPoints
+import llc.bokadev.bokasafe.core.utils.getMidpoint
+import llc.bokadev.bokasafe.core.utils.textAsBitmap
+import llc.bokadev.bokasafe.domain.model.Anchorage
+import llc.bokadev.bokasafe.domain.model.AnchorageZone
+import llc.bokadev.bokasafe.domain.model.Buoy
+import llc.bokadev.bokasafe.domain.model.ProhibitedAnchoringZone
+import llc.bokadev.bokasafe.domain.model.Checkpoint
+import llc.bokadev.bokasafe.domain.model.Depth
+import llc.bokadev.bokasafe.domain.model.Pipeline
+import llc.bokadev.bokasafe.domain.model.ShipWreck
+import llc.bokadev.bokasafe.domain.model.UnderwaterCable
+import llc.bokadev.bokasafe.presentation.bay_map.BayMapViewModel
+import llc.bokadev.bokasafe.presentation.bay_map.CustomNauticalMilesMapScale
+import llc.bokadev.bokasafe.presentation.bay_map.MapEvent
+import llc.bokadev.bokasafe.presentation.bay_map.NotificationPreferencesBottomSheet
+import llc.bokadev.bokasafe.ui.theme.BokaBaySeaTrafficAppTheme
+import timber.log.Timber
+
+
+@RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
+@SuppressLint("PotentialBehaviorOverride")
+@OptIn(
+    MapsComposeExperimentalApi::class, ExperimentalMaterial3Api::class,
+    ExperimentalFoundationApi::class
+)
+@Composable
+fun GoogleMaps(
+    modifier: Modifier = Modifier,
+    scope: CoroutineScope,
+    sheetState: SheetState,
+    viewModel: BayMapViewModel,
+    checkpoints: MutableList<Checkpoint>,
+    shipwrecks: MutableList<ShipWreck>,
+    anchorages: MutableList<Anchorage>,
+    anchorageZones: MutableList<AnchorageZone>,
+    underwaterCables: MutableList<UnderwaterCable>,
+    pipelines: MutableList<Pipeline>,
+    buoys: MutableList<Buoy>,
+    prohibitedProhibitedAnchoringZones: MutableList<ProhibitedAnchoringZone>,
+    onCheckpointClick: (Checkpoint) -> Unit,
+    onShipwreckClick: (ShipWreck) -> Unit,
+    onProhibitedAnchoringZoneClick: (ProhibitedAnchoringZone) -> Unit,
+    onAnchorageClick: (Anchorage) -> Unit,
+    onAnchorageZoneClick: (AnchorageZone) -> Unit,
+    onBuoyClick: (Buoy) -> Unit,
+    depths: MutableList<Depth>,
+    userLocation: LatLng? = null,
+    @DrawableRes userIcon: Int,
+    shouldZoomUserLocation: Boolean,
+    onMarkerCreation: (Marker) -> Unit,
+    resetZoom: () -> Unit,
+    onLighthouseMarkersCreation: (Marker) -> Unit,
+    onShipwreckMarkerCreation: (Marker) -> Unit,
+    onProhibitedAnchoringZoneMarkerCreation: (Marker) -> Unit,
+    onAnchorageMarkerCreation: (Marker) -> Unit,
+    onAnchorageZoneMarkerCreation: (Marker) -> Unit,
+    onBuoyMarkerCreation: (Marker) -> Unit,
+    onItemHide: (Int) -> Unit,
+    onMarkerUpdate: () -> Unit,
+    onMapClick: (LatLng, Int) -> Unit,
+) {
+
+    val state = viewModel.state
+    val bottomSheetState = rememberModalBottomSheetState(
+        confirmValueChange = {
+            it == SheetValue.Hidden
+        }, skipPartiallyExpanded = true
+    )
+
+    if (sheetState.isVisible) ModalBottomSheet(
+        modifier = Modifier
+            .navigationBarsPadding(),
+        dragHandle = {},
+        onDismissRequest = {
+            scope.launch {
+                sheetState.hide()
+            }
+            viewModel.onEvent(MapEvent.OnCancelPreferencesClick)
+        },
+        content = {
+            viewModel.state.mapItemFilters?.let {
+                NotificationPreferencesBottomSheet(mapItemFilters = it,
+                    onSwitchClick = { choice, id ->
+                        viewModel.onEvent(
+                            MapEvent.OnPreferencesSwitchClick(
+                                choice, id
+                            )
+                        )
+                    },
+                    onConfirmClick = {
+                        scope.launch {
+                            sheetState.hide()
+                        }
+                        viewModel.onEvent(MapEvent.OnConfirmPreferencesClick)
+                    },
+                    onCancelClick = {
+                        scope.launch {
+                            sheetState.hide()
+                        }
+                        viewModel.onEvent(MapEvent.OnCancelPreferencesClick)
+                    })
+            }
+        },
+        sheetState = bottomSheetState,
+        scrimColor = BokaBaySeaTrafficAppTheme.colors.darkBlue.copy(alpha = .5f),
+        shape = RoundedCornerShape(topEnd = 16.dp, topStart = 16.dp),
+
+        )
+    val context = LocalContext.current
+
+
+    var cursorActive by remember { mutableStateOf(false) }
+
+
+    val uiSettingsState = remember {
+        MapUiSettings(
+            zoomControlsEnabled = false,
+            mapToolbarEnabled = false,
+            compassEnabled = false,
+            rotationGesturesEnabled = false,
+            scrollGesturesEnabled = !cursorActive,
+            tiltGesturesEnabled = false,
+            zoomGesturesEnabled = !cursorActive,
+            scrollGesturesEnabledDuringRotateOrZoom = !cursorActive,
+
+            )
+    }
+    var markerCreated by remember {
+        mutableStateOf(false)
+    }
+
+    var hasZoomed by remember {
+        mutableStateOf(false)
+    }
+
+
+    val mapStyle =
+        LocalContext.current.assets.open("map_style.json").bufferedReader().use { it.readText() }
+    val mapProperties = remember {
+        MapProperties(
+            mapStyleOptions = MapStyleOptions(mapStyle),
+            isBuildingEnabled = false,
+        )
+    }
+    val cameraPositionState = rememberCameraPositionState()
+    val width = context.resources.displayMetrics.widthPixels
+    val height = context.resources.displayMetrics.heightPixels
+    val padding = (width * 0.10).toInt()
+
+    val localCheckpoints: ArrayList<Checkpoint> = arrayListOf()
+    val localShipwrecks: ArrayList<ShipWreck> = arrayListOf()
+    val localProhibitedProhibitedAnchoringZones: ArrayList<ProhibitedAnchoringZone> = arrayListOf()
+    val localAnchorages: ArrayList<Anchorage> = arrayListOf()
+    val localAnchorageZones: ArrayList<AnchorageZone> = arrayListOf()
+    val localBuoys: ArrayList<Buoy> = arrayListOf()
+    val localDepths: ArrayList<Depth> = arrayListOf()
+
+
+    //Filtering markers
+    val lightHouseMarkers = remember { mutableListOf<Marker>() }
+    val shipwreckMarkers = remember { mutableListOf<Marker>() }
+    val prohibitedAnchoringZoneMarkers = remember { mutableListOf<Marker>() }
+    val anchorageMarkers = remember { mutableListOf<Marker>() }
+    val anchorageZoneMarkers = remember { mutableListOf<Marker>() }
+    val buoyMarkers = remember { mutableListOf<Marker>() }
+    val depthMarkers = remember { mutableListOf<Marker>() }
+    val dashedPolylines: MutableList<Polyline> = remember { mutableListOf() }
+    val circles: MutableList<Circle> = remember { mutableListOf() }
+    val anchorageZonesPolylines: MutableList<Polyline> = remember { mutableListOf() }
+
+
+    //Distance between two points handlers
+    val customPointsMarkers = remember { mutableListOf<Marker>() }
+    val customPointsPollyline = remember { mutableListOf<Polyline?>(null) }
+
+
+    //Custom route
+    val customRoutePointsMarkers = remember { mutableListOf<Marker>() }
+    val customRoutePointsPollyline = remember { mutableListOf<Polyline?>(null) }
+
+
+    var selectedMarker by remember { mutableStateOf<Marker?>(null) }
+
+    var showCursor by remember { mutableStateOf(false) }
+    var cursorPosition by remember { mutableStateOf<Offset?>(null) }
+
+    var googleMapInstance by remember { mutableStateOf<GoogleMap?>(null) }
+
+
+    var mapLoaded by remember { mutableStateOf(false) }
+
+
+
+    LaunchedEffect(cursorActive) {
+        uiSettingsState.copy(
+            scrollGesturesEnabled = !cursorActive,
+            zoomGesturesEnabled = !cursorActive
+        )
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BokaBaySeaTrafficAppTheme.colors.mapRed)
+            .pointerInput(cursorActive) {
+                if (cursorActive) {
+                    detectDragGestures(
+                        onDragStart = { offset ->
+                            Timber.e("Cursor drag started at offset: $offset")
+                            cursorActive = true // Ensure cursor is active
+                            showCursor = true  // Show the cursor immediately
+
+                            // Update cursor position
+                            cursorPosition = offset + Offset(0f, -250f)
+
+                            // Update LatLng immediately
+                            googleMapInstance?.let { map ->
+                                val adjustedOffset = android.graphics.Point(
+                                    (cursorPosition!!.x).toInt(),
+                                    (cursorPosition!!.y + 250.dp.toPx()).toInt()
+                                )
+                                val updatedLatLng =
+                                    map.projection.fromScreenLocation(adjustedOffset)
+                                viewModel.onEvent(MapEvent.OnCursorActive(updatedLatLng))
+                                viewModel.onEvent(
+                                    MapEvent.OnDistanceTextOffsetChange(
+                                        Offset(cursorPosition!!.x, cursorPosition!!.y)
+                                    )
+                                )
+                                Timber.e("Updated LatLng at drag start: $updatedLatLng")
+                            }
+                        },
+                        onDrag = { change, dragAmount ->
+                            // Cursor drag behavior
+                            val newOffset = cursorPosition?.let {
+                                Offset(it.x + dragAmount.x, it.y + dragAmount.y)
+                            } ?: (change.position + Offset(0f, -250f))
+                            cursorPosition = newOffset
+
+                            // Update LatLng based on cursor position
+                            googleMapInstance?.let { map ->
+                                val adjustedOffset = android.graphics.Point(
+                                    (newOffset.x).toInt(),
+                                    (newOffset.y + 250.dp.toPx()).toInt()
+                                )
+                                val updatedLatLng =
+                                    map.projection.fromScreenLocation(adjustedOffset)
+                                viewModel.onEvent(MapEvent.OnCursorActive(updatedLatLng))
+                                viewModel.onEvent(
+                                    MapEvent.OnDistanceTextOffsetChange(
+                                        Offset(newOffset.x, newOffset.y)
+                                    )
+                                )
+                                Timber.e("Updated LatLng during drag: $updatedLatLng")
+                            }
+                        },
+                        onDragEnd = {
+                            Timber.e("Cursor drag ended")
+                            cursorActive = false
+                            showCursor = false
+                            viewModel.onEvent(MapEvent.OnCursorClear)
+                        },
+                        onDragCancel = {
+                            Timber.e("Cursor drag cancelled")
+                            cursorActive = false
+                            showCursor = false
+                            viewModel.onEvent(MapEvent.OnCursorClear)
+                        }
+                    )
+                } else {
+                    return@pointerInput
+                }
+            }
+    )
+    {
+        GoogleMap(
+            modifier = modifier.background(BokaBaySeaTrafficAppTheme.colors.mapRed),
+            uiSettings = uiSettingsState,
+            cameraPositionState = cameraPositionState,
+            properties = mapProperties,
+        ) {
+
+            MapEffect(key1 = Unit) { map ->
+                map.setOnMapLoadedCallback {
+                    mapLoaded = true // Map is fully loaded
+                }
+            }
+
+            MapEffect(key1 = Unit) { map ->
+                val risanPontoon = PolygonOptions()
+                    .add(
+                        LatLng(42.51343409174908, 18.69421335836189),
+                        LatLng(42.51266704067093, 18.69456451829592),
+                        LatLng(42.51277679340598, 18.69491739403726),
+                        LatLng(42.51248716115117, 18.69520280191108),
+                        LatLng(42.51254542537956, 18.69547984741136),
+                        LatLng(42.51305989979508, 18.6952471255272),
+                        LatLng(42.51284542835696, 18.69470461563031),
+                        LatLng(42.51349023982936, 18.69443376829531),
+                        LatLng(42.51343409174908, 18.69421335836189) // Closing point
+                    )
+                    .fillColor(0xFF4d4d4d.toInt()) // Semi-transparent gray fill
+                    .strokeColor(0xFF4d4d4d.toInt())                  // Gray border
+                    .strokeWidth(3f)
+
+                // Border width
+                map.addPolygon(risanPontoon)
+
+                val portoBigger = PolygonOptions()
+                    .add(
+                        LatLng(42.43585129303195, 18.68856581133421),
+                        LatLng(42.43590998143019, 18.68855785707708),
+                        LatLng(42.43586889589382, 18.68832725043108),
+                        LatLng(42.43653794465092, 18.68821589579027),
+                        LatLng(42.43652033419271, 18.68797733355455),
+                        LatLng(42.43326314339419, 18.68868515484798),
+                        LatLng(42.43328075793485, 18.68920996350058),
+                        LatLng(42.43340987195155, 18.68920996158295),
+                        LatLng(42.43334531047817, 18.68889189635706),
+                        LatLng(42.43342747380068, 18.68882828158946),
+                        LatLng(42.43563414406449, 18.68838292214406),
+                        LatLng(42.43582056165457, 18.69059313071287),
+                        LatLng(42.43376294483451, 18.69108576423822),
+                        LatLng(42.4337744536253, 18.6912925411343),
+                        LatLng(42.43608351305846, 18.69073579690654),
+                        LatLng(42.43585129303195, 18.68856581133421) // Closing the polygon
+                    ).fillColor(0xFF4d4d4d.toInt()) // Semi-transparent gray fill
+                    .strokeColor(0xFF4d4d4d.toInt())                  // Outline color
+                    .strokeWidth(3f)
+
+                map.addPolygon(portoBigger)
+
+                val portoSmaller = PolygonOptions()
+                    .add(
+                        LatLng(42.43106329571025 + 0.000276, 18.68782746020326),
+                        LatLng(42.43107092612271 + 0.000276, 18.68793080759222),
+                        LatLng(42.43047976434112 + 0.000276, 18.68807551029373),
+                        LatLng(42.43049120779435 + 0.000276, 18.68815818664175),
+                        LatLng(42.43107474107704 + 0.000276, 18.6880031498555),
+                        LatLng(42.43180421668636 + 0.000276, 18.69354454325169),
+                        LatLng(42.432044604425 + 0.000276, 18.69347893186501),
+                        LatLng(42.43194338176769 + 0.000276, 18.69286014741089),
+                        LatLng(42.4329585712887 + 0.000276, 18.69261689971157),
+                        LatLng(42.43295652085294 + 0.000276, 18.69256967177043),
+                        LatLng(42.43193229601361 + 0.000276, 18.69281302331027),
+                        LatLng(42.43181925596899 + 0.000276, 18.6918471074427),
+                        LatLng(42.4328150382072 + 0.000276, 18.69160844618676),
+                        LatLng(42.43279863443195 + 0.000276, 18.69155010584482),
+                        LatLng(42.43181095827022 + 0.000276, 18.69180284407425),
+                        LatLng(42.43163870848683 + 0.000276, 18.69068850317813),
+                        LatLng(42.43266763640719 + 0.000276, 18.69043030493287),
+                        LatLng(42.4326614850141 + 0.000276, 18.69036918701118),
+                        LatLng(42.43161989660175 + 0.000276, 18.69063309554553),
+                        LatLng(42.4314230143014 + 0.000276, 18.6892496339788),
+                        LatLng(42.43236006210153 + 0.000276, 18.68899682743974),
+                        LatLng(42.43237236490067 + 0.000276, 18.68905516719201),
+                        LatLng(42.43250769366347 + 0.000276, 18.6890246073946),
+                        LatLng(42.43248923942027 + 0.000276, 18.68889403723449),
+                        LatLng(42.431406610453 + 0.000276, 18.6891551808493),
+                        LatLng(42.43124257567006 + 0.000276, 18.68788005877403),
+                        LatLng(42.43393753204431 + 0.000276, 18.68719962920882),
+                        LatLng(42.43392719471085 + 0.000276, 18.6871109312536),
+                        LatLng(42.43122594143016 + 0.000276, 18.6878158689756)
+                    ).fillColor(0xFF4d4d4d.toInt()) // Semi-transparent gray fill
+                    .strokeColor(0xFF4d4d4d.toInt())                  // Outline color
+                    .strokeWidth(3f)
+                map.addPolygon(portoSmaller)
+
+
+                val portoNoviBottom = PolygonOptions()
+                    .add(
+                        LatLng(42.43335102000229, 18.60118825862439),  // Adjusted starting point
+                        LatLng(42.4331026011171, 18.60204842147725),
+                        LatLng(42.43363908376387, 18.60236521373901),
+                        LatLng(42.43370508861859, 18.60216111201835),
+                        LatLng(42.43373023765257, 18.60217877517858),
+                        LatLng(42.43354320352971, 18.60276515601285),
+                        LatLng(42.43351441611615, 18.60274267879554),
+                        LatLng(42.43361921644027, 18.60241406213506),
+                        LatLng(42.43308620766614, 18.60209887883594),
+                        LatLng(42.43307356689315, 18.60214394236489),
+                        LatLng(42.43311417386749, 18.60216570515138),
+                        LatLng(42.43302415398459, 18.6024435650618),
+                        LatLng(42.4329793248717, 18.6024138356079),
+                        LatLng(42.4328383588028, 18.60289246195724),
+                        LatLng(42.43287306456577, 18.60291528175777),
+                        LatLng(42.43278578875431, 18.60318358528157),
+                        LatLng(42.4332822989998, 18.603465647962),
+                        LatLng(42.43333741997111, 18.60329000485308),
+                        LatLng(42.43336855313787, 18.60331005860061),
+                        LatLng(42.43329505834532, 18.60353203281304),
+                        LatLng(42.43268049471521, 18.60318434075018),
+                        LatLng(42.43232628941481, 18.60429143270373),
+                        LatLng(42.43240846040933, 18.60433776359487),
+                        LatLng(42.43236711916885, 18.60446914843524),
+                        LatLng(42.43255726009965, 18.6047621210988),
+                        LatLng(42.43258919070994, 18.60472492051116),
+                        LatLng(42.4326260662203, 18.60472771628247),
+                        LatLng(42.43273123460676, 18.60486114667582),
+                        LatLng(42.43272852615893, 18.60491317338183),
+                        LatLng(42.43264345200297, 18.60502860654871),
+                        LatLng(42.43259328448078, 18.6050470647465),
+                        LatLng(42.43231081450904, 18.60464196893047),
+                        LatLng(42.43215547233217, 18.60434026642319),
+                        LatLng(42.43221731235193, 18.60435695300049),
+                        LatLng(42.43323289498506, 18.6011223549834) // Closing the loop
+                    ).fillColor(0xFF4d4d4d.toInt()) // Semi-transparent gray fill
+                    .strokeColor(0xFF4d4d4d.toInt())                  // Outline color
+                    .strokeWidth(3f)
+                map.addPolygon(portoNoviBottom)// Path width
+
+                val portoNoviRightHandSidePontoon = PolygonOptions().add(
+                    LatLng(42.43163944787811 + 0.000276, 18.60565889375784), // Point 1
+                    LatLng(42.43161678198076 + 0.000276, 18.60572280080413), // Point 2
+                    LatLng(42.43302922232052 + 0.000276, 18.60674436942687), // Point 3
+                    LatLng(42.43305218785689 + 0.000276, 18.60668425951488), // Point 4
+                    LatLng(
+                        42.43163944787811 + 0.000276,
+                        18.60565889375784
+                    )  // Closing back to Point 1
+                )
+                    .strokeColor(0xFF4d4d4d.toInt()) // Outline color (dark gray)
+                    .fillColor(0xFF4d4d4d.toInt())   // Semi-transparent gray fill
+                    .strokeWidth(3f)
+
+                map.addPolygon(portoNoviRightHandSidePontoon)
+
+                val firstPortoNoviPontoon = PolygonOptions().add(
+                    LatLng(42.43467646449475 + 0.000276, 18.60272841467844), // Point 1
+                    LatLng(42.43378924334428 + 0.000276, 18.60280255708607), // Point 2
+                    LatLng(42.43379136807557 + 0.000276, 18.60284228612519), // Point 3
+                    LatLng(42.43467986817681 + 0.000276, 18.60277116089924), // Point 4
+                    LatLng(42.43467646449475 + 0.000276, 18.60272841467844),
+                )
+                    .strokeColor(0xFF4d4d4d.toInt()) // Outline color (dark gray)
+                    .fillColor(0xFF4d4d4d.toInt())   // Semi-transparent gray fill
+                    .strokeWidth(3f)
+
+                map.addPolygon(firstPortoNoviPontoon)
+                val firstPortoNoviPontoonTop = PolygonOptions().add(
+                    LatLng(42.43379747142445 + 0.000276, 18.60269962213035), // Point 1
+                    LatLng(42.43377417238224 + 0.000276, 18.60270029381828), // Point 2
+                    LatLng(42.43378433474902 + 0.000276, 18.60295854741479), // Point 3
+                    LatLng(42.43381110390273 + 0.000276, 18.60295518920831), // Point 4
+                    LatLng(42.43379747142445 + 0.000276, 18.60269962213035)
+                )
+                    .strokeColor(0xFF4d4d4d.toInt()) // Outline color (dark gray)
+                    .fillColor(0xFF4d4d4d.toInt())   // Semi-transparent gray fill
+                    .strokeWidth(3f)
+
+                map.addPolygon(firstPortoNoviPontoonTop)
+
+                val secondPortoNoviPontoon = PolygonOptions().add(
+                    LatLng(42.43469521754036 + 0.000276, 18.60326420305033), // Point 1
+                    LatLng(42.43366867456357 + 0.000276, 18.60336993078505), // Point 2
+                    LatLng(42.43366389702791 + 0.000276, 18.60322603077579), // Point 3
+                    LatLng(42.43363633467168 + 0.000276, 18.60322901837575), // Point 4
+                    LatLng(42.43365287201944 + 0.000276, 18.60356262722907), // Point 5
+                    LatLng(42.43367822935721 + 0.000276, 18.60355963967305), // Point 6
+                    LatLng(42.43367161452424 + 0.000276, 18.60340827085893), // Point 7
+                    LatLng(42.43469667815919 + 0.000276, 18.60331526254028), // Point 8
+                    LatLng(
+                        42.43469521754036 + 0.000276,
+                        18.60326420305033
+                    )  // Closing back to Point 1
+                )
+                    .strokeColor(0xFF4d4d4d.toInt()) // Outline color (dark gray)
+                    .fillColor(0xFF4d4d4d.toInt())   // Semi-transparent gray fill
+                    .strokeWidth(3f)
+
+                map.addPolygon(secondPortoNoviPontoon)
+                val thirdPortoNoviPontoon = PolygonOptions().add(
+                    LatLng(42.434677054895 + 0.000276, 18.60380111743136), // Point 1
+                    LatLng(42.43381629293683 + 0.000276, 18.603890598372), // Point 2
+                    LatLng(42.43381157472728 + 0.000276, 18.60378536516129), // Point 3
+                    LatLng(42.43378471748977 + 0.000276, 18.60378929916724), // Point 4
+                    LatLng(42.43380213824156 + 0.000276, 18.60408336201836), // Point 5
+                    LatLng(42.43382681784473 + 0.000276, 18.6040794281201), // Point 6
+                    LatLng(42.43382101110287 + 0.000276, 18.60392797095043), // Point 7
+                    LatLng(42.43467613918225 + 0.000276, 18.60385108065288), // Point 8
+                    LatLng(42.434677054895 + 0.000276, 18.60380111743136)  // Closing the polygon
+                )
+                    .strokeColor(0xFF4d4d4d.toInt()) // Outline color (dark gray)
+                    .fillColor(0xFF4d4d4d.toInt())   // Semi-transparent gray fill
+                    .strokeWidth(3f)
+
+                map.addPolygon(thirdPortoNoviPontoon)
+
+                val portoNoviBreakWater = PolygonOptions().add(
+                    LatLng(42.43447974400777 + 0.000276, 18.60456063375561), // Point 1
+                    LatLng(42.43446017704768 + 0.000276, 18.60458016994756), // Point 2
+                    LatLng(42.43443546079591 + 0.000276, 18.6045578461591),  // Point 3
+                    LatLng(42.43440970249193 + 0.000276, 18.60459974381902), // Point 4
+                    LatLng(42.43437876074211 + 0.000276, 18.60465007260185), // Point 5
+                    LatLng(42.43433438215891 + 0.000276, 18.60470882708726), // Point 6
+                    LatLng(42.4342909959397 + 0.000276, 18.60476064248336),  // Point 7
+                    LatLng(42.4342351440848 + 0.000276, 18.60483074680534),  // Point 8
+                    LatLng(42.43418130711672 + 0.000276, 18.60488691154802), // Point 9
+                    LatLng(42.43410877940245 + 0.000276, 18.60495297253234), // Point 10
+                    LatLng(42.4340463394912 + 0.000276, 18.60501189467653),  // Point 11
+                    LatLng(42.43400791129768 + 0.000276, 18.60503801933107), // Point 12
+                    LatLng(42.43403913579512 + 0.000276, 18.60511293049861), // Point 13
+                    LatLng(42.43399588498213 + 0.000276, 18.60514070339934), // Point 14
+                    LatLng(42.43393934761384 + 0.000276, 18.60517167034094), // Point 15
+                    LatLng(42.43388040419465 + 0.000276, 18.60520915663977), // Point 16
+                    LatLng(42.43381424328926 + 0.000276, 18.60524012328146), // Point 17
+                    LatLng(42.43374808249703 + 0.000276, 18.60526457079919), // Point 18
+                    LatLng(42.43366748649753 + 0.000276, 18.60529227786355), // Point 19
+                    LatLng(42.43359651396453 + 0.000276, 18.60531183535116), // Point 20
+                    LatLng(42.43353035300341 + 0.000276, 18.60532487397644), // Point 21
+                    LatLng(42.43348173571364 + 0.000276, 18.60533387783196), // Point 22
+                    LatLng(42.43342262378219 + 0.000276, 18.60533968129653), // Point 23
+                    LatLng(42.43336522534474 + 0.000276, 18.60534432394752), // Point 24
+                    LatLng(42.43330697021266 + 0.000276, 18.60534664531126), // Point 25
+                    LatLng(42.43324100487438 + 0.000276, 18.60534896636781), // Point 26
+                    LatLng(42.4332427183441 + 0.000276, 18.60523985791675),  // Point 27
+                    LatLng(42.43324014834605 + 0.000276, 18.60509012362702), // Point 28
+                    LatLng(42.43324186170557 + 0.000276, 18.60497869357332), // Point 29
+                    LatLng(42.43324100449163 + 0.000276, 18.60474190447823), // Point 30
+                    LatLng(42.43320159657199 + 0.000276, 18.60474190470559), // Point 31
+                    LatLng(42.43320159713416 + 0.000276, 18.60525262570891), // Point 32
+                    LatLng(42.432955726066 + 0.000276, 18.605252625201),     // Point 33
+                    LatLng(42.4329554359197 + 0.000276, 18.60520842937934),  // Point 34
+                    LatLng(42.4328940835276 + 0.000276, 18.60520709399544),  // Point 35
+                    LatLng(42.43285047155741 + 0.000276, 18.60526251105899), // Point 36
+                    LatLng(42.43284923931363 + 0.000276, 18.60544244969111), // Point 37
+                    LatLng(42.43289903476325 + 0.000276, 18.60551924373285), // Point 38
+                    LatLng(42.43341729152774 + 0.000276, 18.60552310754422), // Point 39
+                    LatLng(42.43348255652458 + 0.000276, 18.6055125475838),  // Point 40
+                    LatLng(42.43353977389224 + 0.000276, 18.60551035057311), // Point 41
+                    LatLng(42.43360710913582 + 0.000276, 18.60549737369435), // Point 42
+                    LatLng(42.43366775222524 + 0.000276, 18.60548130092482), // Point 43
+                    LatLng(42.43373549799843 + 0.000276, 18.60545909075318), // Point 44
+                    LatLng(42.43380378401271 + 0.000276, 18.60543380070968), // Point 45
+                    LatLng(42.43386950032642 + 0.000276, 18.60540279863359), // Point 46
+                    LatLng(42.43392776151074 + 0.000276, 18.60537191417496), // Point 47
+                    LatLng(42.43398858537375 + 0.000276, 18.60533403920556), // Point 48
+                    LatLng(42.43405018763246 + 0.000276, 18.60529621888079), // Point 49
+                    LatLng(42.43411251388158 + 0.000276, 18.605252745786),   // Point 50
+                    LatLng(42.43418220024693 + 0.000276, 18.60519560417474), // Point 51
+                    LatLng(42.43424174155179 + 0.000276, 18.60514567473148), // Point 52
+                    LatLng(42.43429649859952 + 0.000276, 18.6050884184325),  // Point 53
+                    LatLng(42.43436635905222 + 0.000276, 18.60501684248651), // Point 54
+                    LatLng(42.43442252057456 + 0.000276, 18.60496126554762), // Point 55
+                    LatLng(42.43445507248895 + 0.000276, 18.60492077972652), // Point 56
+                    LatLng(42.43443975351116 + 0.000276, 18.60489932490984), // Point 57
+                    LatLng(42.43442183841601 + 0.000276, 18.60487350353424), // Point 58
+                    LatLng(42.43445880881139 + 0.000276, 18.60482808315806), // Point 59
+                    LatLng(42.43462045742911 + 0.000276, 18.60479742504116), // Point 60
+                    LatLng(42.43466427771508 + 0.000276, 18.60467896389141), // Point 61
+                    LatLng(42.43447974400777 + 0.000276, 18.60456063375561)  // Closing Point
+                ).strokeColor(0xFF4d4d4d.toInt()) // Outline color (dark gray)
+                    .fillColor(0xFF4d4d4d.toInt())   // Semi-transparent gray fill
+                    .strokeWidth(3f)
+                map.addPolygon(portoNoviBreakWater)
+            }
+
+
+
+            MapEffect(key1 = Unit) { map ->
+                googleMapInstance = map
+            }
+
+            MapEffect(key1 = Unit) { map ->
+                map.setOnMapLongClickListener { latLng ->
+                    Timber.e("Map long click detected at LatLng: $latLng")
+                    cursorActive = true
+                    showCursor = true
+
+                    googleMapInstance?.let {
+                        val screenPosition = it.projection.toScreenLocation(latLng)
+                        cursorPosition =
+                            Offset(screenPosition.x.toFloat(), screenPosition.y.toFloat() - 250f)
+                        viewModel.onEvent(MapEvent.OnCursorActive(latLng))
+                        viewModel.onEvent(
+                            MapEvent.OnDistanceTextOffsetChange(
+                                Offset(cursorPosition!!.x, cursorPosition!!.y)
+                            )
+                        )
+                    }
+                }
+            }
+
+
+            MapEffect(key1 = checkpoints) {
+                if (checkpoints.isNotEmpty() && !hasZoomed) {
+                    cameraPositionState.animate(
+                        update = CameraUpdateFactory.newLatLngBounds(
+                            calculateBounds(checkpoints, context), width, height.toInt(), padding
+                        )
+                    )
+                    hasZoomed = true
+                }
+            }
+
+            val userIconBitmap = bitmapDescriptorFromVector(
+                width = 150, height = 150, context = context, vectorResId = userIcon
+            )
+
+            MapEffect(key1 = userLocation) { map ->
+                Timber.e("User location $userLocation")
+                if (!markerCreated && userLocation != null) {
+                    val userMarkerOptions =
+                        MarkerOptions().icon(userIconBitmap).position(userLocation)
+                    val marker = map.addMarker(userMarkerOptions)
+                    marker?.let(onMarkerCreation)
+                    markerCreated = true
+                } else onMarkerUpdate()
+            }
+            MapEffect(key1 = shouldZoomUserLocation) { map ->
+                if (shouldZoomUserLocation && userLocation != null) {
+                    map.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 19f))
+                }
+                map.setOnCameraIdleListener(resetZoom)
+            }
+
+
+            // MapEffect code
+
+            // MapEffect code
+
+            MapEffect(key1 = depths) { map ->
+                val zoomThreshold = 13F // Adjust this value as needed
+                for (depth in depths) {
+                    val depthMarkerOptions = MarkerOptions()
+                        .position(LatLng(depth.coordinates.latitude, depth.coordinates.longitude))
+                        .icon(
+                            textAsBitmap(
+                                text = depth.depth.toString(),
+                                textSize = 14f,
+                                textColor = 0xFFFFFFFF.toInt()
+                            )
+                        )
+                        .title(depth.depth.toString()).infoWindowAnchor(.5f, 1.9f)
+                    localDepths.add(depth)
+                    val depthMarker: Marker? = map.addMarker(depthMarkerOptions)
+                    depthMarker?.tag = "depth_${depth}"
+                    depthMarker?.let(onLighthouseMarkersCreation)
+                    if (depthMarker != null) {
+                        depthMarkers.add(depthMarker)
+                    }
+                }
+                map.setOnCameraIdleListener {
+                    val currentZoom = map.cameraPosition.zoom
+                    val isZoomAboveThreshold = currentZoom >= zoomThreshold
+
+                    for (marker in depthMarkers) {
+                        marker.isVisible = isZoomAboveThreshold
+                    }
+                    for (marker in shipwreckMarkers) {
+                        marker.isVisible = isZoomAboveThreshold
+                    }
+                    for (marker in buoyMarkers) {
+                        marker.isVisible = isZoomAboveThreshold
+                    }
+                    for ((index, marker) in lightHouseMarkers.withIndex()) {
+                        // Toggle visibility for every other marker (e.g., even-indexed markers)
+                        if (index % 3 == 0) { // Change to `index % 2 != 0` for odd-indexed markers
+                            marker.isVisible = isZoomAboveThreshold
+                        }
+                    }
+                }
+            }
+
+
+            MapEffect(key1 = state.shouldEnableCustomPointToPoint) { map ->
+                if (state.shouldEnableCustomPointToPoint) {
+                    // Function to update distance and azimuth UI offset
+                    val updateDistanceTextOffset: () -> Unit = {
+                        if (customPointsMarkers.size >= 2) {
+                            val midpoint = getMidpoint(
+                                customPointsMarkers.first().position,
+                                customPointsMarkers.last().position
+                            )
+                            val projection = map.projection
+                            val screenPosition = projection.toScreenLocation(midpoint)
+                            viewModel.onEvent(
+                                MapEvent.OnDistanceTextOffsetChange(
+                                    Offset(screenPosition.x.toFloat(), screenPosition.y.toFloat())
+                                )
+                            )
+                        } else {
+                            viewModel.onEvent(MapEvent.ClearDistanceBetweenCustomPoints)
+                        }
+                    }
+
+                    // Map click listener to add new points
+                    map.setOnMapClickListener { latLng ->
+                        if (!customPointsMarkers.any { it.position == latLng }) {
+                            // Add a new marker
+                            val newMarker = map.addMarker(
+                                MarkerOptions().position(latLng).icon(
+                                    bitmapDescriptorFromVectorWithNumberOrLetter(
+                                        number = customPointsMarkers.size + 1
+                                    )
+                                )
+                            )
+                            newMarker?.tag = "m${customPointsMarkers.size}"
+                            newMarker?.let {
+                                customPointsMarkers.add(it)
+                                viewModel.onEvent(
+                                    MapEvent.OnMapTwoPointsClick(
+                                        latLng,
+                                        customPointsMarkers.size - 1
+                                    )
+                                )
+                            }
+
+                            // Update polyline logic for two or more points
+                            if (customPointsMarkers.size >= 2) {
+                                // Clear all existing polylines
+                                customPointsPollyline.forEach { it?.remove() }
+                                customPointsPollyline.clear()
+
+                                // Add new polylines between consecutive points
+                                for (i in 0 until customPointsMarkers.size - 1) {
+                                    val polylineOptions = PolylineOptions()
+                                        .add(
+                                            customPointsMarkers[i].position,
+                                            customPointsMarkers[i + 1].position
+                                        )
+                                        .color(0xFFFFFFFF.toInt())
+                                        .width(5f)
+                                    customPointsPollyline.add(map.addPolyline(polylineOptions))
+                                }
+
+                                // Update the distance text offset to the midpoint of the first and last points
+                                updateDistanceTextOffset()
+                            }
+                        }
+                    }
+
+                    // Ensure camera movements update the distance/azimuth offset when polylines are present
+                    map.setOnCameraMoveListener {
+                        updateDistanceTextOffset()
+                    }
+                } else {
+                    // When the feature is disabled, remove all markers and clear the state
+                    customPointsMarkers.forEach { it.remove() }
+                    customPointsMarkers.clear()
+
+                    // Clear all polylines
+                    customPointsPollyline.forEach { it?.remove() }
+                    customPointsPollyline.clear()
+
+                    map.setOnMapClickListener(null) // Disable further map clicks
+                    viewModel.onEvent(MapEvent.ClearCustomPoints)
+                }
+            }
+
+            MapEffect(key1 = state.shouldEnableCustomRoute) { map ->
+                if (state.shouldEnableCustomRoute) {
+                    val updateDistanceTextOffset: () -> Unit = {
+                        if (customRoutePointsMarkers.size == 2) {
+                            val midpoint = getMidpoint(
+                                customRoutePointsMarkers.first().position,
+                                customRoutePointsMarkers.last().position
+                            )
+                            val projection = map.projection
+                            val screenPosition = projection.toScreenLocation(midpoint)
+                            viewModel.onEvent(
+                                MapEvent.OnDistanceTextOffsetChange(
+                                    Offset(screenPosition.x.toFloat(), screenPosition.y.toFloat())
+                                )
+                            )
+                        } else {
+                            viewModel.onEvent(MapEvent.ClearCustomRouteDistance)
+                        }
+                    }
+
+                    // Enable map click listener for adding custom points
+                    map.setOnMapClickListener { latLng ->
+                        // Add a new marker with the correct custom index
+
+
+                        val newMarker = map.addMarker(
+                            MarkerOptions().position(latLng).icon(
+                                bitmapDescriptorFromVectorWithNumber(
+                                    number = customRoutePointsMarkers.size + 1
+                                )
+                            )
+                        )
+
+                        // Assign the custom index to the marker based on the current list size
+                        newMarker?.tag = "routem${customRoutePointsMarkers.size}"
+
+                        // Add the new marker to the list
+                        newMarker?.let { customRoutePointsMarkers.add(it) }
+
+                        // Update ViewModel's list of points
+                        viewModel.onEvent(MapEvent.OnMapCustomRouteClick(latLng))
+
+                        // Rebuild the polyline if there are at least two markers
+                        if (customRoutePointsMarkers.size >= 2) {
+                            // Clear the previous polyline (if necessary)
+                            customRoutePointsPollyline.forEach { it?.remove() }
+                            customRoutePointsPollyline.clear()
+
+                            // Create a new PolylineOptions object
+                            val polylineOptions =
+                                PolylineOptions().color(0xFFDC6601.toInt()).width(5f)
+
+                            // Add positions of consecutive markers to the polyline
+                            for (i in 0 until customRoutePointsMarkers.size - 1) {
+                                val startPosition = customRoutePointsMarkers[i].position
+                                val endPosition = customRoutePointsMarkers[i + 1].position
+                                polylineOptions.add(startPosition, endPosition)
+                            }
+
+                            // Add the polyline to the map
+                            customRoutePointsPollyline.add(map.addPolyline(polylineOptions))
+                        }
+                    }
+
+
+
+
+
+                    map.setOnCameraMoveListener {
+                        updateDistanceTextOffset()
+                    }
+                } else {
+                    // Clear all customPointsMarkers from the map
+                    customRoutePointsMarkers.forEach { it.remove() }
+                    customRoutePointsMarkers.clear()
+
+                    // Remove the polyline if it exists
+
+                    customRoutePointsPollyline.forEach { it?.remove() }
+                    customRoutePointsPollyline.clear()
+
+                    // Disable the click listeners to prevent further drawing
+                    map.setOnMapClickListener(null)
+
+                    // Clear points in ViewModel
+                    viewModel.onEvent(MapEvent.ClearCustomRoutePoints)
+
+                }
+            }
+
+
+            MapEffect(key1 = state.swapCounter) { map ->
+                customRoutePointsMarkers.forEach { it.remove() }
+                customRoutePointsPollyline.forEach { it?.remove() }
+                customRoutePointsMarkers.clear()
+                customRoutePointsPollyline.clear()
+
+                // Add markers and polylines for the route
+                state.customRoutePoints.forEachIndexed { index, latLng ->
+                    // Add marker
+                    val marker = map.addMarker(
+                        MarkerOptions()
+                            .position(latLng)
+                            .icon(bitmapDescriptorFromVectorWithNumber(index + 1))
+                    )
+                    marker?.let { customRoutePointsMarkers.add(it) }
+                }
+
+                // Add polylines
+                for (i in 0 until (state.customRoutePoints.size.minus(1) ?: -1)) {
+                    val polylineOptions = PolylineOptions()
+                        .add(state.customRoutePoints[i], state.customRoutePoints[i + 1])
+                        .color(0xFFDC6601.toInt())
+                        .width(5f)
+                    val polyline = map.addPolyline(polylineOptions)
+                    customRoutePointsPollyline.add(polyline)
+                }
+            }
+
+
+
+
+            MapEffect(key1 = state.mapItemFilters?.lighthouses) { map ->
+                if (state.mapItemFilters?.lighthouses == true) {
+                    for (checkpoint in checkpoints) {
+                        val checkpointBitmap = bitmapDescriptorFromVector(
+                            context = context,
+                            vectorResId = checkpoint.iconResId,
+                            height = 60,
+                            width = 60,
+                        )
+                        val checkpointMarkerOptions = MarkerOptions().icon(checkpointBitmap)
+                            .position(LatLng(checkpoint.latitude, checkpoint.longitude))
+                            .title(checkpoint.name).infoWindowAnchor(.5f, 1.9f)
+                        localCheckpoints.add(checkpoint)
+                        val checkpointMarker: Marker? = map.addMarker(checkpointMarkerOptions)
+                        checkpointMarker?.tag = "checkpoint_${checkpoint.id}"
+                        checkpointMarker?.let(onLighthouseMarkersCreation)
+                        if (checkpointMarker != null) {
+                            lightHouseMarkers.add(checkpointMarker)
+                        }
+                        Timber.e("Local checkpoints $localCheckpoints")
+
+                    }
+
+                } else {
+                    for (marker in lightHouseMarkers) {
+                        marker.remove() // Remove the marker from the map
+                    }
+                    lightHouseMarkers.clear()
+                }
+            }
+
+            MapEffect(key1 = Unit, key2 = state.shouldEnableCustomPointToPoint) { map ->
+                map.setInfoWindowAdapter(object : GoogleMap.InfoWindowAdapter {
+                    override fun getInfoContents(p0: Marker): Nothing? = null
+                    override fun getInfoWindow(marker: Marker): View? {
+                        val view =
+                            LayoutInflater.from(context).inflate(R.layout.custom_window_info, null)
+                        val sectorName = view.findViewById<TextView>(R.id.checkpoint_name)
+                        sectorName.text = marker.title
+                        return view
+                    }
+                })
+            }
+
+            MapEffect(key1 = state.mapItemFilters?.prohibitedAnchoringZone) { map ->
+                if (state.mapItemFilters?.prohibitedAnchoringZone == true) {
+                    for (prohibitedAnchoringZone in prohibitedProhibitedAnchoringZones) {
+                        val centorid = calculateBoundingBoxCentroid(prohibitedAnchoringZone.points)
+
+                        val prohibitedAnchoringZoneBitmap = bitmapDescriptorFromVector(
+                            context = context,
+                            vectorResId = R.drawable.ic_prohibited_anchoring,
+                            height = 50,
+                            width = 50
+                        )
+                        val prohibitedAnchoringZoneMarkerOptions =
+                            MarkerOptions().icon(prohibitedAnchoringZoneBitmap)
+                                .title(prohibitedAnchoringZone.name).infoWindowAnchor(.5f, 1.9f)
+                                .position(
+                                    if (prohibitedAnchoringZone.id == 10) LatLng(
+                                        42.420606, 18.701578
+                                    ) else centorid
+                                )
+                        var prohibitedAnchoringZoneMarker: Marker?
+                        localProhibitedProhibitedAnchoringZones.add(prohibitedAnchoringZone)
+                        prohibitedAnchoringZoneMarker =
+                            map.addMarker(prohibitedAnchoringZoneMarkerOptions)
+                        prohibitedAnchoringZoneMarker?.tag =
+                            "prohibitedAnchoringZone_${prohibitedAnchoringZone.id}"
+                        prohibitedAnchoringZoneMarker?.let(onProhibitedAnchoringZoneMarkerCreation)
+
+                        prohibitedAnchoringZoneMarker?.let { prohibitedAnchoringZoneMarkers.add(it) } // Store the marker in the list
+
+
+                        when (prohibitedAnchoringZone.id) {
+                            2 -> {
+                                drawAnchoringZoneLinesWithSixPoints(map, prohibitedAnchoringZone)
+                            }
+
+                            9 -> {
+                                drawAnchoringZoneLinesWith8Points(map, prohibitedAnchoringZone)
+
+                            }
+
+                            else -> {
+                                drawAnchoringZoneLines(
+                                    map, prohibitedAnchoringZone
+                                )
+                            }
+                        }
+
+
+                    }
+                } else {
+                    clearAllPolylines()
+                    // If the filter state is false, remove the markers
+                    for (marker in prohibitedAnchoringZoneMarkers) {
+                        marker.remove() // Remove the marker from the map
+                    }
+                    prohibitedAnchoringZoneMarkers.clear() // Clear the list of stored markers
+                }
+            }
+
+            MapEffect(key1 = state.mapItemFilters?.anchorages) { map ->
+                if (state.mapItemFilters?.anchorages == true) {
+                    // If the filter state is true, add the markers
+                    for (anchorage in anchorages) {
+                        val anchorageBitmap = bitmapDescriptorFromVector(
+                            context = context,
+                            vectorResId = R.drawable.ic_anchorage,
+                            height = 50,
+                            width = 50
+                        )
+                        val anchorageMarkerOptions = MarkerOptions().icon(anchorageBitmap)
+                            .position(LatLng(anchorage.latitude, anchorage.longitude))
+                            .title(anchorage.name).infoWindowAnchor(.5f, 1.9f)
+
+                        var anchorageMarker: Marker?
+                        localAnchorages.add(anchorage)
+                        anchorageMarker = map.addMarker(anchorageMarkerOptions)
+                        anchorageMarker?.tag = "anchorage_${anchorage.id}"
+                        anchorageMarker?.let(onAnchorageMarkerCreation)
+                        anchorageMarker?.let { anchorageMarkers.add(it) } // Store the marker in the list
+
+
+                    }
+                } else {
+                    // If the filter state is false, remove the markers
+                    for (marker in anchorageMarkers) {
+                        marker.remove() // Remove the marker from the map
+                    }
+                    anchorageMarkers.clear() // Clear the list of stored markers
+                }
+            }
+
+            MapEffect(key1 = state.mapItemFilters?.anchorages) { map ->
+                if (state.mapItemFilters?.anchorages == true) {
+                    // If the filter state is true, add the markers
+                    for (anchorageZone in anchorageZones) {
+                        val anchorageBitmap = bitmapDescriptorFromVector(
+                            context = context,
+                            vectorResId = R.drawable.ic_anchorage,
+                            height = 50,
+                            width = 50
+                        )
+                        val markerPosition = calculateCentroid(anchorageZone.points)
+                        val anchorageZoneMarkerOptions = MarkerOptions().icon(anchorageBitmap)
+                            .position(LatLng(markerPosition.latitude, markerPosition.longitude))
+                            .title(anchorageZone.name).infoWindowAnchor(.5f, 1.9f)
+
+                        var anchorageZoneMarker: Marker?
+                        localAnchorageZones.add(anchorageZone)
+                        anchorageZoneMarker = map.addMarker(anchorageZoneMarkerOptions)
+                        anchorageZoneMarker?.tag = "anchorageZone_${anchorageZone.id}"
+                        anchorageZoneMarker?.let(onAnchorageZoneMarkerCreation)
+                        anchorageZoneMarker?.let { anchorageZoneMarkers.add(it) } // Store the marker in the list
+
+                        drawLinesBetweenPoints(map, anchorageZone.points)
+
+
+                    }
+                } else {
+                    clearAllPolylines()
+                    // If the filter state is false, remove the markers
+                    for (marker in anchorageZoneMarkers) {
+                        marker.remove() // Remove the marker from the map
+                    }
+                    anchorageZoneMarkers.clear() // Clear the list of stored markers
+                }
+            }
+
+
+            MapEffect(key1 = state.mapItemFilters?.underwaterCables) { map ->
+                Timber.e("Under water cables $dashedPolylines")
+                if (state.mapItemFilters?.underwaterCables == true) {
+                    for (underwaterCable in underwaterCables) {
+                        val start = underwaterCable.coordinates.first
+                        val end = underwaterCable.coordinates.second
+                        val underwaterCableLine = createWavyPolyline(
+                            start = start,
+                            end = end,
+                            amplitude = 0.005, // Adjust amplitude as needed
+                            wavelength = 0.05, // Adjust wavelength as needed
+                            segments = 200, // Number of segments to smooth the wave,
+                        )
+
+                        val dashedPolyline = underwaterCableLine.apply {
+                            pattern(listOf(Dash(30f), Gap(20F)))
+                        }
+
+
+                        val line = map.addPolyline(dashedPolyline)
+                        dashedPolylines.add(line)
+
+
+                    }
+                } else {
+                    for (pollyline in dashedPolylines) {
+                        pollyline.remove()
+                    }
+                    dashedPolylines.clear()
+                }
+
+            }
+            MapEffect(key1 = state.mapItemFilters?.underwaterCables) { map ->
+                if (state.mapItemFilters?.underwaterCables == true) {
+                    for (pipeline in pipelines) {
+
+                        drawCustomDashedPolylineWithCircles(map, pipeline.points)
+
+                    }
+                } else {
+                    clearPipelineLinesAndCircles()
+                    for (pollyline in dashedPolylines) {
+                        pollyline.remove()
+                    }
+                    for (circle in circles) {
+                        circle.remove()
+                    }
+                    dashedPolylines.clear()
+                    circles.clear()
+                }
+
+            }
+
+            MapEffect(key1 = state.mapItemFilters?.buoys) { map ->
+                if (state.mapItemFilters?.buoys == true) {
+                    for (buoy in buoys) {
+
+                        val buoyBitmap = bitmapDescriptorFromVector(
+                            context = context,
+                            vectorResId = R.drawable.ic_buoy,
+                            height = 40,
+                            width = 40
+                        )
+                        val buoyMarkerOptions = MarkerOptions().icon(buoyBitmap)
+                            .position(LatLng(buoy.coordinates.latitude, buoy.coordinates.longitude))
+                            .title(buoy.name).infoWindowAnchor(.5f, 1.9f)
+                        var buoyMarker: Marker?
+                        localBuoys.add(buoy)
+
+                        buoyMarker = map.addMarker(buoyMarkerOptions)
+                        buoyMarker?.tag = "buoy_${buoy.id}"
+                        buoyMarker?.let(onBuoyMarkerCreation)
+                        if (buoyMarker != null) {
+                            buoyMarkers.add(buoyMarker)
+                        }
+
+                    }
+                } else {
+                    for (marker in buoyMarkers) {
+                        marker.remove() // Remove the marker from the map
+                    }
+                    buoyMarkers.clear() //
+                }
+
+            }
+            MapEffect(
+                key1 = state.mapItemFilters?.shipwrecks,
+                key2 = state.shouldEnableCustomPointToPoint,
+                key3 = state.shouldEnableCustomRoute,
+            ) { map ->
+                if (state.mapItemFilters?.shipwrecks == true) {
+                    for (shipwreck in shipwrecks) {
+                        val shipwreckBitmap = bitmapDescriptorFromVector(
+                            context = context,
+                            vectorResId = shipwreck.iconResId,
+                            height = 50,
+                            width = 50
+                        )
+                        val shipwreckMarkerOptions = MarkerOptions().icon(shipwreckBitmap)
+                            .position(LatLng(shipwreck.latitude, shipwreck.longitude))
+                            .title(shipwreck.name).infoWindowAnchor(.5f, 1.9f)
+                        var shipwreckMarker: Marker?
+                        localShipwrecks.add(shipwreck)
+
+                        shipwreckMarker = map.addMarker(shipwreckMarkerOptions)
+                        shipwreckMarker?.tag = "shipwreck_${shipwreck.id}"
+                        shipwreckMarker?.let(onShipwreckMarkerCreation)
+                        if (shipwreckMarker != null) {
+                            shipwreckMarkers.add(shipwreckMarker)
+                        }
+                        map.setOnMarkerClickListener { marker ->
+                            Timber.e("Marker ${marker.title} clicked ${marker.id}, tag ${marker.tag}")
+                            Timber.e("CustomCheckpointMarkers ${(checkpoints.size + anchorages.size + prohibitedProhibitedAnchoringZones.size + buoys.size + shipwrecks.size + anchorageZones.size)}")
+                            val tag =
+                                marker.tag as? String ?: return@setOnMarkerClickListener true
+
+
+
+                            when {
+                                tag.startsWith("m") -> {
+                                    val checkpointId = tag.removePrefix("m").toInt()
+                                    Timber.e("Checkpoint ID: $checkpointId")
+
+                                    // Find the marker's index in customPointsMarkers
+                                    val customPointIndex = customPointsMarkers.indexOf(marker)
+                                    if (customPointIndex == -1) {
+                                        // Marker not found in list
+                                        return@setOnMarkerClickListener false
+                                    }
+
+                                    // Remove the corresponding point from the ViewModel
+                                    viewModel.onEvent(
+                                        MapEvent.OnMarkerRemovedTwoPoints(
+                                            customPointIndex
+                                        )
+                                    )
+
+                                    // Remove the marker from the map and the marker list
+                                    marker.remove()
+                                    customPointsMarkers.removeAt(customPointIndex)
+
+                                    // Reindex markers
+                                    customPointsMarkers.forEachIndexed { index, marker ->
+                                        val newCheckpointId =
+                                            index + checkpoints.size + anchorages.size + prohibitedProhibitedAnchoringZones.size + buoys.size + shipwrecks.size + anchorageZones.size + 1
+                                        marker.tag = "m$newCheckpointId"
+                                    }
+
+                                    customPointsMarkers.forEachIndexed { index, updatedMarker ->
+                                        updatedMarker.setIcon(
+                                            bitmapDescriptorFromVectorWithNumberOrLetter(
+                                                number = index + 1 // Reassign numbers sequentially
+                                            )
+                                        )
+                                        updatedMarker.tag =
+                                            "m${index + 1}" // Update marker tag
+                                    }
+
+
+                                    // Reset polyline and recalculate everything
+                                    customPointsPollyline.forEach { it?.remove() }
+                                    customPointsPollyline.clear()
+
+                                    // Update logic for points after removal
+                                    for (i in 0 until customPointsMarkers.size - 1) {
+                                        val polylineOptions = PolylineOptions()
+                                            .add(
+                                                customPointsMarkers[i].position,
+                                                customPointsMarkers[i + 1].position
+                                            )
+                                            .color(0xFFFFFFFF.toInt())
+                                            .width(5f)
+                                        customPointsPollyline.add(map.addPolyline(polylineOptions))
+                                    }
+
+                                    // Update ViewModel events as necessary
+                                    if (customPointsMarkers.size < 2) {
+                                        viewModel.onEvent(MapEvent.ClearDistanceBetweenCustomPoints)
+                                    }
+                                }
+
+
+                                // Marker tag handling code
+
+
+                                tag.startsWith("routem") -> {
+                                    val checkpointId = tag.removePrefix("routem").toInt()
+
+                                    val customRoutePointIndex =
+                                        customRoutePointsMarkers.indexOf(marker)
+                                    if (customRoutePointIndex == -1) {
+                                        return@setOnMarkerClickListener false
+                                    }
+
+                                    viewModel.onEvent(
+                                        MapEvent.OnMarkerRemovedCustomRoute(
+                                            customRoutePointIndex
+                                        )
+                                    )
+
+                                    marker.remove()
+                                    customRoutePointsMarkers.removeAt(customRoutePointIndex)
+
+                                    customRoutePointsMarkers.forEachIndexed { index, marker ->
+                                        val newCheckpointId =
+                                            index + checkpoints.size + anchorages.size + prohibitedProhibitedAnchoringZones.size + buoys.size + shipwrecks.size + anchorageZones.size + 1
+                                        marker.tag = "routem$newCheckpointId"
+                                    }
+
+                                    customRoutePointsMarkers.forEachIndexed { index, updatedMarker ->
+                                        updatedMarker.setIcon(
+                                            bitmapDescriptorFromVectorWithNumber(
+                                                number = index + 1 // Reassign numbers sequentially
+                                            )
+                                        )
+                                        updatedMarker.tag =
+                                            "routem${index + 1}" // Update marker tag
+                                    }
+
+                                    // Clear the existing polylines from the map
+                                    customRoutePointsPollyline.forEach { it?.remove() }
+                                    customRoutePointsPollyline.clear()
+
+                                    // Rebuild the polyline if at least two markers remain
+                                    if (customRoutePointsMarkers.size >= 2) {
+                                        // Create a new PolylineOptions object
+                                        val polylineOptions =
+                                            PolylineOptions().color(0xFFDC6601.toInt())
+                                                .width(5f)
+
+                                        // Rebuild the polyline by connecting consecutive markers
+                                        for (i in 0 until customRoutePointsMarkers.size - 1) {
+                                            val startPosition =
+                                                customRoutePointsMarkers[i].position
+                                            val endPosition =
+                                                customRoutePointsMarkers[i + 1].position
+                                            polylineOptions.add(startPosition, endPosition)
+                                        }
+
+                                        // Add the new polyline to the map
+                                        customRoutePointsPollyline.add(
+                                            map.addPolyline(
+                                                polylineOptions
+                                            )
+                                        )
+
+                                        // Optionally update the distance text offset or other UI components
+                                        // updateDistanceTextOffset() // Uncomment if needed
+                                    } else {
+                                        // If fewer than two markers remain, clear the route distance and UI components
+                                        viewModel.onEvent(MapEvent.ClearCustomRouteDistance)
+                                    }
+
+                                    // Remove the marker from the map
+                                    marker.remove()
+
+                                }
+
+
+                                tag.startsWith("checkpoint_") -> {
+                                    val checkpointId = tag.removePrefix("checkpoint_").toInt()
+                                    val clickedCheckpoint =
+                                        localCheckpoints.firstOrNull { it.id == checkpointId }
+                                    clickedCheckpoint?.let { onCheckpointClick(it) }
+                                }
+
+                                tag.startsWith("shipwreck_") -> {
+                                    val shipwreckId = tag.removePrefix("shipwreck_").toInt()
+                                    val clickedShipwreck =
+                                        localShipwrecks.firstOrNull { it.id == shipwreckId }
+                                    clickedShipwreck?.let { onShipwreckClick(it) }
+                                }
+
+                                tag.startsWith("prohibitedAnchoringZone_") -> {
+                                    val prohibitedAnchoringZoneId =
+                                        tag.removePrefix("prohibitedAnchoringZone_").toInt()
+                                    val clickedProhibitedAnchoringZone =
+                                        localProhibitedProhibitedAnchoringZones.firstOrNull { it.id == prohibitedAnchoringZoneId }
+                                    clickedProhibitedAnchoringZone?.let {
+                                        onProhibitedAnchoringZoneClick(
+                                            it
+                                        )
+                                    }
+                                }
+
+                                tag.startsWith("anchorage_") -> {
+                                    val anchorageId = tag.removePrefix("anchorage_").toInt()
+                                    val clickedAnchorage =
+                                        localAnchorages.firstOrNull { it.id == anchorageId }
+                                    clickedAnchorage?.let {
+                                        onAnchorageClick(it)
+                                    }
+                                }
+
+                                tag.startsWith("anchorageZone_") -> {
+                                    val anchorageZoneId =
+                                        tag.removePrefix("anchorageZone_").toInt()
+                                    val clickedAnchorageZone =
+                                        localAnchorageZones.firstOrNull { it.id == anchorageZoneId }
+                                    clickedAnchorageZone?.let {
+                                        onAnchorageZoneClick(it)
+                                    }
+                                }
+
+                                tag.startsWith("buoy_") -> {
+                                    val buoyId = tag.removePrefix("buoy_").toInt()
+                                    val clickedBuoy = localBuoys.firstOrNull { it.id == buoyId }
+                                    clickedBuoy?.let {
+                                        onBuoyClick(it)
+                                    }
+                                }
+
+                                tag.startsWith("depth_") -> {
+                                    val depthMarkerPosition = marker.position
+
+                                    if (state.shouldEnableCustomRoute) {
+                                        // Check if the marker already exists in the custom route list
+                                        val existingMarkerIndex =
+                                            customRoutePointsMarkers.indexOfFirst { it.position == depthMarkerPosition }
+
+                                        if (existingMarkerIndex != -1) {
+                                            // Marker exists: remove it and update the route
+                                            val existingMarker =
+                                                customRoutePointsMarkers[existingMarkerIndex]
+                                            existingMarker.remove() // Remove marker from the map
+                                            customRoutePointsMarkers.removeAt(existingMarkerIndex) // Remove marker from the list
+
+                                            // Update ViewModel
+                                            viewModel.onEvent(
+                                                MapEvent.OnMarkerRemovedCustomRoute(
+                                                    existingMarkerIndex
+                                                )
+                                            )
+
+                                            customRoutePointsMarkers.forEachIndexed { index, updatedMarker ->
+                                                updatedMarker.setIcon(
+                                                    bitmapDescriptorFromVectorWithNumber(
+                                                        number = index + 1 // Reassign numbers sequentially
+                                                    )
+                                                )
+                                                updatedMarker.tag =
+                                                    "routem${index + 1}" // Update marker tag
+                                            }
+                                            // Rebuild polyline
+                                            customRoutePointsPollyline.forEach { it?.remove() }
+                                            customRoutePointsPollyline.clear()
+
+                                            if (customRoutePointsMarkers.size >= 2) {
+                                                val polylineOptions =
+                                                    PolylineOptions().color(0xFFDC6601.toInt())
+                                                        .width(5f)
+                                                for (i in 0 until customRoutePointsMarkers.size - 1) {
+                                                    polylineOptions.add(
+                                                        customRoutePointsMarkers[i].position,
+                                                        customRoutePointsMarkers[i + 1].position
+                                                    )
+                                                }
+                                                customRoutePointsPollyline.add(
+                                                    map.addPolyline(
+                                                        polylineOptions
+                                                    )
+                                                )
+                                            } else {
+                                                viewModel.onEvent(MapEvent.ClearCustomRouteDistance)
+                                            }
+                                        } else {
+                                            // Marker doesn't exist: add it to the custom route
+                                            val newMarker = map.addMarker(
+                                                MarkerOptions().position(depthMarkerPosition).icon(
+                                                    bitmapDescriptorFromVectorWithNumber(
+                                                        number = customRoutePointsMarkers.size + 1
+                                                    )
+                                                )
+                                            )
+                                            newMarker?.tag =
+                                                "routem${customRoutePointsMarkers.size}"
+                                            newMarker?.let { customRoutePointsMarkers.add(it) }
+                                            viewModel.onEvent(
+                                                MapEvent.OnMapCustomRouteClick(
+                                                    depthMarkerPosition
+                                                )
+                                            )
+
+                                            // Rebuild polyline if at least two markers are present
+                                            if (customRoutePointsMarkers.size >= 2) {
+                                                customRoutePointsPollyline.forEach { it?.remove() }
+                                                customRoutePointsPollyline.clear()
+
+                                                val polylineOptions =
+                                                    PolylineOptions().color(0xFFDC6601.toInt())
+                                                        .width(5f)
+                                                for (i in 0 until customRoutePointsMarkers.size - 1) {
+                                                    polylineOptions.add(
+                                                        customRoutePointsMarkers[i].position,
+                                                        customRoutePointsMarkers[i + 1].position
+                                                    )
+                                                }
+                                                customRoutePointsPollyline.add(
+                                                    map.addPolyline(
+                                                        polylineOptions
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    } else if (state.shouldEnableCustomPointToPoint) {
+                                        // Handle custom point-to-point logic
+                                        if (!customPointsMarkers.any { it.position == depthMarkerPosition }) {
+                                            val newMarker = map.addMarker(
+                                                MarkerOptions().position(depthMarkerPosition).icon(
+                                                    bitmapDescriptorFromVectorWithNumberOrLetter(
+                                                        number = customPointsMarkers.size + 1
+                                                    )
+                                                )
+                                            )
+                                            newMarker?.tag = "m${customPointsMarkers.size}"
+                                            newMarker?.let {
+                                                customPointsMarkers.add(it)
+                                                viewModel.onEvent(
+                                                    MapEvent.OnMapTwoPointsClick(
+                                                        it.position,
+                                                        customPointsMarkers.size - 1
+                                                    )
+                                                )
+                                            }
+
+                                            // Update polyline logic for two or more points
+                                            if (customPointsMarkers.size >= 2) {
+                                                customPointsPollyline.forEach { it?.remove() }
+                                                customPointsPollyline.clear()
+
+                                                val polylineOptions =
+                                                    PolylineOptions().color(0xFFFFFFFF.toInt())
+                                                        .width(5f)
+                                                for (i in 0 until customPointsMarkers.size - 1) {
+                                                    polylineOptions.add(
+                                                        customPointsMarkers[i].position,
+                                                        customPointsMarkers[i + 1].position
+                                                    )
+                                                }
+                                                customPointsPollyline.add(
+                                                    map.addPolyline(
+                                                        polylineOptions
+                                                    )
+                                                )
+                                            }
+                                        } else {
+                                            // Marker exists: remove it and update the custom points
+                                            val existingMarkerIndex =
+                                                customPointsMarkers.indexOfFirst { it.position == depthMarkerPosition }
+                                            if (existingMarkerIndex != -1) {
+                                                val existingMarker =
+                                                    customPointsMarkers[existingMarkerIndex]
+                                                existingMarker.remove() // Remove marker from the map
+                                                customPointsMarkers.removeAt(existingMarkerIndex) // Remove marker from the list
+
+                                                // Update ViewModel
+                                                viewModel.onEvent(
+                                                    MapEvent.OnMarkerRemovedTwoPoints(
+                                                        existingMarkerIndex
+                                                    )
+                                                )
+
+                                                customPointsMarkers.forEachIndexed { index, updatedMarker ->
+                                                    updatedMarker.setIcon(
+                                                        bitmapDescriptorFromVectorWithNumberOrLetter(
+                                                            number = index + 1 // Reassign numbers sequentially
+                                                        )
+                                                    )
+                                                    updatedMarker.tag =
+                                                        "m${index + 1}" // Update marker tag
+                                                }
+
+                                                // Clear and rebuild polyline for the remaining points
+                                                customPointsPollyline.forEach { it?.remove() }
+                                                customPointsPollyline.clear()
+
+                                                if (customPointsMarkers.size >= 2) {
+                                                    val polylineOptions =
+                                                        PolylineOptions().color(0xFFFFFFFF.toInt())
+                                                            .width(5f)
+                                                    for (i in 0 until customPointsMarkers.size - 1) {
+                                                        polylineOptions.add(
+                                                            customPointsMarkers[i].position,
+                                                            customPointsMarkers[i + 1].position
+                                                        )
+                                                    }
+                                                    customPointsPollyline.add(
+                                                        map.addPolyline(
+                                                            polylineOptions
+                                                        )
+                                                    )
+                                                } else {
+                                                    viewModel.onEvent(MapEvent.ClearDistanceBetweenCustomPoints)
+                                                }
+                                            }
+                                        }
+                                    }
+
+
+                                    true // Indicate the click was handled
+                                }
+
+
+                            }
+                            true // Mark the event as handled
+                        }
+
+
+                    }
+                } else {
+                    for (marker in shipwreckMarkers) {
+                        marker.remove() // Remove the marker from the map
+                    }
+                    shipwreckMarkers.clear()
+                }
+            }
+        }
+        ScaleBar(
+            modifier = Modifier
+                .padding(bottom = 35.dp, start = 25.dp)
+                .align(Alignment.BottomStart),
+            cameraPositionState = cameraPositionState
+        )
+
+        CustomNauticalMilesMapScale(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(bottom = 75.dp, start = 25.dp),
+            cameraPositionState = cameraPositionState
+        )
+    }
+}
+
+
+
+
+
+
+
+
+

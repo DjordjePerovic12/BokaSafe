@@ -8,7 +8,7 @@ plugins {
     alias(libs.plugins.kotlin.ksp)
     alias(libs.plugins.hilt.android.plugin)
     id("kotlin-parcelize")
-//    id("com.google.gms.google-services")
+    id("com.google.gms.google-services")
     id ("com.google.firebase.crashlytics")
 }
 val keystorePropertiesFile = rootProject.file("app/keystore.properties")
@@ -18,7 +18,7 @@ val keystoreProperties = Properties()
 keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 
 android {
-    namespace = "llc.bokadev.bokabayseatrafficapp"
+    namespace = "llc.bokadev.bokasafe"
     compileSdk = 35
 
 
@@ -32,8 +32,8 @@ android {
     }
 
     defaultConfig {
-        applicationId = "llc.bokadev.bokabayseatrafficapp"
-        minSdk = 24
+        applicationId = "llc.bokadev.bokasafe"
+        minSdk = 29
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -52,6 +52,15 @@ android {
             )
         }
     }
+
+    flavorDimensions += "version"
+    productFlavors {
+        create("apiDev") {
+            dimension = "version"
+            buildConfigField("String", "BASE_URL", "\"https://bokadev.me\"")
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -116,6 +125,7 @@ dependencies {
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.auth)
+    implementation(libs.firebase.messaging)
     implementation(libs.play.services.auth)
     implementation(libs.hilt.navigation.compose)
     ksp(libs.hilt.compiler)
@@ -148,4 +158,5 @@ dependencies {
     implementation(libs.room.runtime)
     ksp(libs.room.compiler)
     implementation(libs.room.ktx)
+
 }
