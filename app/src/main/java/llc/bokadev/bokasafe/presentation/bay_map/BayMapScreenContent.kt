@@ -169,7 +169,7 @@ fun BokaBayMapScreenContent(
                 onCheckPointClick(checkpoint)
             },
             userLocation = state.userLocation,
-            userIcon = R.drawable.ic_boat,
+            userIcon = R.drawable.ic_user_location,
             onMarkerCreation = {
                 onMarkerCreation(it)
             },

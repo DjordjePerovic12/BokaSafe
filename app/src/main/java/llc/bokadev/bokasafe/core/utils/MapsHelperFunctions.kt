@@ -592,8 +592,8 @@ fun bitmapDescriptorFromVectorWithNumberOrLetter(number: Int): BitmapDescriptor 
     }.toString()
 
     // Colors for customization
-    val backgroundColor = Color.rgb(76, 175, 80) // Green background
-    val textColor = Color.WHITE // White text
+    val backgroundColor = Color.rgb(255, 255, 255) // Green background
+    val textColor = Color.RED // White text
 
     // Text paint for drawing the content
     val paint = Paint().apply {
