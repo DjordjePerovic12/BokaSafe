@@ -4,9 +4,11 @@ import com.squareup.moshi.JsonAdapter
 import llc.bokadev.bokasafe.core.base.BaseDataSource
 import llc.bokadev.bokasafe.core.utils.Resource
 import llc.bokadev.bokasafe.data.remote.dto.ApiErrorDto
+import llc.bokadev.bokasafe.data.remote.mapper.toDocument
 import llc.bokadev.bokasafe.data.remote.mapper.toLighthouse
 import llc.bokadev.bokasafe.data.remote.services.ApiService
 import llc.bokadev.bokasafe.domain.model.Checkpoint
+import llc.bokadev.bokasafe.domain.model.Document
 import llc.bokadev.bokasafe.domain.repository.BokaSafeRepository
 import llc.bokadev.bokasafe.domain.repository.DataStoreRepository
 import javax.inject.Inject
@@ -26,4 +28,8 @@ class BokaSafeRepositoryImplementation @Inject constructor(
     override suspend fun saveFcmToken(token: String) {
         dataStore.saveFcmToken(token)
     }
+
+    override suspend fun getAllDocuments() : Resource<List<Document>> = retrieveResponse {
+        apiService.getAllDocuments()
+    }.mapResponse { toDocument() }
 }

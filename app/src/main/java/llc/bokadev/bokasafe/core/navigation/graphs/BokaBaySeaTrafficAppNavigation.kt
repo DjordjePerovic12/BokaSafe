@@ -13,6 +13,7 @@ import llc.bokadev.bokasafe.core.navigation.Routes.BAY_MAP_SCREEN
 import llc.bokadev.bokasafe.core.navigation.Routes.ROOT
 import llc.bokadev.bokasafe.core.navigation.destinations.bayMapScreenComposable
 import llc.bokadev.bokasafe.core.navigation.destinations.customRouteDetailsScreenComposable
+import llc.bokadev.bokasafe.core.navigation.destinations.externalResourcesScreenComposable
 import llc.bokadev.bokasafe.core.navigation.destinations.moreScreenComposable
 import llc.bokadev.bokasafe.core.navigation.destinations.myRoutesScreenComposable
 import llc.bokadev.bokasafe.core.navigation.destinations.safetyHubScreenComposable
@@ -70,6 +71,12 @@ fun BokaBaySeaTrafficAppNavigation(
         customRouteDetailsScreenComposable(
             navController = navController,
             showSnackBar = showSnackBar
+        )
+
+        externalResourcesScreenComposable(
+            navController = navController,
+            showSnackBar = showSnackBar,
+            launchIntent = launchIntent
         )
     }
 }
