@@ -67,6 +67,7 @@ import llc.bokadev.bokasafe.core.utils.drawAnchoringZoneLines
 import llc.bokadev.bokasafe.core.utils.drawAnchoringZoneLinesWith8Points
 import llc.bokadev.bokasafe.core.utils.drawAnchoringZoneLinesWithSixPoints
 import llc.bokadev.bokasafe.core.utils.drawCustomDashedPolylineWithCircles
+import llc.bokadev.bokasafe.core.utils.drawFishFarm
 import llc.bokadev.bokasafe.core.utils.drawLinesBetweenPoints
 import llc.bokadev.bokasafe.core.utils.getMidpoint
 import llc.bokadev.bokasafe.core.utils.textAsBitmap
@@ -76,6 +77,7 @@ import llc.bokadev.bokasafe.domain.model.Buoy
 import llc.bokadev.bokasafe.domain.model.ProhibitedAnchoringZone
 import llc.bokadev.bokasafe.domain.model.Checkpoint
 import llc.bokadev.bokasafe.domain.model.Depth
+import llc.bokadev.bokasafe.domain.model.FishFarm
 import llc.bokadev.bokasafe.domain.model.Pipeline
 import llc.bokadev.bokasafe.domain.model.ShipWreck
 import llc.bokadev.bokasafe.domain.model.UnderwaterCable
@@ -106,6 +108,7 @@ fun GoogleMaps(
     underwaterCables: MutableList<UnderwaterCable>,
     pipelines: MutableList<Pipeline>,
     buoys: MutableList<Buoy>,
+    fishFarms: MutableList<FishFarm>,
     prohibitedProhibitedAnchoringZones: MutableList<ProhibitedAnchoringZone>,
     onCheckpointClick: (Checkpoint) -> Unit,
     onShipwreckClick: (ShipWreck) -> Unit,
@@ -113,6 +116,7 @@ fun GoogleMaps(
     onAnchorageClick: (Anchorage) -> Unit,
     onAnchorageZoneClick: (AnchorageZone) -> Unit,
     onBuoyClick: (Buoy) -> Unit,
+    onFishFarmClick: (FishFarm) -> Unit,
     depths: MutableList<Depth>,
     userLocation: LatLng? = null,
     @DrawableRes userIcon: Int,
@@ -125,6 +129,7 @@ fun GoogleMaps(
     onAnchorageMarkerCreation: (Marker) -> Unit,
     onAnchorageZoneMarkerCreation: (Marker) -> Unit,
     onBuoyMarkerCreation: (Marker) -> Unit,
+    onFishFarmMarkerCreation: (Marker) -> Unit,
     onItemHide: (Int) -> Unit,
     onMarkerUpdate: () -> Unit,
     onMapClick: (LatLng, Int) -> Unit,
@@ -223,6 +228,7 @@ fun GoogleMaps(
     val localAnchorages: ArrayList<Anchorage> = arrayListOf()
     val localAnchorageZones: ArrayList<AnchorageZone> = arrayListOf()
     val localBuoys: ArrayList<Buoy> = arrayListOf()
+    val localFishFarms: ArrayList<FishFarm> = arrayListOf()
     val localDepths: ArrayList<Depth> = arrayListOf()
 
 
@@ -233,6 +239,7 @@ fun GoogleMaps(
     val anchorageMarkers = remember { mutableListOf<Marker>() }
     val anchorageZoneMarkers = remember { mutableListOf<Marker>() }
     val buoyMarkers = remember { mutableListOf<Marker>() }
+    val fishFarmMarkers = remember { mutableListOf<Marker>() }
     val depthMarkers = remember { mutableListOf<Marker>() }
     val dashedPolylines: MutableList<Polyline> = remember { mutableListOf() }
     val circles: MutableList<Circle> = remember { mutableListOf() }
@@ -354,6 +361,7 @@ fun GoogleMaps(
                 map.setOnMapLoadedCallback {
                     mapLoaded = true // Map is fully loaded
                 }
+                Timber.e("FAARME UNIT $fishFarms")
             }
 
             MapEffect(key1 = Unit) { map ->
@@ -959,7 +967,6 @@ fun GoogleMaps(
                         if (checkpointMarker != null) {
                             lightHouseMarkers.add(checkpointMarker)
                         }
-                        Timber.e("Local checkpoints $localCheckpoints")
 
                     }
 
@@ -991,7 +998,7 @@ fun GoogleMaps(
 
                         val prohibitedAnchoringZoneBitmap = bitmapDescriptorFromVector(
                             context = context,
-                            vectorResId = R.drawable.ic_prohibited_anchoring,
+                            vectorResId = R.drawable.anchoring_prohibited_area,
                             height = 50,
                             width = 50
                         )
@@ -1049,7 +1056,7 @@ fun GoogleMaps(
                     for (anchorage in anchorages) {
                         val anchorageBitmap = bitmapDescriptorFromVector(
                             context = context,
-                            vectorResId = R.drawable.ic_anchorage,
+                            vectorResId = R.drawable.sidrite_anchorage,
                             height = 50,
                             width = 50
                         )
@@ -1081,7 +1088,7 @@ fun GoogleMaps(
                     for (anchorageZone in anchorageZones) {
                         val anchorageBitmap = bitmapDescriptorFromVector(
                             context = context,
-                            vectorResId = R.drawable.ic_anchorage,
+                            vectorResId = R.drawable.sidrite_anchorage,
                             height = 50,
                             width = 50
                         )
@@ -1108,6 +1115,41 @@ fun GoogleMaps(
                         marker.remove() // Remove the marker from the map
                     }
                     anchorageZoneMarkers.clear() // Clear the list of stored markers
+                }
+            }
+
+            MapEffect(key1 = state.mapItemFilters?.fishFarms) { map ->
+                Timber.e("FARME ${state.fishFarms}")
+                if (state.mapItemFilters?.fishFarms == true) {
+                    Timber.e("FARM SU $fishFarms")
+                    for (fishFarm in fishFarms) {
+                        Timber.e("FISH FARM $fishFarm")
+                        val fishFarmBitmap = bitmapDescriptorFromVector(
+                            context = context,
+                            vectorResId = R.drawable.marine_farm,
+                            height = 60,
+                            width = 60
+                        )
+                        val fishFarmMarkerOptions = MarkerOptions().icon(fishFarmBitmap)
+                            .position(LatLng(fishFarm.centralCoordinate.latitude, fishFarm.centralCoordinate.longitude))
+                            .title(fishFarm.id.toString()).infoWindowAnchor(.5f, 1.9f)
+                        var fishFarmMarker: Marker?
+                        localFishFarms.add(fishFarm)
+
+                        fishFarmMarker = map.addMarker(fishFarmMarkerOptions)
+                        fishFarmMarker?.tag = "fishFarm_${fishFarm.id}"
+                        fishFarmMarker?.let(onBuoyMarkerCreation)
+                        if (fishFarmMarker != null) {
+                            fishFarmMarkers.add(fishFarmMarker)
+                        }
+                        drawFishFarm(map, fishFarm.coordinates, fishFarm.id)
+                    }
+                } else {
+                    clearAllPolylines()
+                    for (marker in fishFarmMarkers) {
+                        marker.remove() // Remove the marker from the map
+                    }
+                    fishFarmMarkers.clear() //
                 }
             }
 
@@ -1195,8 +1237,8 @@ fun GoogleMaps(
                     }
                     buoyMarkers.clear() //
                 }
-
             }
+
             MapEffect(
                 key1 = state.mapItemFilters?.shipwrecks,
                 key2 = state.shouldEnableCustomPointToPoint,
@@ -1224,7 +1266,7 @@ fun GoogleMaps(
                         }
                         map.setOnMarkerClickListener { marker ->
                             Timber.e("Marker ${marker.title} clicked ${marker.id}, tag ${marker.tag}")
-                            Timber.e("CustomCheckpointMarkers ${(checkpoints.size + anchorages.size + prohibitedProhibitedAnchoringZones.size + buoys.size + shipwrecks.size + anchorageZones.size)}")
+                            Timber.e("CustomCheckpointMarkers ${(checkpoints.size + anchorages.size + prohibitedProhibitedAnchoringZones.size + buoys.size + shipwrecks.size + anchorageZones.size + fishFarms.size)}")
                             val tag =
                                 marker.tag as? String ?: return@setOnMarkerClickListener true
 
@@ -1256,7 +1298,7 @@ fun GoogleMaps(
                                     // Reindex markers
                                     customPointsMarkers.forEachIndexed { index, marker ->
                                         val newCheckpointId =
-                                            index + checkpoints.size + anchorages.size + prohibitedProhibitedAnchoringZones.size + buoys.size + shipwrecks.size + anchorageZones.size + 1
+                                            index + checkpoints.size + anchorages.size +  fishFarms.size + prohibitedProhibitedAnchoringZones.size + buoys.size + shipwrecks.size + anchorageZones.size + 1
                                         marker.tag = "m$newCheckpointId"
                                     }
 
@@ -1317,7 +1359,7 @@ fun GoogleMaps(
 
                                     customRoutePointsMarkers.forEachIndexed { index, marker ->
                                         val newCheckpointId =
-                                            index + checkpoints.size + anchorages.size + prohibitedProhibitedAnchoringZones.size + buoys.size + shipwrecks.size + anchorageZones.size + 1
+                                            index + checkpoints.size + anchorages.size +  fishFarms.size + prohibitedProhibitedAnchoringZones.size + buoys.size + shipwrecks.size + anchorageZones.size + 1
                                         marker.tag = "routem$newCheckpointId"
                                     }
 
@@ -1421,6 +1463,14 @@ fun GoogleMaps(
                                     val clickedBuoy = localBuoys.firstOrNull { it.id == buoyId }
                                     clickedBuoy?.let {
                                         onBuoyClick(it)
+                                    }
+                                }
+
+                                tag.startsWith("fishFarm_") -> {
+                                    val fishFarmId = tag.removePrefix("fishFarm_").toInt()
+                                    val clickedFishFarm = localFishFarms.firstOrNull { it.id == fishFarmId }
+                                    clickedFishFarm?.let {
+                                        onFishFarmClick(it)
                                     }
                                 }
 

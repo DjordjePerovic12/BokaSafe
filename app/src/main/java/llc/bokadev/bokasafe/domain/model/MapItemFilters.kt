@@ -6,5 +6,6 @@ data class MapItemFilters(
     val prohibitedAnchoringZone: Boolean,
     val anchorages: Boolean,
     val underwaterCables: Boolean,
-    val buoys: Boolean
+    val buoys: Boolean,
+    val fishFarms: Boolean
 )

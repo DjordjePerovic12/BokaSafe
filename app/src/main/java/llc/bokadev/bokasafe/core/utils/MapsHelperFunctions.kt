@@ -117,6 +117,48 @@ fun drawLinesBetweenPoints(map: GoogleMap, points: List<LatLng>) {
 }
 
 
+fun drawFishFarm(map: GoogleMap, points: List<LatLng>, id: Int) {
+    // Check if there are enough points to draw lines
+    if (points.size < 2) {
+        throw IllegalArgumentException("At least two points are needed to draw lines.")
+    }
+
+    // Iterate over the points and draw lines between consecutive points
+    for (i in 0 until points.size - 1) {
+        val start = points[i]
+        val end = points[i + 1]
+
+        val polylineOptions = PolylineOptions().apply {
+            color(0xFF000000.toInt()) // Line color
+            width(2f)
+            pattern(listOf(Dash(30f), Gap(20f))) // Dash and gap pattern
+            add(start)
+            add(end)
+        }
+
+        // Add the polyline to the map and store it for future reference
+        allPolylines.add(map.addPolyline(polylineOptions))
+    }
+
+    // Connect the last point back to the first point to close the loop
+    val firstPoint = points.first()
+    val lastPoint = points.last()
+
+
+    val closingLine = PolylineOptions().apply {
+        color(0xFF000000.toInt()) // Line color
+        width(2f)
+        pattern(listOf(Dash(30f), Gap(20f))) // Dash and gap pattern
+        add(lastPoint)
+        add(firstPoint)
+    }
+
+    // Add the closing polyline to the map and store it for future reference
+    if(id != 24)
+    allPolylines.add(map.addPolyline(closingLine))
+}
+
+
 fun drawAnchoringZoneLines(map: GoogleMap, prohibitedAnchoringZone: ProhibitedAnchoringZone) {
     // Check if we have points to work with
     if (prohibitedAnchoringZone.points.isNotEmpty()) {

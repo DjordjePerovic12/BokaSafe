@@ -12,5 +12,4 @@ data class LighthouseDto(
     @Json(name = "isSelected") val isSelected: Boolean,
     @Json(name = "status") val status: String,
     @Json(name = "characteristics") val characteristics: String
-
 )

@@ -395,6 +395,59 @@ fun NotificationPreferencesBottomSheet(
 
         item {
             Spacer(
+                modifier = Modifier.height(1.dp).fillMaxWidth()
+                    .background(BokaBaySeaTrafficAppTheme.colors.lightGray)
+            )
+        }
+
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(verticalArrangement = Arrangement.SpaceEvenly) {
+                    Text(
+                        text = "Fish farms",
+                        color = BokaBaySeaTrafficAppTheme.colors.white,
+                        style = BokaBaySeaTrafficAppTheme.typography.nunitoBold16
+                    )
+                }
+
+                Switch(
+                    checked = checked.fishFarms, onCheckedChange = {
+                        onSwitchClick(it, MapItems.FISH_FARM.mapItemTypeId)
+                    },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = BokaBaySeaTrafficAppTheme.colors.confirmGreen,
+                        uncheckedThumbColor = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f),
+                        uncheckedTrackColor = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f),
+                        checkedTrackColor = BokaBaySeaTrafficAppTheme.colors.white.copy(.2f),
+                        checkedBorderColor = BokaBaySeaTrafficAppTheme.colors.confirmGreen,
+                        uncheckedBorderColor = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f)
+                    ),
+                    thumbContent = {
+                        if (checked.fishFarms) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_tick),
+                                contentDescription = null,
+                            )
+
+                        } else {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_x),
+                                contentDescription = null,
+                                tint = BokaBaySeaTrafficAppTheme.colors.white
+                            )
+                        }
+                    }
+
+                )
+            }
+        }
+
+        item {
+            Spacer(
                 modifier = Modifier.height(25.dp)
             )
         }

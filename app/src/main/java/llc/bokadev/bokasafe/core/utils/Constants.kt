@@ -329,7 +329,7 @@ object Constants {
     val anchorages = mutableListOf(
         Anchorage(
             id = 1,
-            name = "Sidrište Ljuta",
+            name = "Anchorage Ljuta",
             latitude = 42.481370,
             longitude = 18.754385,
             speedLimit = 14,
@@ -337,7 +337,7 @@ object Constants {
         ),
         Anchorage(
             id = 2,
-            name = "Sidrište Kamenarovići",
+            name = "Anchorage Kamenarovići",
             latitude = 42.456335,
             longitude = 18.762592,
             speedLimit = 14,
@@ -345,7 +345,7 @@ object Constants {
         ),
         Anchorage(
             id = 3,
-            name = "Sidrište Seljanovo",
+            name = "Anchorage Seljanovo",
             latitude = 42.44865,
             longitude = 18.68261,
             speedLimit = 14,
@@ -353,7 +353,7 @@ object Constants {
         ),
         Anchorage(
             id = 4,
-            name = "Sidrište Herceg Novi - Škver",
+            name = "Anchorage Herceg Novi - Škver",
             latitude =
             42.448265,
             longitude = 18.529219,

@@ -10,5 +10,5 @@ data class ShipWreck(
     val latitude: Double,
     val longitude: Double,
     var isSelected: Boolean,
-    var iconResId: Int = R.drawable.ic_shipwreck,
+    var iconResId: Int = R.drawable.shipwreck,
 )

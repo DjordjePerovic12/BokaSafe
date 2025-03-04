@@ -157,6 +157,9 @@ fun BayMapScreen(
             onBuoyClick = {
                 viewModel.onEvent(MapEvent.BuoySelected(it))
             },
+            onFishFarmClick = {
+                viewModel.onEvent(MapEvent.FishFarmSelected(it))
+            },
             onMarkerCreation = {
                 viewModel.onEvent(MapEvent.CreateUserMarker(it))
             }, onShipwreckMarkersCreation = {
@@ -176,6 +179,9 @@ fun BayMapScreen(
             },
             onBuoyMarkerCreation = {
                 viewModel.onEvent(MapEvent.AddBuoyMarker(it))
+            },
+            onFishFarmMarkerCreation = {
+                viewModel.onEvent(MapEvent.AddFishFarmMarker(it))
             },
             onMarkerUpdate = {
                 viewModel.onEvent(MapEvent.UpdateUserMarker)
@@ -582,6 +588,62 @@ fun BayMapScreen(
 
                 Text(
                     text = "W: ${state.azimuth?.toInt()?.toThreeDigitString()}°",
+                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular16,
+                    modifier = Modifier.padding(horizontal = 25.dp)
+                )
+
+                Spacer(modifier = Modifier.height(15.dp))
+
+            }
+        }
+
+        AnimatedVisibility(visible = state.isFishFarmMarkerSelected) {
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .clip(RoundedCornerShape(5.dp))
+                    .background(BokaBaySeaTrafficAppTheme.colors.defaultGray)
+                    .padding(end = 15.dp, top = 20.dp)
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_x),
+                    contentDescription = null,
+                    tint = BokaBaySeaTrafficAppTheme.colors.white,
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .size(22.dp)
+                        .clickable {
+                            viewModel.onEvent(MapEvent.OnFishFarmDetailsCloseClick)
+                        }
+
+                )
+                Text(
+                    text = "Fish Farm",
+                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.ralewayBold20,
+                    modifier = Modifier.padding(horizontal = 25.dp)
+                )
+
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Text(
+                    text = "D: ${state.distanceToCheckpoint?.toNauticalMiles()} NM",
+                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular16,
+                    modifier = Modifier.padding(horizontal = 25.dp)
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Text(
+                    text = "W: ${
+                        state.azimuth?.toInt()?.toThreeDigitString()
+                    }°",
                     color = BokaBaySeaTrafficAppTheme.colors.white,
                     style = BokaBaySeaTrafficAppTheme.typography.nunitoRegular16,
                     modifier = Modifier.padding(horizontal = 25.dp)

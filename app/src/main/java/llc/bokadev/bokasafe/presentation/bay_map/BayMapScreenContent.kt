@@ -51,6 +51,7 @@ import llc.bokadev.bokasafe.domain.model.AnchorageZone
 import llc.bokadev.bokasafe.domain.model.Buoy
 import llc.bokadev.bokasafe.domain.model.ProhibitedAnchoringZone
 import llc.bokadev.bokasafe.domain.model.Checkpoint
+import llc.bokadev.bokasafe.domain.model.FishFarm
 import llc.bokadev.bokasafe.domain.model.ShipWreck
 import llc.bokadev.bokasafe.ui.theme.BokaBaySeaTrafficAppTheme
 import timber.log.Timber
@@ -67,6 +68,7 @@ fun BokaBayMapScreenContent(
     onAnchorageMarkerCreation: (Marker) -> Unit,
     onAnchorageZoneMarkerCreation: (Marker) -> Unit,
     onBuoyMarkerCreation: (Marker) -> Unit,
+    onFishFarmMarkerCreation: (Marker) -> Unit,
     onMarkerUpdate: () -> Unit,
     resetZoom: () -> Unit,
     onCheckPointClick: (Checkpoint) -> Unit,
@@ -75,6 +77,7 @@ fun BokaBayMapScreenContent(
     onAnchorageZoneClick: (AnchorageZone) -> Unit,
     onProhibitedAnchoringZoneClick: (ProhibitedAnchoringZone) -> Unit,
     onBuoyClick: (Buoy) -> Unit,
+    onFishFarmClick: (FishFarm) -> Unit,
     onUserLocationClick: () -> Unit,
     onItemHide: (Int) -> Unit,
     state: GuideState
@@ -163,6 +166,7 @@ fun BokaBayMapScreenContent(
             underwaterCables = state.underWaterCables,
             pipelines = state.pipelines,
             buoys = state.buoys,
+            fishFarms = state.fishFarms,
             depths = state.depths,
             onCheckpointClick = { checkpoint ->
                 viewModel.onEvent(MapEvent.ResetSelection)
@@ -188,6 +192,9 @@ fun BokaBayMapScreenContent(
             onBuoyMarkerCreation = {
                 onBuoyMarkerCreation(it)
             },
+            onFishFarmMarkerCreation = {
+                onFishFarmMarkerCreation(it)
+            },
             onMarkerUpdate = { onMarkerUpdate() },
             shouldZoomUserLocation = state.shouldZoomUserLocation,
             resetZoom = { resetZoom() },
@@ -211,6 +218,10 @@ fun BokaBayMapScreenContent(
             onBuoyClick = {
                 viewModel.onEvent(MapEvent.ResetSelection)
                 onBuoyClick(it)
+            },
+            onFishFarmClick = {
+                viewModel.onEvent(MapEvent.ResetSelection)
+                onFishFarmClick(it)
             },
             viewModel = viewModel,
             onItemHide = { onItemHide(it) },
