@@ -46,6 +46,7 @@ import llc.bokadev.bokasafe.domain.model.Checkpoint
 import llc.bokadev.bokasafe.domain.model.Depth
 import llc.bokadev.bokasafe.domain.model.FishFarm
 import llc.bokadev.bokasafe.domain.model.MapItemFilters
+import llc.bokadev.bokasafe.domain.model.MarineProtectedArea
 import llc.bokadev.bokasafe.domain.model.Pipeline
 import llc.bokadev.bokasafe.domain.model.ProhibitedAnchoringZone
 import llc.bokadev.bokasafe.domain.model.ShipWreck
@@ -74,6 +75,7 @@ class BayMapViewModel @Inject constructor(
     private var previouslySelectedAnchorageZoneMarkerId: Int? = null
     private var previouslySelectedBuoyMarkerId: Int? = null
     private var previouslySelectedFishFarmMarkerId: Int? = null
+    private var previouslySelectedMarineProtectedAreaMarkerId: Int? = null
 
 
     private val _smoothedSpeed = MutableStateFlow(0f)
@@ -105,6 +107,7 @@ class BayMapViewModel @Inject constructor(
 
     init {
         getAllFishFarms()
+        getAllMarineProtectedAreas()
         observeUserLocation()
         getAllLighthouses()
         viewModelScope.launch {
@@ -146,6 +149,30 @@ class BayMapViewModel @Inject constructor(
                     is Resource.Success -> {
                         state =
                             state.copy(fishFarms = it.data?.toMutableList() ?: mutableListOf())
+                    }
+
+                    is Resource.Error -> {
+
+                    }
+
+                    is Resource.Loading -> {
+                        Timber.e("LOADING")
+                    }
+                }
+            }
+        }
+    }
+
+    fun getAllMarineProtectedAreas() {
+        viewModelScope.launch {
+            val result = repository.getAllMarineProtectedAreas()
+            result.let {
+                when (it) {
+                    is Resource.Success -> {
+                        state =
+                            state.copy(
+                                marineProtectedAreas = it.data?.toMutableList() ?: mutableListOf()
+                            )
                     }
 
                     is Resource.Error -> {
@@ -206,6 +233,10 @@ class BayMapViewModel @Inject constructor(
 
             is MapEvent.FishFarmSelected -> {
                 handleFishFarmSelected(event)
+            }
+
+            is MapEvent.MarineProtectedAreaSelected -> {
+                handleMarineProtectedAreaSelected(event)
             }
 
             is MapEvent.CreateUserMarker -> {
@@ -363,6 +394,14 @@ class BayMapViewModel @Inject constructor(
                             )
                         }
 
+                        MapItems.MARINE_PROTECTED_AREA.mapItemTypeId -> {
+                            state.copy(
+                                mapItemFilters = state.mapItemFilters?.copy(
+                                    marineProtectedAreas = event.checked
+                                )
+                            )
+                        }
+
                         else -> {
                             state
                         }
@@ -382,7 +421,8 @@ class BayMapViewModel @Inject constructor(
                         anchorages = true,
                         underwaterCables = true,
                         buoys = true,
-                        fishFarms = true
+                        fishFarms = true,
+                        marineProtectedAreas = true
                     )
                 )
             }
@@ -907,6 +947,14 @@ class BayMapViewModel @Inject constructor(
                 )
             }
 
+            is MapEvent.OnMarineProtectedAreaDetailsCloseClick -> {
+                state = state.copy(
+                    isMarineProtectedAreaMarkerSelected = false,
+                    isMarineProtectedAreaVisible = false,
+                    selectedMarineProtectedArea = null
+                )
+            }
+
             is MapEvent.OnAddNewRoute -> {
                 Timber.e("what?")
                 state = state.copy(shouldEnableCustomRoute = true)
@@ -1368,6 +1416,51 @@ class BayMapViewModel @Inject constructor(
         }
     }
 
+    private fun handleMarineProtectedAreaSelected(event: MapEvent.MarineProtectedAreaSelected) {
+        val marker =
+            state.marineProtectedAreaMarkers.find { it.tag == event.protectedMarineArea.id }
+        val marineProtectedArea =
+            state.marineProtectedAreas.firstOrNull { it.id == event.protectedMarineArea.id }
+
+        if (marineProtectedArea != null) {
+            if (marineProtectedArea.id == previouslySelectedFishFarmMarkerId) {
+                // Deselect buoy
+                marineProtectedArea.isSelected = false
+                state = state.copy(
+                    isMarineProtectedAreaMarkerSelected = false,
+                    isMarineProtectedAreaVisible = false,
+                    selectedMarineProtectedArea = null
+                )
+                marker?.hideInfoWindow()
+                previouslySelectedMarineProtectedAreaMarkerId = null
+            } else {
+                // Select new buoy
+                marineProtectedArea.isSelected = true
+                state = state.copy(
+                    selectedMarineProtectedArea = marineProtectedArea,
+                    isMarineProtectedAreaMarkerSelected = true,
+                    isMarineProtectedAreaVisible = true,
+                    isMpaAnchoringProhibitedMarkerSelected = event.isProhibitedAnchoringMarkerClick,
+                    isFishingProhibitedMarkerSelected = event.isProhibitedFishingMarkerClick
+                )
+                calculateDistance(
+                    LatLng(
+                        marineProtectedArea.mpaSymbolCoordinate.latitude,
+                        marineProtectedArea.mpaSymbolCoordinate.longitude
+                    )
+                )
+                calculateAzimuth(
+                    LatLng(
+                        marineProtectedArea.mpaSymbolCoordinate.latitude,
+                        marineProtectedArea.mpaSymbolCoordinate.longitude
+                    )
+                )
+                marker?.showInfoWindow()
+                previouslySelectedBuoyMarkerId = marineProtectedArea.id
+            }
+        }
+    }
+
     private fun resetSelection() {
         state = state.copy(
             isAnchorageMarkerSelected = false,
@@ -1390,7 +1483,12 @@ class BayMapViewModel @Inject constructor(
             selectedBuoy = null,
             isFishFarmMarkerSelected = false,
             selectedFishFarm = null,
-            isFishFarmVisible = false
+            isFishFarmVisible = false,
+            selectedMarineProtectedArea = null,
+            isMarineProtectedAreaMarkerSelected = false,
+            isMarineProtectedAreaVisible = false,
+            isMpaAnchoringProhibitedMarkerSelected = false,
+            isFishingProhibitedMarkerSelected = false
 
         )
     }
@@ -1439,6 +1537,12 @@ sealed class MapEvent() {
         val fishFarm: FishFarm
     ) : MapEvent()
 
+    data class MarineProtectedAreaSelected(
+        val protectedMarineArea: MarineProtectedArea,
+        val isProhibitedAnchoringMarkerClick: Boolean = false,
+        val isProhibitedFishingMarkerClick: Boolean = false
+    ) : MapEvent()
+
 
     object ResetZoom : MapEvent()
     data class LocationsEnabled(val isEnabled: Boolean) : MapEvent()
@@ -1450,6 +1554,7 @@ sealed class MapEvent() {
     data class AddAnchorageZoneMarker(val marker: Marker) : MapEvent()
     data class AddBuoyMarker(val marker: Marker) : MapEvent()
     data class AddFishFarmMarker(val marker: Marker) : MapEvent()
+    data class AddMarineProtectedAreaMarker(val marker: Marker) : MapEvent()
     object UpdateUserMarker : MapEvent()
     data class UpdateGpsState(val gpsState: Gps) : MapEvent()
     object ZoomUserLocation : MapEvent()
@@ -1490,6 +1595,7 @@ sealed class MapEvent() {
     object OnProhibitedAnhcoringZoneDetailsCloseClick : MapEvent()
     object OnBuoyDetailsCloseClick : MapEvent()
     object OnFishFarmDetailsCloseClick : MapEvent()
+    object OnMarineProtectedAreaDetailsCloseClick : MapEvent()
     object OnAddNewRoute : MapEvent()
 
 
@@ -1506,6 +1612,7 @@ data class GuideState(
     val pipelines: MutableList<Pipeline> = Constants.pipelines,
     val buoys: MutableList<Buoy> = Constants.buoys,
     val fishFarms: MutableList<FishFarm> = mutableListOf(),
+    val marineProtectedAreas: MutableList<MarineProtectedArea> = mutableListOf(),
     val userLocation: LatLng? = null,
     val distanceToCheckpoint: Float? = null,
     val userMarker: Marker? = null,
@@ -1518,6 +1625,7 @@ data class GuideState(
     val anchorageZoneMarkers: MutableList<Marker> = mutableStateListOf(),
     val buoyMarkers: MutableList<Marker> = mutableStateListOf(),
     val fishFarmMarkers: MutableList<Marker> = mutableStateListOf(),
+    val marineProtectedAreaMarkers: MutableList<Marker> = mutableStateListOf(),
     val gpsState: Gps = Gps.OFF,
     val selectedCheckpoint: Checkpoint? = null,
     val selectedShipwreck: ShipWreck? = null,
@@ -1526,6 +1634,7 @@ data class GuideState(
     val selectedAnchorageZone: AnchorageZone? = null,
     val selectedBuoy: Buoy? = null,
     val selectedFishFarm: FishFarm? = null,
+    val selectedMarineProtectedArea: MarineProtectedArea? = null,
     val isLighthouseMarkerSelected: Boolean = false,
     val isShipwreckMarkerSelected: Boolean = false,
     val isProhibitedAnchoringZoneMarkerSelected: Boolean = false,
@@ -1533,14 +1642,18 @@ data class GuideState(
     val isAnchorageZoneMarkerSelected: Boolean = false,
     val isBuoyMarkerSelected: Boolean = false,
     val isFishFarmMarkerSelected: Boolean = false,
+    val isMarineProtectedAreaMarkerSelected: Boolean = false,
+    val isFishingProhibitedMarkerSelected: Boolean = false,
+    val isMpaAnchoringProhibitedMarkerSelected: Boolean = false,
     val isLighthouseMarkerVisible: Boolean = false,
     val isShipwreckMarkerVisible: Boolean = false,
     val isBuoyVisible: Boolean = false,
     val isFishFarmVisible: Boolean = false,
+    val isMarineProtectedAreaVisible: Boolean = false,
     val isProhibitedAnchoringZoneVisible: Boolean = false,
     val isAnchorageVisible: Boolean = false,
     val isAnchorageZoneVisible: Boolean = false,
-    val mapItemFilters: MapItemFilters? = MapItemFilters(true, true, true, true, true, true, true),
+    val mapItemFilters: MapItemFilters? = MapItemFilters(true, true, true, true, true, true, true, true),
     val shouldEnableCustomPointToPoint: Boolean = false,
     val customPoints: MutableList<LatLng> = mutableStateListOf(),
     val customPointsDistance: Float? = null,

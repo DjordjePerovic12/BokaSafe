@@ -69,6 +69,7 @@ import llc.bokadev.bokasafe.core.utils.drawAnchoringZoneLinesWithSixPoints
 import llc.bokadev.bokasafe.core.utils.drawCustomDashedPolylineWithCircles
 import llc.bokadev.bokasafe.core.utils.drawFishFarm
 import llc.bokadev.bokasafe.core.utils.drawLinesBetweenPoints
+import llc.bokadev.bokasafe.core.utils.drawMarineProtectedArea
 import llc.bokadev.bokasafe.core.utils.getMidpoint
 import llc.bokadev.bokasafe.core.utils.textAsBitmap
 import llc.bokadev.bokasafe.domain.model.Anchorage
@@ -78,6 +79,7 @@ import llc.bokadev.bokasafe.domain.model.ProhibitedAnchoringZone
 import llc.bokadev.bokasafe.domain.model.Checkpoint
 import llc.bokadev.bokasafe.domain.model.Depth
 import llc.bokadev.bokasafe.domain.model.FishFarm
+import llc.bokadev.bokasafe.domain.model.MarineProtectedArea
 import llc.bokadev.bokasafe.domain.model.Pipeline
 import llc.bokadev.bokasafe.domain.model.ShipWreck
 import llc.bokadev.bokasafe.domain.model.UnderwaterCable
@@ -109,6 +111,7 @@ fun GoogleMaps(
     pipelines: MutableList<Pipeline>,
     buoys: MutableList<Buoy>,
     fishFarms: MutableList<FishFarm>,
+    marineProtectedAreas: MutableList<MarineProtectedArea>,
     prohibitedProhibitedAnchoringZones: MutableList<ProhibitedAnchoringZone>,
     onCheckpointClick: (Checkpoint) -> Unit,
     onShipwreckClick: (ShipWreck) -> Unit,
@@ -117,6 +120,7 @@ fun GoogleMaps(
     onAnchorageZoneClick: (AnchorageZone) -> Unit,
     onBuoyClick: (Buoy) -> Unit,
     onFishFarmClick: (FishFarm) -> Unit,
+    onMarineProtectedAreaClick: (MarineProtectedArea, Boolean, Boolean) -> Unit,
     depths: MutableList<Depth>,
     userLocation: LatLng? = null,
     @DrawableRes userIcon: Int,
@@ -130,6 +134,7 @@ fun GoogleMaps(
     onAnchorageZoneMarkerCreation: (Marker) -> Unit,
     onBuoyMarkerCreation: (Marker) -> Unit,
     onFishFarmMarkerCreation: (Marker) -> Unit,
+    onMarineProtectedAreaMarkerCreation: (Marker) -> Unit,
     onItemHide: (Int) -> Unit,
     onMarkerUpdate: () -> Unit,
     onMapClick: (LatLng, Int) -> Unit,
@@ -229,6 +234,7 @@ fun GoogleMaps(
     val localAnchorageZones: ArrayList<AnchorageZone> = arrayListOf()
     val localBuoys: ArrayList<Buoy> = arrayListOf()
     val localFishFarms: ArrayList<FishFarm> = arrayListOf()
+    val localMarineProtectedAreas: ArrayList<MarineProtectedArea> = arrayListOf()
     val localDepths: ArrayList<Depth> = arrayListOf()
 
 
@@ -240,6 +246,9 @@ fun GoogleMaps(
     val anchorageZoneMarkers = remember { mutableListOf<Marker>() }
     val buoyMarkers = remember { mutableListOf<Marker>() }
     val fishFarmMarkers = remember { mutableListOf<Marker>() }
+    val marineProtectedAreaMarkers = remember { mutableListOf<Marker>() }
+    val fishingProhibitedMarkers = remember { mutableListOf<Marker>() }
+    val mpaAnchoringProhibitedMarkers = remember { mutableListOf<Marker>() }
     val depthMarkers = remember { mutableListOf<Marker>() }
     val dashedPolylines: MutableList<Polyline> = remember { mutableListOf() }
     val circles: MutableList<Circle> = remember { mutableListOf() }
@@ -1119,11 +1128,8 @@ fun GoogleMaps(
             }
 
             MapEffect(key1 = state.mapItemFilters?.fishFarms) { map ->
-                Timber.e("FARME ${state.fishFarms}")
                 if (state.mapItemFilters?.fishFarms == true) {
-                    Timber.e("FARM SU $fishFarms")
                     for (fishFarm in fishFarms) {
-                        Timber.e("FISH FARM $fishFarm")
                         val fishFarmBitmap = bitmapDescriptorFromVector(
                             context = context,
                             vectorResId = R.drawable.marine_farm,
@@ -1131,14 +1137,19 @@ fun GoogleMaps(
                             width = 60
                         )
                         val fishFarmMarkerOptions = MarkerOptions().icon(fishFarmBitmap)
-                            .position(LatLng(fishFarm.centralCoordinate.latitude, fishFarm.centralCoordinate.longitude))
+                            .position(
+                                LatLng(
+                                    fishFarm.centralCoordinate.latitude,
+                                    fishFarm.centralCoordinate.longitude
+                                )
+                            )
                             .title(fishFarm.id.toString()).infoWindowAnchor(.5f, 1.9f)
                         var fishFarmMarker: Marker?
                         localFishFarms.add(fishFarm)
 
                         fishFarmMarker = map.addMarker(fishFarmMarkerOptions)
                         fishFarmMarker?.tag = "fishFarm_${fishFarm.id}"
-                        fishFarmMarker?.let(onBuoyMarkerCreation)
+                        fishFarmMarker?.let(onFishFarmMarkerCreation)
                         if (fishFarmMarker != null) {
                             fishFarmMarkers.add(fishFarmMarker)
                         }
@@ -1150,6 +1161,102 @@ fun GoogleMaps(
                         marker.remove() // Remove the marker from the map
                     }
                     fishFarmMarkers.clear() //
+                }
+            }
+
+            MapEffect(key1 = state.mapItemFilters?.marineProtectedAreas) { map ->
+                Timber.e("MPA ${state.marineProtectedAreas}")
+                if (state.mapItemFilters?.marineProtectedAreas == true) {
+                    for (marineProtectedArea in marineProtectedAreas) {
+                        Timber.e("MPA IN $marineProtectedArea")
+                        val marineProtectedAreaBitmap = bitmapDescriptorFromVector(
+                            context = context,
+                            vectorResId = R.drawable.mpa,
+                            height = 60,
+                            width = 60
+                        )
+                        val marineProtectedAreaMarkerOptions =
+                            MarkerOptions().icon(marineProtectedAreaBitmap)
+                                .position(
+                                    LatLng(
+                                        marineProtectedArea.mpaSymbolCoordinate.latitude,
+                                        marineProtectedArea.mpaSymbolCoordinate.longitude
+                                    )
+                                )
+                                .title(marineProtectedArea.id.toString())
+                                .infoWindowAnchor(.5f, 1.9f)
+                        var marineProtectedAreaMarker: Marker?
+                        localMarineProtectedAreas.add(marineProtectedArea)
+
+                        marineProtectedAreaMarker = map.addMarker(marineProtectedAreaMarkerOptions)
+                        marineProtectedAreaMarker?.tag =
+                            "protectedMarineArea_${marineProtectedArea.id}"
+                        marineProtectedAreaMarker?.let(onMarineProtectedAreaMarkerCreation)
+                        if (marineProtectedAreaMarker != null) {
+                            marineProtectedAreaMarkers.add(marineProtectedAreaMarker)
+                        }
+                        val prohibitedFishingBitmap = bitmapDescriptorFromVector(
+                            context = context,
+                            vectorResId = R.drawable.fishing_prohibited_area,
+                            height = 60,
+                            width = 60
+                        )
+                        val prohibitedFishingMarkerOptions =
+                            MarkerOptions().icon(prohibitedFishingBitmap)
+                                .position(
+                                    LatLng(
+                                        marineProtectedArea.fishingProhibited.latitude,
+                                        marineProtectedArea.fishingProhibited.longitude
+                                    )
+                                )
+                                .title(marineProtectedArea.id.toString())
+                                .infoWindowAnchor(.5f, 1.9f)
+                        var prohibitedFishingMarker: Marker?
+                        prohibitedFishingMarker = map.addMarker(prohibitedFishingMarkerOptions)
+                        prohibitedFishingMarker?.tag = "prohibitedFishing_${marineProtectedArea.id}"
+                        prohibitedFishingMarker?.let(onMarineProtectedAreaMarkerCreation)
+                        if (prohibitedFishingMarker != null) {
+                            fishingProhibitedMarkers.add(prohibitedFishingMarker)
+                        }
+                        val mpaProhibitedAnchoringBitmap = bitmapDescriptorFromVector(
+                            context = context,
+                            vectorResId = R.drawable.anchoring_prohibited_area,
+                            height = 60,
+                            width = 60
+                        )
+                        val mpaProhibitedAnhoringMarkerOptions =
+                            MarkerOptions().icon(mpaProhibitedAnchoringBitmap)
+                                .position(
+                                    LatLng(
+                                        marineProtectedArea.anchoringProhibitedCoordinate.latitude,
+                                        marineProtectedArea.anchoringProhibitedCoordinate.longitude
+                                    )
+                                )
+                                .title(marineProtectedArea.id.toString())
+                                .infoWindowAnchor(.5f, 1.9f)
+                        var mpaProhibitedAnchoringMarker: Marker?
+                        mpaProhibitedAnchoringMarker =
+                            map.addMarker(mpaProhibitedAnhoringMarkerOptions)
+                        mpaProhibitedAnchoringMarker?.tag =
+                            "paProhibitedAnchoring_${marineProtectedArea.id}"
+                        mpaProhibitedAnchoringMarker?.let(onMarineProtectedAreaMarkerCreation)
+                        if (mpaProhibitedAnchoringMarker != null) {
+                            mpaAnchoringProhibitedMarkers.add(mpaProhibitedAnchoringMarker)
+                        }
+                        drawMarineProtectedArea(map, marineProtectedArea.coordinates)
+                    }
+                } else {
+                    clearAllPolylines()
+                    for (marker in marineProtectedAreaMarkers) {
+                        marker.remove() // Remove the marker from the map
+                    }
+                    for (marker in mpaAnchoringProhibitedMarkers) {
+                        marker.remove() // Remove the marker from the map
+                    }
+                    for (marker in fishingProhibitedMarkers) {
+                        marker.remove() // Remove the marker from the map
+                    }
+                    marineProtectedAreaMarkers.clear() //
                 }
             }
 
@@ -1298,7 +1405,7 @@ fun GoogleMaps(
                                     // Reindex markers
                                     customPointsMarkers.forEachIndexed { index, marker ->
                                         val newCheckpointId =
-                                            index + checkpoints.size + anchorages.size +  fishFarms.size + prohibitedProhibitedAnchoringZones.size + buoys.size + shipwrecks.size + anchorageZones.size + 1
+                                            index + checkpoints.size + anchorages.size + fishFarms.size + prohibitedProhibitedAnchoringZones.size + buoys.size + shipwrecks.size + anchorageZones.size + 1
                                         marker.tag = "m$newCheckpointId"
                                     }
 
@@ -1359,7 +1466,7 @@ fun GoogleMaps(
 
                                     customRoutePointsMarkers.forEachIndexed { index, marker ->
                                         val newCheckpointId =
-                                            index + checkpoints.size + anchorages.size +  fishFarms.size + prohibitedProhibitedAnchoringZones.size + buoys.size + shipwrecks.size + anchorageZones.size + 1
+                                            index + checkpoints.size + anchorages.size + fishFarms.size + prohibitedProhibitedAnchoringZones.size + buoys.size + shipwrecks.size + anchorageZones.size + 1
                                         marker.tag = "routem$newCheckpointId"
                                     }
 
@@ -1468,9 +1575,41 @@ fun GoogleMaps(
 
                                 tag.startsWith("fishFarm_") -> {
                                     val fishFarmId = tag.removePrefix("fishFarm_").toInt()
-                                    val clickedFishFarm = localFishFarms.firstOrNull { it.id == fishFarmId }
+                                    val clickedFishFarm =
+                                        localFishFarms.firstOrNull { it.id == fishFarmId }
                                     clickedFishFarm?.let {
                                         onFishFarmClick(it)
+                                        Timber.e("CLICKED FARM IS ${it.id}")
+                                    }
+                                }
+
+                                tag.startsWith("protectedMarineArea_") -> {
+                                    val marineProtectedAreaId =
+                                        tag.removePrefix("protectedMarineArea_").toInt()
+                                    val clickedMarineProtectedArea =
+                                        localMarineProtectedAreas.firstOrNull { it.id == marineProtectedAreaId }
+                                    clickedMarineProtectedArea?.let {
+                                        onMarineProtectedAreaClick(it, true, true)
+                                    }
+                                }
+
+                                tag.startsWith("prohibitedFishing_") -> {
+                                    val prohibitedFishingId =
+                                        tag.removePrefix("prohibitedFishing_").toInt()
+                                    val clickedProhibitedFishing =
+                                        localMarineProtectedAreas.firstOrNull { it.id == prohibitedFishingId }
+                                    clickedProhibitedFishing?.let {
+                                        onMarineProtectedAreaClick(it, false, true)
+                                    }
+                                }
+
+                                tag.startsWith("paProhibitedAnchoring_") -> {
+                                    val mpaProhibitedAnchoringId =
+                                        tag.removePrefix("paProhibitedAnchoring_").toInt()
+                                    val clickedMpaProhibitedAnchoring =
+                                        localMarineProtectedAreas.firstOrNull { it.id == mpaProhibitedAnchoringId }
+                                    clickedMpaProhibitedAnchoring?.let {
+                                        onMarineProtectedAreaClick(it, true, false)
                                     }
                                 }
 
