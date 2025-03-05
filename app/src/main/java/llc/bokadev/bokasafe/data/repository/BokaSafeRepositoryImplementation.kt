@@ -7,11 +7,13 @@ import llc.bokadev.bokasafe.data.remote.dto.ApiErrorDto
 import llc.bokadev.bokasafe.data.remote.mapper.toDocument
 import llc.bokadev.bokasafe.data.remote.mapper.toFishFarms
 import llc.bokadev.bokasafe.data.remote.mapper.toLighthouse
+import llc.bokadev.bokasafe.data.remote.mapper.toMarinas
 import llc.bokadev.bokasafe.data.remote.mapper.toMarineProtectedAreas
 import llc.bokadev.bokasafe.data.remote.services.ApiService
 import llc.bokadev.bokasafe.domain.model.Checkpoint
 import llc.bokadev.bokasafe.domain.model.Document
 import llc.bokadev.bokasafe.domain.model.FishFarm
+import llc.bokadev.bokasafe.domain.model.Marina
 import llc.bokadev.bokasafe.domain.model.MarineProtectedArea
 import llc.bokadev.bokasafe.domain.repository.BokaSafeRepository
 import llc.bokadev.bokasafe.domain.repository.DataStoreRepository
@@ -45,4 +47,8 @@ class BokaSafeRepositoryImplementation @Inject constructor(
     override suspend fun getAllMarineProtectedAreas() : Resource<List<MarineProtectedArea>> = retrieveResponse {
         apiService.getAllMarineProtectedAreas()
     }.mapResponse { toMarineProtectedAreas() }
+
+    override suspend fun getAllMarinas() : Resource<List<Marina>> = retrieveResponse {
+        apiService.getAllMarinas()
+    }.mapResponse { toMarinas() }
 }

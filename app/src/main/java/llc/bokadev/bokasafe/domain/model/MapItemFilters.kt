@@ -8,5 +8,6 @@ data class MapItemFilters(
     val underwaterCables: Boolean,
     val buoys: Boolean,
     val fishFarms: Boolean,
-    val marineProtectedAreas: Boolean
+    val marineProtectedAreas: Boolean,
+    val marinas: Boolean
 )
