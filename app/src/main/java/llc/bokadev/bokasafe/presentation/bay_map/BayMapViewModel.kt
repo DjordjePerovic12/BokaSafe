@@ -1534,7 +1534,7 @@ class BayMapViewModel @Inject constructor(
                     selectedMarina = null
                 )
                 marker?.hideInfoWindow()
-                previouslySelectedMarineProtectedAreaMarkerId = null
+                previouslySelectedMarinaMarkerId = null
             } else {
                 // Select new buoy
                 marina.isSelected = true
