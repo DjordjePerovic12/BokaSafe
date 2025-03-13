@@ -752,6 +752,25 @@ fun GoogleMaps(
                             marker.isVisible = isZoomAboveThreshold
                         }
                     }
+
+                    for (marker in marinaMarkers) {
+                        marker.isVisible = isZoomAboveThreshold
+                    }
+
+                    for (marker in fishFarmMarkers) {
+                        marker.isVisible = isZoomAboveThreshold
+                    }
+
+                    for (marker in fishingProhibitedMarkers) {
+                        marker.isVisible = isZoomAboveThreshold
+                    }
+                    for (marker in mpaAnchoringProhibitedMarkers) {
+                        marker.isVisible = isZoomAboveThreshold
+                    }
+
+                    for (marker in marineProtectedAreaMarkers) {
+                        marker.isVisible = isZoomAboveThreshold
+                    }
                 }
             }
 
