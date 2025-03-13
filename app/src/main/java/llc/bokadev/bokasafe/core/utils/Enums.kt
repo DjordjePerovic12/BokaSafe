@@ -15,4 +15,5 @@ enum class MapItems(val mapItemTypeId: Int) {
     BUOY(mapItemTypeId = 6),
     FISH_FARM(mapItemTypeId = 7),
     MARINE_PROTECTED_AREA(mapItemTypeId = 8),
+    MARINAS(mapItemTypeId = 9)
 }

@@ -52,6 +52,7 @@ import llc.bokadev.bokasafe.domain.model.Buoy
 import llc.bokadev.bokasafe.domain.model.ProhibitedAnchoringZone
 import llc.bokadev.bokasafe.domain.model.Checkpoint
 import llc.bokadev.bokasafe.domain.model.FishFarm
+import llc.bokadev.bokasafe.domain.model.Marina
 import llc.bokadev.bokasafe.domain.model.MarineProtectedArea
 import llc.bokadev.bokasafe.domain.model.ShipWreck
 import llc.bokadev.bokasafe.ui.theme.BokaBaySeaTrafficAppTheme
@@ -70,6 +71,7 @@ fun BokaBayMapScreenContent(
     onAnchorageZoneMarkerCreation: (Marker) -> Unit,
     onBuoyMarkerCreation: (Marker) -> Unit,
     onFishFarmMarkerCreation: (Marker) -> Unit,
+    onMarinaMarkerCreation: (Marker) -> Unit,
     onMarineProtectedAreaMarkerCreation: (Marker) -> Unit,
     onMarkerUpdate: () -> Unit,
     resetZoom: () -> Unit,
@@ -80,6 +82,7 @@ fun BokaBayMapScreenContent(
     onProhibitedAnchoringZoneClick: (ProhibitedAnchoringZone) -> Unit,
     onBuoyClick: (Buoy) -> Unit,
     onFishFarmClick: (FishFarm) -> Unit,
+    onMarinaClick: (Marina) -> Unit,
     onMarineProtectedAreaClick: (MarineProtectedArea, Boolean, Boolean) -> Unit,
     onUserLocationClick: () -> Unit,
     onItemHide: (Int) -> Unit,
@@ -170,6 +173,7 @@ fun BokaBayMapScreenContent(
             pipelines = state.pipelines,
             buoys = state.buoys,
             fishFarms = state.fishFarms,
+            marinas = state.marinas,
             marineProtectedAreas = state.marineProtectedAreas,
             depths = state.depths,
             onCheckpointClick = { checkpoint ->
@@ -198,6 +202,9 @@ fun BokaBayMapScreenContent(
             },
             onFishFarmMarkerCreation = {
                 onFishFarmMarkerCreation(it)
+            },
+            onMarinaMarkerCreation = {
+                onMarinaMarkerCreation(it)
             },
             onMarineProtectedAreaMarkerCreation = {
                 onMarineProtectedAreaMarkerCreation(it)
@@ -229,6 +236,10 @@ fun BokaBayMapScreenContent(
             onFishFarmClick = {
                 viewModel.onEvent(MapEvent.ResetSelection)
                 onFishFarmClick(it)
+            },
+            onMarinaClick = {
+                viewModel.onEvent(MapEvent.ResetSelection)
+                onMarinaClick(it)
             },
             onMarineProtectedAreaClick = { mpa, isProhibitedAnchoringMarkerClicked, isProhibitedFishingMarkerClicked ->
                 viewModel.onEvent(MapEvent.ResetSelection)

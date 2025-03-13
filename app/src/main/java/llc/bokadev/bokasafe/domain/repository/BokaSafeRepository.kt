@@ -4,6 +4,7 @@ import llc.bokadev.bokasafe.core.utils.Resource
 import llc.bokadev.bokasafe.domain.model.Checkpoint
 import llc.bokadev.bokasafe.domain.model.Document
 import llc.bokadev.bokasafe.domain.model.FishFarm
+import llc.bokadev.bokasafe.domain.model.Marina
 import llc.bokadev.bokasafe.domain.model.MarineProtectedArea
 
 interface BokaSafeRepository {
@@ -16,4 +17,6 @@ interface BokaSafeRepository {
     suspend fun getAllFishFarms(): Resource<List<FishFarm>>
 
     suspend fun getAllMarineProtectedAreas(): Resource<List<MarineProtectedArea>>
+
+    suspend fun getAllMarinas() : Resource<List<Marina>>
 }

@@ -79,6 +79,7 @@ import llc.bokadev.bokasafe.domain.model.ProhibitedAnchoringZone
 import llc.bokadev.bokasafe.domain.model.Checkpoint
 import llc.bokadev.bokasafe.domain.model.Depth
 import llc.bokadev.bokasafe.domain.model.FishFarm
+import llc.bokadev.bokasafe.domain.model.Marina
 import llc.bokadev.bokasafe.domain.model.MarineProtectedArea
 import llc.bokadev.bokasafe.domain.model.Pipeline
 import llc.bokadev.bokasafe.domain.model.ShipWreck
@@ -111,6 +112,7 @@ fun GoogleMaps(
     pipelines: MutableList<Pipeline>,
     buoys: MutableList<Buoy>,
     fishFarms: MutableList<FishFarm>,
+    marinas: MutableList<Marina>,
     marineProtectedAreas: MutableList<MarineProtectedArea>,
     prohibitedProhibitedAnchoringZones: MutableList<ProhibitedAnchoringZone>,
     onCheckpointClick: (Checkpoint) -> Unit,
@@ -120,6 +122,7 @@ fun GoogleMaps(
     onAnchorageZoneClick: (AnchorageZone) -> Unit,
     onBuoyClick: (Buoy) -> Unit,
     onFishFarmClick: (FishFarm) -> Unit,
+    onMarinaClick: (Marina) -> Unit,
     onMarineProtectedAreaClick: (MarineProtectedArea, Boolean, Boolean) -> Unit,
     depths: MutableList<Depth>,
     userLocation: LatLng? = null,
@@ -134,6 +137,7 @@ fun GoogleMaps(
     onAnchorageZoneMarkerCreation: (Marker) -> Unit,
     onBuoyMarkerCreation: (Marker) -> Unit,
     onFishFarmMarkerCreation: (Marker) -> Unit,
+    onMarinaMarkerCreation: (Marker) -> Unit,
     onMarineProtectedAreaMarkerCreation: (Marker) -> Unit,
     onItemHide: (Int) -> Unit,
     onMarkerUpdate: () -> Unit,
@@ -234,6 +238,7 @@ fun GoogleMaps(
     val localAnchorageZones: ArrayList<AnchorageZone> = arrayListOf()
     val localBuoys: ArrayList<Buoy> = arrayListOf()
     val localFishFarms: ArrayList<FishFarm> = arrayListOf()
+    val localMarinas: ArrayList<Marina> = arrayListOf()
     val localMarineProtectedAreas: ArrayList<MarineProtectedArea> = arrayListOf()
     val localDepths: ArrayList<Depth> = arrayListOf()
 
@@ -246,6 +251,7 @@ fun GoogleMaps(
     val anchorageZoneMarkers = remember { mutableListOf<Marker>() }
     val buoyMarkers = remember { mutableListOf<Marker>() }
     val fishFarmMarkers = remember { mutableListOf<Marker>() }
+    val marinaMarkers = remember { mutableListOf<Marker>() }
     val marineProtectedAreaMarkers = remember { mutableListOf<Marker>() }
     val fishingProhibitedMarkers = remember { mutableListOf<Marker>() }
     val mpaAnchoringProhibitedMarkers = remember { mutableListOf<Marker>() }
@@ -1127,6 +1133,46 @@ fun GoogleMaps(
                 }
             }
 
+
+
+            MapEffect(key1 = state.mapItemFilters?.marinas) { map ->
+                if (state.mapItemFilters?.marinas == true) {
+                    for (marina in marinas) {
+                        val marinaBitmap = bitmapDescriptorFromVector(
+                            context = context,
+                            vectorResId = R.drawable.marina,
+                            height = 60,
+                            width = 60
+                        )
+                        val marinaMarkerOptions = MarkerOptions().icon(marinaBitmap)
+                            .position(
+                                LatLng(
+                                    marina.coordinates.latitude,
+                                    marina.coordinates.longitude
+                                )
+                            )
+                            .title(marina.id.toString()).infoWindowAnchor(.5f, 1.9f)
+                        var marinaMarker: Marker?
+                        localMarinas.add(marina)
+
+                        marinaMarker = map.addMarker(marinaMarkerOptions)
+                        marinaMarker?.tag = "narina_${marina.id}"
+                        marinaMarker?.let(onFishFarmMarkerCreation)
+                        if (marinaMarker != null) {
+                            marinaMarkers.add(marinaMarker)
+                        }
+                    }
+                } else {
+                    for (marker in marinaMarkers) {
+                        marker.remove() // Remove the marker from the map
+                    }
+                    marinaMarkers.clear() //
+                }
+            }
+
+
+
+
             MapEffect(key1 = state.mapItemFilters?.fishFarms) { map ->
                 if (state.mapItemFilters?.fishFarms == true) {
                     for (fishFarm in fishFarms) {
@@ -1405,7 +1451,7 @@ fun GoogleMaps(
                                     // Reindex markers
                                     customPointsMarkers.forEachIndexed { index, marker ->
                                         val newCheckpointId =
-                                            index + checkpoints.size + anchorages.size + fishFarms.size + prohibitedProhibitedAnchoringZones.size + buoys.size + shipwrecks.size + anchorageZones.size + 1
+                                            index + checkpoints.size + anchorages.size + fishFarms.size + prohibitedProhibitedAnchoringZones.size + buoys.size + shipwrecks.size + anchorageZones.size + marineProtectedAreas.size + marinas.size + 1
                                         marker.tag = "m$newCheckpointId"
                                     }
 
@@ -1466,7 +1512,7 @@ fun GoogleMaps(
 
                                     customRoutePointsMarkers.forEachIndexed { index, marker ->
                                         val newCheckpointId =
-                                            index + checkpoints.size + anchorages.size + fishFarms.size + prohibitedProhibitedAnchoringZones.size + buoys.size + shipwrecks.size + anchorageZones.size + 1
+                                            index + checkpoints.size + anchorages.size + fishFarms.size + prohibitedProhibitedAnchoringZones.size + buoys.size + shipwrecks.size + anchorageZones.size + marineProtectedAreas.size + marinas.size + 1
                                         marker.tag = "routem$newCheckpointId"
                                     }
 
@@ -1580,6 +1626,16 @@ fun GoogleMaps(
                                     clickedFishFarm?.let {
                                         onFishFarmClick(it)
                                         Timber.e("CLICKED FARM IS ${it.id}")
+                                    }
+                                }
+
+                                tag.startsWith("narina_") -> {
+                                    val marinaId = tag.removePrefix("narina_").toInt()
+                                    val clickedMarina =
+                                        localMarinas.firstOrNull { it.id == marinaId }
+                                    clickedMarina?.let {
+                                        onMarinaClick(it)
+                                        Timber.e("CLICKED MARINA IS ${it.id}")
                                     }
                                 }
 

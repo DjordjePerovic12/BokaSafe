@@ -160,6 +160,9 @@ fun BayMapScreen(
             onFishFarmClick = {
                 viewModel.onEvent(MapEvent.FishFarmSelected(it))
             },
+            onMarinaClick = {
+                viewModel.onEvent(MapEvent.MarinaSelected(it))
+            },
             onMarineProtectedAreaClick = { mpa, isProhibitedAnchoringMarkerClicked, isProhibitedFishingMarkerClicked ->
                 viewModel.onEvent(MapEvent.MarineProtectedAreaSelected(mpa, isProhibitedAnchoringMarkerClicked, isProhibitedFishingMarkerClicked))
             },
@@ -185,6 +188,9 @@ fun BayMapScreen(
             },
             onFishFarmMarkerCreation = {
                 viewModel.onEvent(MapEvent.AddFishFarmMarker(it))
+            },
+            onMarinaMarkerCreation = {
+                viewModel.onEvent(MapEvent.AddMarinaMarker(it))
             },
             onMarineProtectedAreaMarkerCreation = {
                 viewModel.onEvent(MapEvent.AddMarineProtectedAreaMarker(it))
