@@ -729,6 +729,105 @@ fun BayMapScreen(
 
             }
         }
+
+        AnimatedVisibility(visible = state.isMarineProtectedAreaMarkerSelected) {
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .clip(RoundedCornerShape(5.dp))
+                    .background(BokaBaySeaTrafficAppTheme.colors.defaultGray)
+                    .padding(end = 15.dp, top = 20.dp)
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_x),
+                    contentDescription = null,
+                    tint = BokaBaySeaTrafficAppTheme.colors.white,
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .size(22.dp)
+                        .clickable {
+                            viewModel.onEvent(MapEvent.OnMarineProtectedAreaDetailsCloseClick)
+                        }
+
+                )
+                Text(
+                    text = state.selectedMarineProtectedArea?.name ?: "",
+                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.ralewayBold20,
+                    modifier = Modifier.padding(horizontal = 25.dp),
+                    textAlign = TextAlign.Center
+                )
+
+
+                if (state.isMpaAnchoringProhibitedMarkerSelected) {
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Text(
+                        text = "Anchoring Prohibited Area",
+                        color = BokaBaySeaTrafficAppTheme.colors.white,
+                        style = BokaBaySeaTrafficAppTheme.typography.ralewayRegular18,
+                        modifier = Modifier.padding(horizontal = 25.dp)
+                    )
+
+                }
+
+
+
+                if (state.isFishingProhibitedMarkerSelected) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = "Fishing Prohibited Area",
+                        color = BokaBaySeaTrafficAppTheme.colors.white,
+                        style = BokaBaySeaTrafficAppTheme.typography.ralewayRegular18,
+                        modifier = Modifier.padding(horizontal = 25.dp)
+                    )
+
+                }
+
+
+                Spacer(modifier = Modifier.height(15.dp))
+
+            }
+        }
+
+        AnimatedVisibility(visible = state.isMarinaMarkerSelected) {
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .clip(RoundedCornerShape(5.dp))
+                    .background(BokaBaySeaTrafficAppTheme.colors.defaultGray)
+                    .padding(end = 15.dp, top = 20.dp)
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_x),
+                    contentDescription = null,
+                    tint = BokaBaySeaTrafficAppTheme.colors.white,
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .size(22.dp)
+                        .clickable {
+                            viewModel.onEvent(MapEvent.OnMarinaDetailsCloseClick)
+                        }
+
+                )
+                Text(
+                    text = state.selectedMarina?.name ?: "",
+                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.ralewayBold20,
+                    modifier = Modifier.padding(horizontal = 25.dp),
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+            }
+        }
     }
 }
 
