@@ -1385,9 +1385,9 @@ fun GoogleMaps(
 
                         val buoyBitmap = bitmapDescriptorFromVector(
                             context = context,
-                            vectorResId = R.drawable.ic_buoy,
-                            height = 40,
-                            width = 40
+                            vectorResId = R.drawable.buoy,
+                            height = 80,
+                            width = 80
                         )
                         val buoyMarkerOptions = MarkerOptions().icon(buoyBitmap)
                             .position(LatLng(buoy.coordinates.latitude, buoy.coordinates.longitude))
