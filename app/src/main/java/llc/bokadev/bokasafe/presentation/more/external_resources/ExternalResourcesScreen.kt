@@ -1,6 +1,7 @@
 package llc.bokadev.bokasafe.presentation.more.external_resources
 
 import android.content.Intent
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -42,6 +43,10 @@ fun ExternalResourcesScreen(
 
     val state = viewModel.viewStateFlow.collectAsState().value
 
+    BackHandler {
+        viewModel.onEvent(ExtenralResourcesEvent.OnBackClick)
+    }
+
     Scaffold(topBar = {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -53,12 +58,13 @@ fun ExternalResourcesScreen(
                 .padding(top = 30.dp)
 
         ) {
-            Icon(painter = painterResource(R.drawable.arrow),
+            Icon(
+                painter = painterResource(R.drawable.arrow),
                 tint = BokaBaySeaTrafficAppTheme.colors.white,
                 contentDescription = null,
                 modifier = Modifier
                     .clickable {
-//                        viewModel.onEvent(SafetyHubEvent.OnBackClick)
+                        viewModel.onEvent(ExtenralResourcesEvent.OnBackClick)
                     }
                     .size(18.dp)
             )

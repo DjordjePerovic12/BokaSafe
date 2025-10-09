@@ -13,6 +13,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.room.Room
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -108,11 +109,8 @@ class BayMapViewModel @Inject constructor(
 
 
     init {
-        getAllFishFarms()
-        getAllMarineProtectedAreas()
-        getAllMarinas()
+        getDynamicData()
         observeUserLocation()
-        getAllLighthouses()
         viewModelScope.launch {
             state = state.copy(
                 preferredSpeedUnit = dataStoreRepository.getPreferredSpeedUnit().first(),
@@ -120,6 +118,13 @@ class BayMapViewModel @Inject constructor(
             )
         }
 
+    }
+
+    fun getDynamicData() {
+        getAllFishFarms()
+        getAllMarineProtectedAreas()
+        getAllMarinas()
+        getAllLighthouses()
     }
 
     fun getAllLighthouses() {

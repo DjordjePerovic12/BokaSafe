@@ -163,7 +163,8 @@ fun GoogleMaps(
         },
         content = {
             viewModel.state.mapItemFilters?.let {
-                NotificationPreferencesBottomSheet(mapItemFilters = it,
+                NotificationPreferencesBottomSheet(
+                    mapItemFilters = it,
                     onSwitchClick = { choice, id ->
                         viewModel.onEvent(
                             MapEvent.OnPreferencesSwitchClick(
@@ -459,6 +460,27 @@ fun GoogleMaps(
                     .strokeWidth(3f)
                 map.addPolygon(portoSmaller)
 
+                val portoNoviOriginal = PolygonOptions()
+                    .add(
+                        LatLng(42.43289787297656, 18.60104857619816),
+                        LatLng(42.43183490170527, 18.60436050225395),
+                        LatLng(42.43226158819513, 18.60522779499725),
+                        LatLng(42.43250153520546, 18.60490110052737),
+                        LatLng(42.43236414705783, 18.60469385354008),
+                        LatLng(42.43231952799346, 18.60470340304738),
+                        LatLng(42.43209125530186, 18.60428778524147),
+                        LatLng(42.43220731108125, 18.60431417459557),
+                        LatLng(42.43235124532137, 18.60440481435254),
+                        LatLng(42.43325016532452, 18.60115333874764),
+                        LatLng(42.4332899837066, 18.6011412490479),
+                        LatLng(42.43289787297656, 18.60104857619816) // closes the loop
+                    )
+                    .fillColor(0xFFf48282.toInt())  // semi-transparent gray
+                    .strokeColor(0xFFf48282.toInt())
+                    .strokeWidth(3f)
+
+                map.addPolygon(portoNoviOriginal)
+/**/
 
                 val portoNoviBottom = PolygonOptions()
                     .add(
@@ -501,6 +523,7 @@ fun GoogleMaps(
                     .strokeColor(0xFF4d4d4d.toInt())                  // Outline color
                     .strokeWidth(3f)
                 map.addPolygon(portoNoviBottom)// Path width
+
 
                 val portoNoviRightHandSidePontoon = PolygonOptions().add(
                     LatLng(42.43163944787811 + 0.000276, 18.60565889375784), // Point 1

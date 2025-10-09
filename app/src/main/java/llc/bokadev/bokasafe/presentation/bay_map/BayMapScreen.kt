@@ -249,7 +249,8 @@ fun BayMapScreen(
                     text = viewModel.state.selectedCheckpoint?.name ?: "",
                     color = BokaBaySeaTrafficAppTheme.colors.white,
                     style = BokaBaySeaTrafficAppTheme.typography.ralewayBold20,
-                    modifier = Modifier.padding(horizontal = 25.dp)
+                    modifier = Modifier.padding(horizontal = 25.dp),
+                    textAlign = TextAlign.Center
                 )
 
                 Spacer(modifier = Modifier.height(15.dp))
@@ -517,7 +518,8 @@ fun BayMapScreen(
                     text = "${viewModel.state.selectedAnchorageZone?.name}",
                     color = BokaBaySeaTrafficAppTheme.colors.white,
                     style = BokaBaySeaTrafficAppTheme.typography.ralewayBold20,
-                    modifier = Modifier.padding(horizontal = 25.dp)
+                    modifier = Modifier.padding(horizontal = 25.dp),
+                    textAlign = TextAlign.Center
                 )
 
 
@@ -572,7 +574,8 @@ fun BayMapScreen(
                     text = "${viewModel.state.selectedBuoy?.name}",
                     color = BokaBaySeaTrafficAppTheme.colors.white,
                     style = BokaBaySeaTrafficAppTheme.typography.ralewayBold20,
-                    modifier = Modifier.padding(horizontal = 25.dp)
+                    modifier = Modifier.padding(horizontal = 25.dp),
+                    textAlign = TextAlign.Center
                 )
 
 
@@ -639,7 +642,8 @@ fun BayMapScreen(
                     text = "Fish Farm",
                     color = BokaBaySeaTrafficAppTheme.colors.white,
                     style = BokaBaySeaTrafficAppTheme.typography.ralewayBold20,
-                    modifier = Modifier.padding(horizontal = 25.dp)
+                    modifier = Modifier.padding(horizontal = 25.dp),
+                    textAlign = TextAlign.Center
                 )
 
 

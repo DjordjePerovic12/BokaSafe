@@ -111,9 +111,10 @@ fun BokaBayMapScreenContent(
 
 
     if (state.showCursorInstruction) {
-        CursorInstructionsAlertDialog(onConfirm = {
-            viewModel.onEvent(MapEvent.DismissCursorDialog)
-        },
+        CursorInstructionsAlertDialog(
+            onConfirm = {
+                viewModel.onEvent(MapEvent.DismissCursorDialog)
+            },
             onNeverShowThisAgain = {
                 viewModel.onEvent(MapEvent.OnDontShowAgainClick)
             })
@@ -153,319 +154,325 @@ fun BokaBayMapScreenContent(
 
             )
         }
+        viewModel.getDynamicData()
     } else
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
-        val context = LocalContext.current
-        Timber.e("MAP ${state.lighthouses}")
-        GoogleMaps(
-            scope = scope, sheetState = bottomSheetState,
+        Box(
             modifier = Modifier
-                .fillMaxSize(),
-            checkpoints = state.lighthouses,
-            shipwrecks = state.shipwrecks,
-            prohibitedProhibitedAnchoringZones = state.prohibitedProhibitedAnchoringZones,
-            anchorages = state.anchorages,
-            anchorageZones = state.anchorageZones,
-            underwaterCables = state.underWaterCables,
-            pipelines = state.pipelines,
-            buoys = state.buoys,
-            fishFarms = state.fishFarms,
-            marinas = state.marinas,
-            marineProtectedAreas = state.marineProtectedAreas,
-            depths = state.depths,
-            onCheckpointClick = { checkpoint ->
-                viewModel.onEvent(MapEvent.ResetSelection)
-                onCheckPointClick(checkpoint)
-            },
-            userLocation = state.userLocation,
-            userIcon = R.drawable.ic_user_location,
-            onMarkerCreation = {
-                onMarkerCreation(it)
-            },
-            onShipwreckMarkerCreation = {
-                onShipwreckMarkersCreation(it)
-            },
-            onProhibitedAnchoringZoneMarkerCreation = {
-                onProhibitedAnchoringZoneMarkersCreation(it)
-            },
-            onAnchorageMarkerCreation = {
-                onAnchorageMarkerCreation(it)
-            },
-            onAnchorageZoneMarkerCreation = {
-                onAnchorageZoneMarkerCreation(it)
-            },
-            onBuoyMarkerCreation = {
-                onBuoyMarkerCreation(it)
-            },
-            onFishFarmMarkerCreation = {
-                onFishFarmMarkerCreation(it)
-            },
-            onMarinaMarkerCreation = {
-                onMarinaMarkerCreation(it)
-            },
-            onMarineProtectedAreaMarkerCreation = {
-                onMarineProtectedAreaMarkerCreation(it)
-            },
-            onMarkerUpdate = { onMarkerUpdate() },
-            shouldZoomUserLocation = state.shouldZoomUserLocation,
-            resetZoom = { resetZoom() },
-            onLighthouseMarkersCreation = { onLighthouseMarkersCreation(it) },
-            onShipwreckClick = {
-                viewModel.onEvent(MapEvent.ResetSelection)
-                onShipwreckClick(it)
-            },
-            onProhibitedAnchoringZoneClick = {
-                viewModel.onEvent(MapEvent.ResetSelection)
-                onProhibitedAnchoringZoneClick(it)
-            },
-            onAnchorageClick = {
-                viewModel.onEvent(MapEvent.ResetSelection)
-                onAnchorageClick(it)
-            },
-            onAnchorageZoneClick = {
-                viewModel.onEvent(MapEvent.ResetSelection)
-                onAnchorageZoneClick(it)
-            },
-            onBuoyClick = {
-                viewModel.onEvent(MapEvent.ResetSelection)
-                onBuoyClick(it)
-            },
-            onFishFarmClick = {
-                viewModel.onEvent(MapEvent.ResetSelection)
-                onFishFarmClick(it)
-            },
-            onMarinaClick = {
-                viewModel.onEvent(MapEvent.ResetSelection)
-                onMarinaClick(it)
-            },
-            onMarineProtectedAreaClick = { mpa, isProhibitedAnchoringMarkerClicked, isProhibitedFishingMarkerClicked ->
-                viewModel.onEvent(MapEvent.ResetSelection)
-                onMarineProtectedAreaClick(mpa, isProhibitedAnchoringMarkerClicked, isProhibitedFishingMarkerClicked)
-            },
-            viewModel = viewModel,
-            onItemHide = { onItemHide(it) },
-            onMapClick = { poistion, index ->
-                viewModel.onEvent(MapEvent.OnMapTwoPointsClick(poistion, index))
+                .fillMaxSize()
+        ) {
+            val context = LocalContext.current
+            Timber.e("MAP ${state.lighthouses}")
+            GoogleMaps(
+                scope = scope, sheetState = bottomSheetState,
+                modifier = Modifier
+                    .fillMaxSize(),
+                checkpoints = state.lighthouses,
+                shipwrecks = state.shipwrecks,
+                prohibitedProhibitedAnchoringZones = state.prohibitedProhibitedAnchoringZones,
+                anchorages = state.anchorages,
+                anchorageZones = state.anchorageZones,
+                underwaterCables = state.underWaterCables,
+                pipelines = state.pipelines,
+                buoys = state.buoys,
+                fishFarms = state.fishFarms,
+                marinas = state.marinas,
+                marineProtectedAreas = state.marineProtectedAreas,
+                depths = state.depths,
+                onCheckpointClick = { checkpoint ->
+                    viewModel.onEvent(MapEvent.ResetSelection)
+                    onCheckPointClick(checkpoint)
+                },
+                userLocation = state.userLocation,
+                userIcon = R.drawable.ic_user_location,
+                onMarkerCreation = {
+                    onMarkerCreation(it)
+                },
+                onShipwreckMarkerCreation = {
+                    onShipwreckMarkersCreation(it)
+                },
+                onProhibitedAnchoringZoneMarkerCreation = {
+                    onProhibitedAnchoringZoneMarkersCreation(it)
+                },
+                onAnchorageMarkerCreation = {
+                    onAnchorageMarkerCreation(it)
+                },
+                onAnchorageZoneMarkerCreation = {
+                    onAnchorageZoneMarkerCreation(it)
+                },
+                onBuoyMarkerCreation = {
+                    onBuoyMarkerCreation(it)
+                },
+                onFishFarmMarkerCreation = {
+                    onFishFarmMarkerCreation(it)
+                },
+                onMarinaMarkerCreation = {
+                    onMarinaMarkerCreation(it)
+                },
+                onMarineProtectedAreaMarkerCreation = {
+                    onMarineProtectedAreaMarkerCreation(it)
+                },
+                onMarkerUpdate = { onMarkerUpdate() },
+                shouldZoomUserLocation = state.shouldZoomUserLocation,
+                resetZoom = { resetZoom() },
+                onLighthouseMarkersCreation = { onLighthouseMarkersCreation(it) },
+                onShipwreckClick = {
+                    viewModel.onEvent(MapEvent.ResetSelection)
+                    onShipwreckClick(it)
+                },
+                onProhibitedAnchoringZoneClick = {
+                    viewModel.onEvent(MapEvent.ResetSelection)
+                    onProhibitedAnchoringZoneClick(it)
+                },
+                onAnchorageClick = {
+                    viewModel.onEvent(MapEvent.ResetSelection)
+                    onAnchorageClick(it)
+                },
+                onAnchorageZoneClick = {
+                    viewModel.onEvent(MapEvent.ResetSelection)
+                    onAnchorageZoneClick(it)
+                },
+                onBuoyClick = {
+                    viewModel.onEvent(MapEvent.ResetSelection)
+                    onBuoyClick(it)
+                },
+                onFishFarmClick = {
+                    viewModel.onEvent(MapEvent.ResetSelection)
+                    onFishFarmClick(it)
+                },
+                onMarinaClick = {
+                    viewModel.onEvent(MapEvent.ResetSelection)
+                    onMarinaClick(it)
+                },
+                onMarineProtectedAreaClick = { mpa, isProhibitedAnchoringMarkerClicked, isProhibitedFishingMarkerClicked ->
+                    viewModel.onEvent(MapEvent.ResetSelection)
+                    onMarineProtectedAreaClick(
+                        mpa,
+                        isProhibitedAnchoringMarkerClicked,
+                        isProhibitedFishingMarkerClicked
+                    )
+                },
+                viewModel = viewModel,
+                onItemHide = { onItemHide(it) },
+                onMapClick = { poistion, index ->
+                    viewModel.onEvent(MapEvent.OnMapTwoPointsClick(poistion, index))
+                }
+
+
+            )
+
+            if (state.customPointsDistance != null && state.customPointsDistance.toNauticalMiles() != "0.00") {
+                Text(
+                    text = "D: ${state.customPointsDistance.toNauticalMiles()} NM \n" +
+                            if (state.customPointsAzimuth != null) "W: ${
+                                state.customPointsAzimuth?.toInt()?.toThreeDigitString()
+                            }°" else "",
+                    modifier = Modifier.offset {
+                        IntOffset(
+                            textPosition.x.toInt(),
+                            textPosition.y.toInt()
+                        )
+                    },// Ensure the text is displayed above the map
+                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold20
+                )
+            }
+
+            if (state.distanceFromCursor != null && state.azimuthFromCursor != null) {
+                Box(
+                    modifier = Modifier
+                        .offset {
+                            IntOffset(
+                                state.distanceTextOffset.x.toInt(),
+                                state.distanceTextOffset.y.toInt()
+                            )
+                        }
+                ) {
+                    // Draw cursor (a small '+' with a hole in the center)
+                    Canvas(modifier = Modifier.size(30.dp)) { // Increased size for better visibility
+                        drawLine(
+                            color = Color.Red,
+                            start = Offset(15f, 0f), // Centered vertically
+                            end = Offset(15f, 30f), // Longer vertical line
+                            strokeWidth = 3f // Increased stroke width for visibility
+                        )
+                        drawLine(
+                            color = Color.Red,
+                            start = Offset(0f, 15f), // Centered horizontally
+                            end = Offset(30f, 15f), // Longer horizontal line
+                            strokeWidth = 3f // Increased stroke width for visibility
+                        )
+                        drawCircle(
+                            color = Color.Transparent,
+                            radius = 3f, // Slightly larger hole in the center
+                            center = Offset(15f, 15f) // Center of the canvas
+                        )
+                    }
+
+                    // Calculate dynamic offset for the text
+                    val screenWidth = LocalContext.current.resources.displayMetrics.widthPixels
+                    val density = LocalContext.current.resources.displayMetrics.density
+                    val dynamicOffsetX =
+                        if (state.distanceTextOffset.x > screenWidth - (200 * density)) {
+                            (-200).dp // Offset to the left if near the right edge
+                        } else {
+                            20.dp // Default offset to the right
+                        }
+
+
+                    // Draw text below the cursor
+                    Text(
+                        text = "D: ${state.distanceFromCursor?.toNauticalMiles()} NM\n" +
+                                "W: ${state.azimuthFromCursor?.toInt()?.toThreeDigitString()}°\n" +
+                                "Latitude : ${state.cursorLatLng?.latitude?.toLatitude()} N\",\n" +
+                                "Longitude : ${state.cursorLatLng?.longitude?.toLongitude()} E\"",
+                        color = Color.White,
+                        style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold20,
+                        modifier = Modifier.offset(x = dynamicOffsetX) // Position text below cursor
+                    )
+                }
             }
 
 
-        )
 
-        if (state.customPointsDistance != null && state.customPointsDistance.toNauticalMiles() != "0.00") {
-            Text(
-                text = "D: ${state.customPointsDistance.toNauticalMiles()} NM \n" +
-                        if (state.customPointsAzimuth != null) "W: ${
-                            state.customPointsAzimuth?.toInt()?.toThreeDigitString()
-                        }°" else "",
-                modifier = Modifier.offset {
-                    IntOffset(
-                        textPosition.x.toInt(),
-                        textPosition.y.toInt()
-                    )
-                },// Ensure the text is displayed above the map
-                color = BokaBaySeaTrafficAppTheme.colors.white,
-                style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold20
-            )
-        }
 
-        if (state.distanceFromCursor != null && state.azimuthFromCursor != null) {
-            Box(
+
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(20.dp),
                 modifier = Modifier
-                    .offset {
-                        IntOffset(
-                            state.distanceTextOffset.x.toInt(),
-                            state.distanceTextOffset.y.toInt()
-                        )
-                    }
+                    .fillMaxWidth()
+                    .padding(top = 20.dp)
             ) {
-                // Draw cursor (a small '+' with a hole in the center)
-                Canvas(modifier = Modifier.size(30.dp)) { // Increased size for better visibility
-                    drawLine(
-                        color = Color.Red,
-                        start = Offset(15f, 0f), // Centered vertically
-                        end = Offset(15f, 30f), // Longer vertical line
-                        strokeWidth = 3f // Increased stroke width for visibility
+                Box(
+                    modifier = Modifier
+                        .padding(top = 25.dp, start = 25.dp)
+                        .size(50.dp)
+                        .clip(CircleShape)
+                        .background(BokaBaySeaTrafficAppTheme.colors.primaryRed)
+                        .noRippleClickable {
+                            viewModel.onEvent(MapEvent.OnPhoneClick)
+                        }
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_phone),
+                        contentDescription = null,
+                        modifier = Modifier.padding(15.dp),
+                        tint = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f)
                     )
-                    drawLine(
-                        color = Color.Red,
-                        start = Offset(0f, 15f), // Centered horizontally
-                        end = Offset(30f, 15f), // Longer horizontal line
-                        strokeWidth = 3f // Increased stroke width for visibility
-                    )
-                    drawCircle(
-                        color = Color.Transparent,
-                        radius = 3f, // Slightly larger hole in the center
-                        center = Offset(15f, 15f) // Center of the canvas
+                }
+                Box(
+                    modifier = Modifier
+                        .padding(top = 25.dp, start = 25.dp)
+                        .size(50.dp)
+                        .clip(CircleShape)
+                        .background(BokaBaySeaTrafficAppTheme.colors.primaryRed)
+                        .noRippleClickable {
+                            viewModel.onEvent(MapEvent.ResetSelection)
+                            scope.launch {
+                                bottomSheetState.show()
+                            }
+                        }
+                        .zIndex(1f)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_filters),
+                        contentDescription = null,
+                        modifier = Modifier.padding(15.dp),
+                        tint = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f)
                     )
                 }
 
-                // Calculate dynamic offset for the text
-                val screenWidth = LocalContext.current.resources.displayMetrics.widthPixels
-                val density = LocalContext.current.resources.displayMetrics.density
-                val dynamicOffsetX =
-                    if (state.distanceTextOffset.x > screenWidth - (200 * density)) {
-                        (-200).dp // Offset to the left if near the right edge
-                    } else {
-                        20.dp // Default offset to the right
-                    }
+                Box(
+                    modifier = Modifier
+                        .padding(top = 25.dp, start = 25.dp)
+                        .size(50.dp)
+                        .clip(CircleShape)
+                        .background(if (state.shouldEnableCustomPointToPoint) BokaBaySeaTrafficAppTheme.colors.confirmGreen else BokaBaySeaTrafficAppTheme.colors.primaryRed)
+                        .noRippleClickable {
+                            viewModel.onEvent(MapEvent.ResetSelection)
+                            viewModel.onEvent(MapEvent.OnCompassIconClick)
 
-
-                // Draw text below the cursor
-                Text(
-                    text = "D: ${state.distanceFromCursor?.toNauticalMiles()} NM\n" +
-                            "W: ${state.azimuthFromCursor?.toInt()?.toThreeDigitString()}°\n" +
-                            "Latitude : ${state.cursorLatLng?.latitude?.toLatitude()} N\",\n" +
-                            "Longitude : ${state.cursorLatLng?.longitude?.toLongitude()} E\"",
-                    color = Color.White,
-                    style = BokaBaySeaTrafficAppTheme.typography.neueMontrealBold20,
-                    modifier = Modifier.offset(x = dynamicOffsetX) // Position text below cursor
-                )
-            }
-        }
-
-
-
-
-
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(20.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 20.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .padding(top = 25.dp, start = 25.dp)
-                    .size(50.dp)
-                    .clip(CircleShape)
-                    .background(BokaBaySeaTrafficAppTheme.colors.primaryRed)
-                    .noRippleClickable {
-                        viewModel.onEvent(MapEvent.OnPhoneClick)
-                    }
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_phone), contentDescription = null,
-                    modifier = Modifier.padding(15.dp),
-                    tint = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f)
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .padding(top = 25.dp, start = 25.dp)
-                    .size(50.dp)
-                    .clip(CircleShape)
-                    .background(BokaBaySeaTrafficAppTheme.colors.primaryRed)
-                    .noRippleClickable {
-                        viewModel.onEvent(MapEvent.ResetSelection)
-                        scope.launch {
-                            bottomSheetState.show()
                         }
-                    }
-                    .zIndex(1f)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_filters),
-                    contentDescription = null,
-                    modifier = Modifier.padding(15.dp),
-                    tint = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f)
-                )
-            }
-
-            Box(
-                modifier = Modifier
-                    .padding(top = 25.dp, start = 25.dp)
-                    .size(50.dp)
-                    .clip(CircleShape)
-                    .background(if (state.shouldEnableCustomPointToPoint) BokaBaySeaTrafficAppTheme.colors.confirmGreen else BokaBaySeaTrafficAppTheme.colors.primaryRed)
-                    .noRippleClickable {
-                        viewModel.onEvent(MapEvent.ResetSelection)
-                        viewModel.onEvent(MapEvent.OnCompassIconClick)
-
-                    }
-                    .zIndex(1f)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.compass),
-                    contentDescription = null,
-                    modifier = Modifier.padding(15.dp),
-                    tint = if (state.shouldEnableCustomPointToPoint) BokaBaySeaTrafficAppTheme.colors.primaryRed else BokaBaySeaTrafficAppTheme.colors.white.copy(
-                        .5f
+                        .zIndex(1f)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.compass),
+                        contentDescription = null,
+                        modifier = Modifier.padding(15.dp),
+                        tint = if (state.shouldEnableCustomPointToPoint) BokaBaySeaTrafficAppTheme.colors.primaryRed else BokaBaySeaTrafficAppTheme.colors.white.copy(
+                            .5f
+                        )
                     )
-                )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .padding(top = 25.dp, start = 25.dp)
+                        .size(50.dp)
+                        .clip(CircleShape)
+                        .background(BokaBaySeaTrafficAppTheme.colors.primaryRed)
+                        .noRippleClickable {
+                            viewModel.onEvent(MapEvent.ResetSelection)
+                            viewModel.onEvent(MapEvent.OnRouteIconClick)
+
+                        }
+                        .zIndex(1f)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_route),
+                        contentDescription = null,
+                        modifier = Modifier.padding(15.dp),
+                        tint = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f)
+                    )
+                }
+
             }
 
-            Box(
+            Column(
+                verticalArrangement = Arrangement.spacedBy(40.dp),
+                horizontalAlignment = Alignment.End,
                 modifier = Modifier
-                    .padding(top = 25.dp, start = 25.dp)
-                    .size(50.dp)
-                    .clip(CircleShape)
-                    .background(BokaBaySeaTrafficAppTheme.colors.primaryRed)
-                    .noRippleClickable {
-                        viewModel.onEvent(MapEvent.ResetSelection)
-                        viewModel.onEvent(MapEvent.OnRouteIconClick)
-
-                    }
-                    .zIndex(1f)
+                    .fillMaxWidth()
+                    .padding(top = 110.dp)
             ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_route),
-                    contentDescription = null,
-                    modifier = Modifier.padding(15.dp),
-                    tint = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f)
-                )
+                Box(
+                    modifier = Modifier
+                        .padding(end = 25.dp)
+                        .size(50.dp)
+                        .clip(CircleShape)
+                        .background(BokaBaySeaTrafficAppTheme.colors.primaryRed)
+                        .align(Alignment.End)
+                        .clickable {
+                            viewModel.onEvent(MapEvent.OnMoreClick)
+                        }
+                        .zIndex(1f)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.more),
+                        contentDescription = null,
+                        modifier = Modifier.padding(15.dp),
+                        tint = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f)
+                    )
+                }
             }
 
-        }
-
-        Column(
-            verticalArrangement = Arrangement.spacedBy(40.dp),
-            horizontalAlignment = Alignment.End,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 110.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .padding(end = 25.dp)
-                    .size(50.dp)
-                    .clip(CircleShape)
-                    .background(BokaBaySeaTrafficAppTheme.colors.primaryRed)
-                    .align(Alignment.End)
-                    .clickable {
-                        viewModel.onEvent(MapEvent.OnMoreClick)
-                    }
-                    .zIndex(1f)
+            Column(
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+                horizontalAlignment = Alignment.Start,
+                modifier = Modifier.padding(top = 120.dp, start = 20.dp)
             ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.more),
-                    contentDescription = null,
-                    modifier = Modifier.padding(15.dp),
-                    tint = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f)
-                )
-            }
-        }
-
-        Column(
-            verticalArrangement = Arrangement.spacedBy(20.dp),
-            horizontalAlignment = Alignment.Start,
-            modifier = Modifier.padding(top = 120.dp, start = 20.dp)
-        ) {
-            if (state.preferredSpeedUnit != "")
-                SpeedometerItem(
-                    preferredSpeedUnit = state.preferredSpeedUnit,
-                    isUserStatic = state.isUserStatic,
-                    speedList = viewModel.speedList,
-                    userMovementSpeed = state.userMovementSpeed ?: -1f
-                )
+                if (state.preferredSpeedUnit != "")
+                    SpeedometerItem(
+                        preferredSpeedUnit = state.preferredSpeedUnit,
+                        isUserStatic = state.isUserStatic,
+                        speedList = viewModel.speedList,
+                        userMovementSpeed = state.userMovementSpeed ?: -1f
+                    )
 
 
-            if (state.userCourseOfMovement != String() && state.userCourseOfMovementAzimuth != null) {
-                CompassItem(userCourse = state.userCourseOfMovementAzimuth)
+                if (state.userCourseOfMovement != String() && state.userCourseOfMovementAzimuth != null) {
+                    CompassItem(userCourse = state.userCourseOfMovementAzimuth)
 //                Box(
 //                    modifier = Modifier
 //                        .padding(start = 25.dp)
@@ -481,56 +488,57 @@ fun BokaBayMapScreenContent(
 //                        color = BokaBaySeaTrafficAppTheme.colors.darkBlue
 //                    )
 //                }
+                }
             }
+
+
+
+
+
+
+            if (state.shouldEnableCustomRoute)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                        .padding(top = 65.dp)
+                ) {
+                    CustomRouteBottomSheet(
+                        state = viewModel.state, onSaveRouteClick = {
+                            viewModel.onEvent(MapEvent.ToggleSaveRouteAlertDialog)
+                        },
+                        onTogglePointsClick = {
+                            viewModel.onEvent(MapEvent.OnRoutePointsToggle(it))
+                        })
+                }
+
+
+            if (!state.shouldEnableCustomRoute)
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(bottom = 55.dp, end = 25.dp)
+                        .size(50.dp)
+                        .clip(CircleShape)
+                        .background(BokaBaySeaTrafficAppTheme.colors.primaryRed)
+                        .noRippleClickable {
+                            onUserLocationClick()
+
+                        }
+                        .zIndex(1f)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.target),
+                        contentDescription = null,
+                        modifier = Modifier.padding(15.dp),
+                        tint = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f)
+                    )
+                }
+
+
         }
-
-
-
-
-
-
-        if (state.shouldEnableCustomRoute)
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-                    .padding(top = 65.dp)
-            ) {
-                CustomRouteBottomSheet(state = viewModel.state, onSaveRouteClick = {
-                    viewModel.onEvent(MapEvent.ToggleSaveRouteAlertDialog)
-                },
-                    onTogglePointsClick = {
-                        viewModel.onEvent(MapEvent.OnRoutePointsToggle(it))
-                    })
-            }
-
-
-        if (!state.shouldEnableCustomRoute)
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(bottom = 55.dp, end = 25.dp)
-                    .size(50.dp)
-                    .clip(CircleShape)
-                    .background(BokaBaySeaTrafficAppTheme.colors.primaryRed)
-                    .noRippleClickable {
-                        onUserLocationClick()
-
-                    }
-                    .zIndex(1f)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.target),
-                    contentDescription = null,
-                    modifier = Modifier.padding(15.dp),
-                    tint = BokaBaySeaTrafficAppTheme.colors.white.copy(.5f)
-                )
-            }
-
-
-    }
 }
 
 
