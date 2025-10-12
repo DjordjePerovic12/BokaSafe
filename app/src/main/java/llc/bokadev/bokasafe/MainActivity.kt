@@ -161,22 +161,22 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                 ) { innerPadding ->
 
 
-                            // If permissions are granted, proceed with the app's navigation and flow
-                            BokaBaySeaTrafficAppNavigation(
-                                navController = appState.navController,
-                                navigator = navigator,
-                                showSnackBar = { message ->
-                                    appState.showSnackBar(message)
-                                },
-                                launchIntent = { intent ->
-                                    startActivity(intent)
-                                },
-                                viewModel = viewModel,
-                                activateCustomRoute = {
-                                    viewModel.onEvent(MapEvent.OnAddNewRoute)
-                                },
+                    // If permissions are granted, proceed with the app's navigation and flow
+                    BokaBaySeaTrafficAppNavigation(
+                        navController = appState.navController,
+                        navigator = navigator,
+                        showSnackBar = { message ->
+                            appState.showSnackBar(message)
+                        },
+                        launchIntent = { intent ->
+                            startActivity(intent)
+                        },
+                        viewModel = viewModel,
+                        activateCustomRoute = {
+                            viewModel.onEvent(MapEvent.OnAddNewRoute)
+                        },
 
-                                )
+                        )
 
 
                 }

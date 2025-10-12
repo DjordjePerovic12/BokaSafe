@@ -19,6 +19,9 @@ object Constants {
     const val BASE_URL_IMAGES = "https://v2-test.flourishapp.me"
 
 
+    const val SPEED_SAMPLE_LIMIT = 30
+
+
     val shipwrecks: MutableList<ShipWreck> = mutableListOf(
         ShipWreck(
             id = 1,

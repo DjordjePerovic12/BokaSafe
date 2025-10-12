@@ -2,6 +2,7 @@ package llc.bokadev.bokasafe.presentation.bay_map
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -9,12 +10,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -35,9 +41,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import kotlinx.coroutines.launch
 import llc.bokadev.bokasafe.R
@@ -462,13 +470,22 @@ fun BokaBayMapScreenContent(
                 horizontalAlignment = Alignment.Start,
                 modifier = Modifier.padding(top = 120.dp, start = 20.dp)
             ) {
-                if (state.preferredSpeedUnit != "")
-                    SpeedometerItem(
-                        preferredSpeedUnit = state.preferredSpeedUnit,
-                        isUserStatic = state.isUserStatic,
-                        speedList = viewModel.speedList,
-                        userMovementSpeed = state.userMovementSpeed ?: -1f
-                    )
+
+
+
+
+                    if (state.preferredSpeedUnit != "")
+                        SpeedometerItem(
+                            preferredSpeedUnit = state.preferredSpeedUnit,
+                            isUserStatic = state.isUserStatic,
+                            speedList = viewModel.speedList,
+                            userMovementSpeed = state.userMovementSpeed ?: -1f
+                        )
+
+
+
+
+
 
 
                 if (state.userCourseOfMovement != String() && state.userCourseOfMovementAzimuth != null) {

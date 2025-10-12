@@ -130,6 +130,12 @@ fun BayMapScreen(
     }
 
 
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.stopNearestShoreUpdates()
+        }
+    }
+
 
 
 

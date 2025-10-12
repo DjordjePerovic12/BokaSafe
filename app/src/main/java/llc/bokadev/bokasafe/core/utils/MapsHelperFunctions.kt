@@ -9,6 +9,7 @@ import android.graphics.Typeface
 import android.view.View
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
@@ -26,6 +27,17 @@ import llc.bokadev.bokasafe.domain.model.Checkpoint
 import llc.bokadev.bokasafe.domain.model.ProhibitedAnchoringZone
 import kotlin.math.PI
 import kotlin.math.sin
+import com.google.android.gms.maps.model.MarkerOptions
+import com.squareup.moshi.JsonClass
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlin.math.asin
+import kotlin.math.cos
+import kotlin.math.hypot
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 
 val allPolylines: MutableList<Polyline> = mutableListOf()
@@ -180,8 +192,8 @@ fun drawFishFarm(map: GoogleMap, points: List<LatLng>, id: Int) {
     }
 
     // Add the closing polyline to the map and store it for future reference
-    if(id != 24)
-    allPolylines.add(map.addPolyline(closingLine))
+    if (id != 24)
+        allPolylines.add(map.addPolyline(closingLine))
 }
 
 
@@ -853,3 +865,178 @@ fun Double.toFormattedString(): String {
         this.toString()
     }
 }
+
+
+@JsonClass(generateAdapter = true)
+data class ShorelinePoint(
+    val lat: Double,
+    val lng: Double
+)
+
+@JsonClass(generateAdapter = true)
+data class ShoreResult(
+    val point: LatLng,
+    val distanceMeters: Double
+)
+
+
+fun drawShorelineMarkers(context: Context, map: GoogleMap) {
+    // Load the JSON text from assets
+    val json = context.assets.open("shoreline.json").bufferedReader().use { it.readText() }
+
+    // Create Moshi instance and adapter for List<ShorelinePoint>
+    val moshi = Moshi.Builder().build()
+    val listType = Types.newParameterizedType(List::class.java, ShorelinePoint::class.java)
+    val adapter = moshi.adapter<List<ShorelinePoint>>(listType)
+
+    // Parse the JSON
+    val points = adapter.fromJson(json) ?: emptyList()
+
+    // Add markers for each coordinate
+    for (point in points) {
+        val position = LatLng(point.lat, point.lng)
+        map.addMarker(MarkerOptions().position(position))
+    }
+
+    // Optionally move camera to first coordinate
+    if (points.isNotEmpty()) {
+        val first = LatLng(points.first().lat, points.first().lng)
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(first, 13f))
+    }
+}
+
+suspend fun loadShorelinePoints(context: Context): List<List<ShorelinePoint>> =
+    withContext(Dispatchers.IO) {
+        val json = context.assets.open("shoreline.json").bufferedReader().use { it.readText() }
+        val moshi = Moshi.Builder().build()
+
+        // Define type for List<List<ShorelinePoint>>
+        val listType = Types.newParameterizedType(
+            List::class.java,
+            Types.newParameterizedType(List::class.java, ShorelinePoint::class.java)
+        )
+
+        val adapter = moshi.adapter<List<List<ShorelinePoint>>>(listType)
+        adapter.fromJson(json) ?: emptyList()
+    }
+
+fun distanceMeters(a: LatLng, b: LatLng): Double {
+    val R = 6371000.0 // Earth radius in meters
+    val dLat = Math.toRadians(b.latitude - a.latitude)
+    val dLon = Math.toRadians(b.longitude - a.longitude)
+    val lat1 = Math.toRadians(a.latitude)
+    val lat2 = Math.toRadians(b.latitude)
+
+    val h = sin(dLat / 2).pow(2) + cos(lat1) * cos(lat2) * sin(dLon / 2).pow(2)
+    return 2 * R * asin(sqrt(h))
+}
+
+fun findNearestShorePoint(user: LatLng, shorelines: List<List<ShorelinePoint>>): LatLng? {
+    var nearestPoint: LatLng? = null
+    var minDist = Double.MAX_VALUE
+
+    for (polyline in shorelines) {
+        for (i in 0 until polyline.size - 1) {
+            val p1 = polyline[i]
+            val p2 = polyline[i + 1]
+            val candidate =
+                closestPointOnSegment(user, LatLng(p1.lat, p1.lng), LatLng(p2.lat, p2.lng))
+            val dist = simpleDistance(user, candidate)
+            if (dist < minDist) {
+                minDist = dist
+                nearestPoint = candidate
+            }
+        }
+    }
+
+    return nearestPoint
+}
+
+fun simpleDistance(a: LatLng, b: LatLng): Double {
+    val dx = a.longitude - b.longitude
+    val dy = a.latitude - b.latitude
+    return sqrt(dx * dx + dy * dy)
+}
+
+
+/**
+ * Local tangent-plane (equirectangular) conversions around a base latitude.
+ * We use the user's lat as the base, which keeps errors tiny for <~10–20 km spans.
+ */
+private fun toLocalMeters(base: LatLng, p: LatLng): Pair<Double, Double> {
+    val latRad = Math.toRadians(base.latitude)
+    val dx = (p.longitude - base.longitude) * 111_320.0 * cos(latRad) // meters
+    val dy = (p.latitude - base.latitude) * 110_540.0                 // meters
+    return dx to dy
+}
+
+private fun fromLocalMeters(base: LatLng, x: Double, y: Double): LatLng {
+    val latRad = Math.toRadians(base.latitude)
+    val lat = base.latitude  + (y / 110_540.0)
+    val lon = base.longitude + (x / (111_320.0 * cos(latRad)))
+    return LatLng(lat, lon)
+}
+
+/** Fast flat-earth distance (meters) using the same local frame. */
+private fun simpleDistanceMeters(a: LatLng, b: LatLng): Double {
+    val (ax, ay) = toLocalMeters(a, a) // (0,0)
+    val (bx, by) = toLocalMeters(a, b)
+    return hypot(bx - ax, by - ay) // == hypot(bx, by)
+}
+
+/** Closest point on segment AB to point P (all in LatLng, computed in local-meters frame). */
+private fun closestPointOnSegment(p: LatLng, a: LatLng, b: LatLng): LatLng {
+    // Convert to local meters around p (so p becomes ~ (0,0) which is numerically stable)
+    val (ax, ay) = toLocalMeters(p, a)
+    val (bx, by) = toLocalMeters(p, b)
+    val (px, py) = 0.0 to 0.0
+
+    val abx = bx - ax
+    val aby = by - ay
+    val abLen2 = abx*abx + aby*aby
+    if (abLen2 == 0.0) return a // degenerate segment
+
+    // Project AP onto AB
+    val apx = px - ax
+    val apy = py - ay
+    val t = ((apx * abx) + (apy * aby)) / abLen2
+    val tClamped = t.coerceIn(0.0, 1.0)
+
+    val qx = ax + tClamped * abx
+    val qy = ay + tClamped * aby
+
+    // Convert projected point back to LatLng
+    return fromLocalMeters(p, qx, qy)
+}
+
+/**
+ * Returns nearest point on ANY shoreline segment within [maxMeters] of [user],
+ * including islands. If nothing within range: returns null.
+ */
+fun findNearestShoreProjection(
+    user: LatLng,
+    shorelines: List<List<ShorelinePoint>>,
+    maxMeters: Double = 300.0
+): ShoreResult? {
+    var bestPoint: LatLng? = null
+    var bestDist = maxMeters // hard cutoff
+
+    for (poly in shorelines) {
+        if (poly.size < 2) continue
+        for (i in 0 until poly.size - 1) {
+            val a = LatLng(poly[i].lat, poly[i].lng)
+            val b = LatLng(poly[i + 1].lat, poly[i + 1].lng)
+
+            val candidate = closestPointOnSegment(user, a, b)
+            val d = simpleDistanceMeters(user, candidate)
+            if (d < bestDist) {
+                bestDist = d
+                bestPoint = candidate
+            }
+        }
+    }
+
+    return bestPoint?.let { ShoreResult(it, bestDist) }
+}
+
+

@@ -27,15 +27,20 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import llc.amplitudo.flourish_V2.core.utils.Constants
+import llc.amplitudo.flourish_V2.core.utils.Constants.SPEED_SAMPLE_LIMIT
 import llc.bokadev.bokasafe.core.navigation.Navigator
 import llc.bokadev.bokasafe.core.navigation.Screen
 import llc.bokadev.bokasafe.core.utils.Gps
 import llc.bokadev.bokasafe.core.utils.MapItems
 import llc.bokadev.bokasafe.core.utils.Resource
+import llc.bokadev.bokasafe.core.utils.ShoreResult
+import llc.bokadev.bokasafe.core.utils.ShorelinePoint
 import llc.bokadev.bokasafe.core.utils.calculateCentroid
 import llc.bokadev.bokasafe.core.utils.createGpsReceiver
+import llc.bokadev.bokasafe.core.utils.findNearestShoreProjection
 import llc.bokadev.bokasafe.core.utils.toKnots
 import llc.bokadev.bokasafe.data.local.db.BokaBaySeaTrafficAppDatabase
 import llc.bokadev.bokasafe.data.local.model.RouteEntity
@@ -86,7 +91,7 @@ class BayMapViewModel @Inject constructor(
 
     private var totalDistance = 0.0f
     private var previousLocation: Location? = null
-    val speedList: ArrayList<Float> = arrayListOf()
+    val speedList: ArrayDeque<Float> = ArrayDeque()
     private var staticCounter = 0
     private val staticSpeedThreshold = 0.5f // Speed threshold to consider user static
     private val staticDistanceThreshold = 1.5f // Distance threshold to consider user static
@@ -1022,6 +1027,11 @@ class BayMapViewModel @Inject constructor(
                 state = state.copy(shouldEnableCustomRoute = true)
             }
 
+            is MapEvent.OnNearestShoreUpdate -> {
+                Timber.e("Nearest shore calculated & nearest point is ${event.result}m away ")
+                state = state.copy(nearestShore = event.result)
+            }
+
 
             else -> {}
         }
@@ -1144,11 +1154,14 @@ class BayMapViewModel @Inject constructor(
                         speed.toKnots()
                     }"
                 )
-                if (!state.isUserStatic) {
-                    if (accuracy > 3.0f && accuracy < 9f) {
-                        speedList.add(speed)
+
+                if (!state.isUserStatic && accuracy in 3.0f..9f) {
+                    if (speedList.size >= SPEED_SAMPLE_LIMIT) {
+                        speedList.removeFirst()
                     }
+                    speedList.add(speed)
                 }
+
                 Timber.e("SPEED LIST $speedList")
 
 
@@ -1183,6 +1196,34 @@ class BayMapViewModel @Inject constructor(
 
 
             }.launchIn(viewModelScope)
+    }
+
+
+    private var nearestJob: Job? = null
+
+    fun startNearestShoreUpdates(
+        shorelines: List<List<ShorelinePoint>>,
+        userLocation: () -> LatLng?
+    ) {
+
+        nearestJob?.cancel()
+        nearestJob = viewModelScope.launch {
+            while (isActive) {
+                val user = userLocation()
+                Timber.e("Recieved location $user")
+                val result = if (user != null) {
+                    findNearestShoreProjection(user, shorelines, maxMeters = 300.0)
+                } else null
+                Timber.e("Result")
+                onEvent(MapEvent.OnNearestShoreUpdate(result))
+                delay(3_000)
+            }
+        }
+    }
+
+    fun stopNearestShoreUpdates() {
+        nearestJob?.cancel()
+        nearestJob = null
     }
 
 
@@ -1241,12 +1282,11 @@ class BayMapViewModel @Inject constructor(
     }
 
     private fun calculateAverageSpeed(): Float {
-        var sum = 0.0f
-        for (speed in speedList) {
-            sum += speed
-        }
+        if (speedList.isEmpty()) return 0f
+        val sum = speedList.sum()
         return sum / speedList.size
     }
+
 
     private fun handleCheckpointSelected(event: MapEvent.CheckpointSelected) {
         val marker = state.lighthouseMarkers.find { it.tag == event.checkpoint.id }
@@ -1711,7 +1751,7 @@ sealed class MapEvent() {
     object OnMarinaDetailsCloseClick : MapEvent()
     object OnMarineProtectedAreaDetailsCloseClick : MapEvent()
     object OnAddNewRoute : MapEvent()
-
+    data class OnNearestShoreUpdate(val result: ShoreResult?) : MapEvent()
 
 }
 
@@ -1811,5 +1851,6 @@ data class GuideState(
     val showCursorInstruction: Boolean = false,
     val shouldShowNameRouteAlertDialog: Boolean = false,
     val shouldShowNameError: Boolean = false,
-    val swapCounter: Int? = 0
+    val swapCounter: Int? = 0,
+    val nearestShore: ShoreResult? = null,
 )

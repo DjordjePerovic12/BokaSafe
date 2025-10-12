@@ -29,7 +29,7 @@ fun SpeedometerItem(
     modifier: Modifier = Modifier,
     preferredSpeedUnit: String,
     isUserStatic: Boolean,
-    speedList: ArrayList<Float>,
+    speedList: ArrayDeque<Float>,
     userMovementSpeed: Float
 ) {
     val greenThreshold = 10 * 0.514444f // 10 knots in m/s

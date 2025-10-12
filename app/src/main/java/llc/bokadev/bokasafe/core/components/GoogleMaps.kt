@@ -7,18 +7,25 @@ import android.view.View
 import android.widget.TextView
 import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
+import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,12 +35,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.Circle
 import com.google.android.gms.maps.model.Dash
 import com.google.android.gms.maps.model.Gap
@@ -49,11 +60,13 @@ import com.google.maps.android.compose.MapEffect
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.MapsComposeExperimentalApi
+import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.widgets.ScaleBar
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import llc.bokadev.bokasafe.R
+import llc.bokadev.bokasafe.core.utils.ShorelinePoint
 import llc.bokadev.bokasafe.core.utils.bitmapDescriptorFromVector
 import llc.bokadev.bokasafe.core.utils.bitmapDescriptorFromVectorWithNumber
 import llc.bokadev.bokasafe.core.utils.bitmapDescriptorFromVectorWithNumberOrLetter
@@ -70,7 +83,9 @@ import llc.bokadev.bokasafe.core.utils.drawCustomDashedPolylineWithCircles
 import llc.bokadev.bokasafe.core.utils.drawFishFarm
 import llc.bokadev.bokasafe.core.utils.drawLinesBetweenPoints
 import llc.bokadev.bokasafe.core.utils.drawMarineProtectedArea
+import llc.bokadev.bokasafe.core.utils.findNearestShorePoint
 import llc.bokadev.bokasafe.core.utils.getMidpoint
+import llc.bokadev.bokasafe.core.utils.loadShorelinePoints
 import llc.bokadev.bokasafe.core.utils.textAsBitmap
 import llc.bokadev.bokasafe.domain.model.Anchorage
 import llc.bokadev.bokasafe.domain.model.AnchorageZone
@@ -283,6 +298,36 @@ fun GoogleMaps(
     var mapLoaded by remember { mutableStateOf(false) }
 
 
+    var shorelines by remember { mutableStateOf<List<List<ShorelinePoint>>>(emptyList()) }
+
+    var nearestPoint by remember { mutableStateOf<LatLng?>(null) }
+
+    var isMapReady by remember { mutableStateOf(false) }
+
+
+//    LaunchedEffect(isMapReady) {
+//        if (isMapReady) {
+//            shorelines = loadShorelinePoints(context)
+//            if (userLocation != null) {
+//                nearestPoint = findNearestShorePoint(userLocation, shorelines)
+//            }
+//        }
+//    }
+
+    LaunchedEffect(isMapReady, shorelines, userLocation) {
+        if (isMapReady) {
+            shorelines = loadShorelinePoints(context)
+        }
+        if (shorelines.isNotEmpty()) {
+            Timber.e("Sent location $userLocation")
+            viewModel.startNearestShoreUpdates(
+                shorelines = shorelines,
+                userLocation = { userLocation } // your latest location
+            )
+        }
+    }
+
+
 
     LaunchedEffect(cursorActive) {
         uiSettingsState.copy(
@@ -376,9 +421,12 @@ fun GoogleMaps(
             MapEffect(key1 = Unit) { map ->
                 map.setOnMapLoadedCallback {
                     mapLoaded = true // Map is fully loaded
+                    isMapReady = true
                 }
                 Timber.e("FAARME UNIT $fishFarms")
             }
+
+
 
             MapEffect(key1 = Unit) { map ->
                 val risanPontoon = PolygonOptions()
@@ -480,7 +528,7 @@ fun GoogleMaps(
                     .strokeWidth(3f)
 
                 map.addPolygon(portoNoviOriginal)
-/**/
+                /**/
 
                 val portoNoviBottom = PolygonOptions()
                     .add(
@@ -712,6 +760,16 @@ fun GoogleMaps(
             val userIconBitmap = bitmapDescriptorFromVector(
                 width = 150, height = 150, context = context, vectorResId = userIcon
             )
+
+//            MapEffect(key1 = nearestPoint) { map ->
+//                val redMarkerIcon =
+//                    BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED) // copy() ensures distinct instance
+//                val nearestShoreMarker = MarkerOptions()
+//                    .icon(redMarkerIcon)
+//                    .position(nearestPoint ?: LatLng(0.0, 0.0))
+//                val marker = map.addMarker(nearestShoreMarker)
+//                marker?.let(onMarkerCreation)
+//            }
 
             MapEffect(key1 = userLocation) { map ->
                 Timber.e("User location $userLocation")
@@ -1916,9 +1974,51 @@ fun GoogleMaps(
                 }
             }
         }
+
+        AnimatedVisibility(
+            visible = state.nearestShore != null,
+            modifier = Modifier.align(Alignment.BottomCenter)
+                .padding(bottom = (height / 15).dp)
+        ) {
+
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .wrapContentSize()
+                    .clip(RoundedCornerShape(5.dp))
+                    .background(BokaBaySeaTrafficAppTheme.colors.primaryRed)
+                    .padding(vertical = 12.dp, horizontal = 12.dp)
+            ) {
+                Text(
+                    text = "WARNING",
+                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.ralewayBold20,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = "You are to close to the shore.",
+                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.ralewayBold20,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Text(
+                    text = "D: ${state.nearestShore?.distanceMeters?.toInt()} m",
+                    color = BokaBaySeaTrafficAppTheme.colors.white,
+                    style = BokaBaySeaTrafficAppTheme.typography.ralewayBold20,
+                    modifier = Modifier.padding(horizontal = 25.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+
         ScaleBar(
             modifier = Modifier
-                .padding(bottom = 35.dp, start = 25.dp)
+                .padding(bottom = 50.dp, start = 25.dp)
                 .align(Alignment.BottomStart),
             cameraPositionState = cameraPositionState
         )
@@ -1926,9 +2026,10 @@ fun GoogleMaps(
         CustomNauticalMilesMapScale(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(bottom = 75.dp, start = 25.dp),
+                .padding(bottom = 100.dp, start = 25.dp),
             cameraPositionState = cameraPositionState
         )
+        Spacer(modifier = Modifier.height(15.dp))
     }
 }
 
