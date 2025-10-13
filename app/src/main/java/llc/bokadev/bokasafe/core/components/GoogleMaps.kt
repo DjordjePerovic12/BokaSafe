@@ -304,6 +304,8 @@ fun GoogleMaps(
 
     var isMapReady by remember { mutableStateOf(false) }
 
+    var isShoreLoaded by remember { mutableStateOf(false) }
+
 
 //    LaunchedEffect(isMapReady) {
 //        if (isMapReady) {
@@ -314,18 +316,39 @@ fun GoogleMaps(
 //        }
 //    }
 
-    LaunchedEffect(isMapReady, shorelines, userLocation) {
-        if (isMapReady) {
+
+
+    LaunchedEffect(isMapReady) {
+        if(isMapReady && !isShoreLoaded) {
             shorelines = loadShorelinePoints(context)
+            isShoreLoaded = true
         }
-        if (shorelines.isNotEmpty()) {
+    }
+
+    LaunchedEffect(isShoreLoaded) {
+        if (isShoreLoaded) {
             Timber.e("Sent location $userLocation")
             viewModel.startNearestShoreUpdates(
                 shorelines = shorelines,
-                userLocation = { userLocation } // your latest location
+                userLocation = { userLocation }
             )
         }
     }
+
+
+
+//    LaunchedEffect(isMapReady, shorelines, userLocation) {
+//        if (isMapReady) {
+//            shorelines = loadShorelinePoints(context)
+//        }
+//        if (shorelines.isNotEmpty()) {
+//            Timber.e("Sent location $userLocation")
+//            viewModel.startNearestShoreUpdates(
+//                shorelines = shorelines,
+//                userLocation = { userLocation } // your latest location
+//            )
+//        }
+//    }
 
 
 

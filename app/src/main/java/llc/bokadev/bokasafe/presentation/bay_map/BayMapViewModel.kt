@@ -17,6 +17,7 @@ import androidx.room.Room
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -1207,7 +1208,7 @@ class BayMapViewModel @Inject constructor(
     ) {
 
         nearestJob?.cancel()
-        nearestJob = viewModelScope.launch {
+        nearestJob = viewModelScope.launch(Dispatchers.Default) {
             while (isActive) {
                 val user = userLocation()
                 Timber.e("Recieved location $user")
