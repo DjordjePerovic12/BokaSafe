@@ -49,7 +49,7 @@ fun MoreScreen(
         MoreOptions(2, "My routes"),
         MoreOptions(3, "External resources"),
         MoreOptions(4, "Safety hub"),
-        MoreOptions(5, "Notices for seafarers"),
+        MoreOptions(5, "Notice to Mariners"),
     )
 
     if (state.shouldShowAlertDialog)
